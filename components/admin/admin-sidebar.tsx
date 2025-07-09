@@ -1,3 +1,5 @@
+"use client"
+
 import {
   Sidebar,
   SidebarContent,
@@ -10,8 +12,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { BarChart3, Calendar, MapPin, Users, Settings, LogOut } from "lucide-react"
+import { BarChart3, Calendar, MapPin, Users, Settings, LogOut, FileText } from "lucide-react"
 import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { useRouter } from "next/navigation"
+import { logoutAction } from "@/lib/actions"
 
 const menuItems = [
   {
@@ -37,31 +42,46 @@ const menuItems = [
   {
     title: "Reportes",
     url: "/admin/reportes",
-    icon: BarChart3,
+    icon: FileText,
   },
 ]
 
 export function AdminSidebar() {
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    try {
+      await logoutAction()
+      router.push('/login')
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+  }
+
   return (
-    <Sidebar variant="inset">
+    <Sidebar>
       <SidebarHeader>
         <div className="flex items-center gap-2 px-4 py-2">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-lg">C</span>
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <BarChart3 className="h-4 w-4" />
           </div>
-          <span className="font-bold text-xl text-primary">CanchaYa Admin</span>
+          <div>
+            <p className="text-sm font-semibold">CanchaYA</p>
+            <p className="text-xs text-muted-foreground">Panel Admin</p>
+          </div>
         </div>
       </SidebarHeader>
+      
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Administración</SidebarGroupLabel>
+          <SidebarGroupLabel>Gestión</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <Link href={item.url}>
-                      <item.icon />
+                      <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
@@ -70,20 +90,35 @@ export function AdminSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        
+        <SidebarGroup>
+          <SidebarGroupLabel>Sistema</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link href="/admin/configuracion">
+                    <Settings className="h-4 w-4" />
+                    <span>Configuración</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
+      
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton>
-              <Settings />
-              <span>Configuración</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton>
-              <LogOut />
-              <span>Cerrar sesión</span>
-            </SidebarMenuButton>
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start" 
+              onClick={handleLogout}
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Cerrar sesión
+            </Button>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
