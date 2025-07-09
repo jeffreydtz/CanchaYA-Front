@@ -57,13 +57,14 @@ const mockCourts = {
 }
 
 interface CourtPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
-export default function CourtPage({ params }: CourtPageProps) {
-  const courtId = Number.parseInt(params.id)
+export default async function CourtPage({ params }: CourtPageProps) {
+  const { id } = await params
+  const courtId = Number.parseInt(id)
   const court = mockCourts[courtId as keyof typeof mockCourts]
 
   if (!court) {
