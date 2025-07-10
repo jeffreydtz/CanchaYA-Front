@@ -28,7 +28,7 @@ export default defineConfig({
         ['html'],
         ['json', { outputFile: 'e2e-results.json' }],
         ['junit', { outputFile: 'e2e-results.xml' }],
-        ...(process.env.CI ? [['github']] : [['list']])
+        ...(process.env.CI ? [['github', {}]] : [['list']])
     ],
 
     /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
