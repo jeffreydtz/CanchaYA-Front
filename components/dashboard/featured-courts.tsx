@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Star, MapPin, Clock } from 'lucide-react'
 import Image from 'next/image'
+import { useEffect, useState } from 'react'
 
 interface Court {
   id: string
@@ -56,7 +57,18 @@ const mockCourts: Court[] = [
   },
 ]
 
+// Función para formatear números de manera consistente
+const formatPrice = (price: number): string => {
+  return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+}
+
 export default function FeaturedCourts() {
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
   return (
     <section className="py-12">
       <div className="container mx-auto px-4">
@@ -71,7 +83,7 @@ export default function FeaturedCourts() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mockCourts.map((court) => (
+          {(mockCourts || []).map((court) => (
             <Card key={court.id} className="overflow-hidden hover:shadow-lg transition-shadow">
               <div className="relative h-48">
                 <Image
@@ -112,7 +124,7 @@ export default function FeaturedCourts() {
                 
                 <div className="flex items-center justify-between">
                   <div className="text-lg font-bold text-green-600">
-                    ${court.price.toLocaleString()}
+                    ${isClient ? (court.price || 0).toLocaleString() : formatPrice(court.price || 0)}
                   </div>
                   <Link href={`/cancha/${court.id}`}>
                     <Button size="sm" disabled={!court.available}>

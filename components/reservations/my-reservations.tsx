@@ -199,7 +199,7 @@ export default function MyReservations() {
                       </div>
                     </TableCell>
                     <TableCell>{getStatusBadge(reservation.status)}</TableCell>
-                    <TableCell>${reservation.price.toLocaleString()}</TableCell>
+                    <TableCell>${(reservation.price || 0).toLocaleString()}</TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
                         {reservation.status === 'pending' && (

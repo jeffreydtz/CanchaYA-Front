@@ -53,10 +53,11 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   const unreadCount = notifications.filter(n => !n.read).length
 
   const addNotification = useCallback((notification: Omit<Notification, 'id' | 'createdAt' | 'read'>) => {
+    const now = new Date()
     const newNotification: Notification = {
       ...notification,
       id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
+      createdAt: isNaN(now.getTime()) ? new Date(0).toISOString() : now.toISOString(),
       read: false,
     }
     

@@ -101,10 +101,20 @@ export function NotificationCenter() {
                       </p>
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(notification.createdAt), {
-                            addSuffix: true,
-                            locale: es
-                          })}
+                          {(() => {
+                            try {
+                              const date = new Date(notification.createdAt)
+                              if (isNaN(date.getTime())) {
+                                return 'Fecha inválida'
+                              }
+                              return formatDistanceToNow(date, {
+                                addSuffix: true,
+                                locale: es
+                              })
+                            } catch (error) {
+                              return 'Fecha inválida'
+                            }
+                          })()}
                         </span>
                         <div className="flex space-x-1">
                           {!notification.read && (
