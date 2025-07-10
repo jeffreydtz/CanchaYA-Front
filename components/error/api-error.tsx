@@ -54,18 +54,14 @@ export function ApiError({
 
   // Auto-retry countdown for network errors
   useEffect(() => {
-    if (!isOnline || retryCount >= maxRetries || !onRetry) return
-
-    const timer = setTimeout(() => {
-      if (countdown > 0) {
-        setCountdown(countdown - 1)
-      } else {
+    if (retryCount < maxRetries) {
+      const timer = setTimeout(() => {
         handleRetry()
-      }
-    }, 1000)
+      }, retryDelay * Math.pow(2, retryCount))
 
-    return () => clearTimeout(timer)
-  }, [countdown, isOnline, retryCount, maxRetries, onRetry])
+      return () => clearTimeout(timer)
+    }
+  }, [retryCount, maxRetries, retryDelay, handleRetry])
 
   const getErrorType = (): {
     type: string
@@ -302,9 +298,13 @@ export function useApiError() {
   const [retryCount, setRetryCount] = useState(0)
 
   const handleError = (error: Error | string) => {
-    const errorObj = typeof error === 'string' ? new Error(error) : error
-    setError(errorObj)
-    console.error('API Error:', errorObj)
+    const errorMessage = typeof error === 'string' ? error : error.message
+    setError(errorMessage)
+  }
+
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1)
+    setError(null)
   }
 
   const retry = async (operation: () => Promise<any>) => {

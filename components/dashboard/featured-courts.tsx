@@ -5,124 +5,118 @@
 
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { 
-  MapPin, 
-  DollarSign, 
-  Star, 
-  Users,
-  Calendar,
-  Clock,
-  AlertCircle
-} from 'lucide-react'
-import apiClient from '@/lib/api-client'
-import { Court } from '@/lib/api-client'
-import { formatPrice } from '@/lib/utils'
+import { Star, MapPin, Clock } from 'lucide-react'
+import Image from 'next/image'
+
+interface Court {
+  id: string
+  name: string
+  sport: string
+  location: string
+  price: number
+  rating: number
+  image: string
+  available: boolean
+}
+
+const mockCourts: Court[] = [
+  {
+    id: '1',
+    name: 'Cancha de Fútbol 11 - Club Deportivo Central',
+    sport: 'Fútbol',
+    location: 'Zona Norte',
+    price: 15000,
+    rating: 4.5,
+    image: '/placeholder.jpg',
+    available: true,
+  },
+  {
+    id: '2',
+    name: 'Cancha de Tenis - Club Atlético',
+    sport: 'Tenis',
+    location: 'Zona Sur',
+    price: 8000,
+    rating: 4.8,
+    image: '/placeholder.jpg',
+    available: true,
+  },
+  {
+    id: '3',
+    name: 'Cancha de Paddle - Centro Deportivo',
+    sport: 'Paddle',
+    location: 'Zona Este',
+    price: 6000,
+    rating: 4.2,
+    image: '/placeholder.jpg',
+    available: false,
+  },
+]
 
 export default function FeaturedCourts() {
-  const [courts, setCourts] = useState<Court[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-
-  const loadFeaturedCourts = useCallback(async () => {
-    setIsLoading(true)
-    try {
-      const response = await apiClient.getCourts({ featured: true })
-      if (response.data) {
-        setCourts(response.data)
-      }
-    } catch (err) {
-      console.error('Error loading featured courts:', err)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    loadFeaturedCourts()
-  }, [loadFeaturedCourts])
-
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[...Array(6)].map((_, i) => (
-          <Card key={i} className="animate-pulse">
-            <div className="h-48 bg-gray-200 rounded-t-lg"></div>
-            <CardContent className="p-4">
-              <div className="h-4 bg-gray-200 rounded mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded mb-4"></div>
-              <div className="h-6 bg-gray-200 rounded"></div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    )
-  }
-
   return (
     <section className="py-12">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">Canchas Destacadas</h2>
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            Canchas Destacadas
+          </h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Descubre las mejores canchas deportivas con instalaciones de primer nivel
+            Descubre las mejores canchas disponibles para tu deporte favorito.
+            Reserva con facilidad y disfruta de instalaciones de primera calidad.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {courts.map((court) => (
+          {mockCourts.map((court) => (
             <Card key={court.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="relative">
-                <img
-                  src={court.imagen}
-                  alt={court.nombre}
-                  className="w-full h-48 object-cover"
+              <div className="relative h-48">
+                <Image
+                  src={court.image}
+                  alt={court.name}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
-                {court.featured && (
-                  <Badge className="absolute top-2 right-2 bg-yellow-500">
-                    <Star className="h-3 w-3 mr-1" />
-                    Destacada
+                <div className="absolute top-2 right-2">
+                  <Badge variant={court.available ? "default" : "secondary"}>
+                    {court.available ? "Disponible" : "Ocupada"}
                   </Badge>
-                )}
+                </div>
               </div>
-              
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="text-xl font-semibold mb-1">{court.nombre}</h3>
-                    <p className="text-gray-600 text-sm">{court.club}</p>
-                  </div>
-                  <Badge variant="secondary">{court.deporte}</Badge>
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="font-semibold text-lg text-gray-900 line-clamp-2">
+                    {court.name}
+                  </h3>
                 </div>
-
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center text-sm text-gray-600">
-                    <MapPin className="h-4 w-4 mr-2" />
-                    {court.direccion}
+                
+                <div className="flex items-center text-sm text-gray-600 mb-2">
+                  <MapPin className="h-4 w-4 mr-1" />
+                  {court.location}
+                </div>
+                
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center">
+                    <Star className="h-4 w-4 text-yellow-500 mr-1" />
+                    <span className="text-sm font-medium">{court.rating}</span>
                   </div>
                   <div className="flex items-center text-sm text-gray-600">
-                    <Clock className="h-4 w-4 mr-2" />
-                    {court.horarios}
-                  </div>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <DollarSign className="h-4 w-4 mr-2" />
-                    {formatPrice(court.precio)} por hora
+                    <Clock className="h-4 w-4 mr-1" />
+                    <span>1 hora</span>
                   </div>
                 </div>
-
-                <div className="flex gap-2">
-                  <Link href={`/cancha/${court.id}`} className="flex-1">
-                    <Button className="w-full">
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Reservar
-                    </Button>
-                  </Link>
+                
+                <div className="flex items-center justify-between">
+                  <div className="text-lg font-bold text-green-600">
+                    ${court.price.toLocaleString()}
+                  </div>
                   <Link href={`/cancha/${court.id}`}>
-                    <Button variant="outline" size="icon">
-                      <AlertCircle className="h-4 w-4" />
+                    <Button size="sm" disabled={!court.available}>
+                      {court.available ? "Reservar" : "No disponible"}
                     </Button>
                   </Link>
                 </div>
@@ -131,12 +125,13 @@ export default function FeaturedCourts() {
           ))}
         </div>
 
-        {courts.length === 0 && !isLoading && (
-          <div className="text-center py-12">
-            <AlertCircle className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-600">No se encontraron canchas destacadas</p>
-          </div>
-        )}
+        <div className="text-center mt-8">
+          <Link href="/">
+            <Button variant="outline" size="lg">
+              Ver Todas las Canchas
+            </Button>
+          </Link>
+        </div>
       </div>
     </section>
   )

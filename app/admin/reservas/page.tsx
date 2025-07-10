@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Search, Calendar, Clock, User } from 'lucide-react'
+import { Search } from 'lucide-react'
 
 interface Reservation {
   id: string
@@ -48,7 +48,7 @@ const mockReservations: Reservation[] = [
 ]
 
 export default function AdminReservationsPage() {
-  const [reservations, setReservations] = useState<Reservation[]>(mockReservations)
+  const [reservations] = useState<Reservation[]>(mockReservations)
   const [searchTerm, setSearchTerm] = useState('')
 
   const filteredReservations = reservations.filter(reservation =>

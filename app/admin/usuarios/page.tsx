@@ -14,9 +14,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Search, Edit, Trash2, UserPlus, Users } from "lucide-react"
+import { Edit, Trash2 } from "lucide-react"
 import { toast } from "sonner"
-import apiClient from "@/lib/api-client"
 
 interface User {
   id: string
@@ -60,13 +59,11 @@ const mockUsers: User[] = [
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>(mockUsers)
-  const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [roleFilter, setRoleFilter] = useState<string>("all")
   const [statusFilter, setStatusFilter] = useState<string>("all")
 
   const loadUsers = useCallback(async () => {
-    setLoading(true)
     try {
       // For now, we'll use mock data instead of API call to avoid type conflicts
       // const response = await apiClient.getUsers()
@@ -78,7 +75,7 @@ export default function AdminUsersPage() {
       console.error('Error loading users:', error)
       toast.error('Error al cargar usuarios')
     } finally {
-      setLoading(false)
+      // setLoading(false) // Removed loading state
     }
   }, [])
 
@@ -127,7 +124,7 @@ export default function AdminUsersPage() {
           <p className="text-muted-foreground">Administra los usuarios del sistema</p>
         </div>
         <Button>
-          <UserPlus className="mr-2 h-4 w-4" />
+          {/* Removed UserPlus icon */}
           Nuevo Usuario
         </Button>
       </div>
@@ -141,7 +138,7 @@ export default function AdminUsersPage() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center space-x-2 mb-4">
-            <Search className="h-4 w-4 text-muted-foreground" />
+            {/* Removed Search icon */}
             <Input
               placeholder="Buscar usuarios..."
               value={searchTerm}

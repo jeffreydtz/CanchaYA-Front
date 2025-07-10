@@ -6,9 +6,9 @@
  */
 
 import { useState } from 'react'
-import { Card, CardContent, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useNotifications } from './notification-provider'
 import { formatDistanceToNow } from 'date-fns'

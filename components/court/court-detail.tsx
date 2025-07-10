@@ -1,36 +1,29 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { MapPin, Clock, Users, Star, Phone, Mail } from 'lucide-react'
 import { useAuth } from '@/components/auth/auth-context'
-import { useToast } from '@/hooks/use-toast'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Calendar } from '@/components/ui/calendar'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { MapPin, Clock, DollarSign, Star } from 'lucide-react'
 import { toast } from 'sonner'
 import apiClient from '@/lib/api-client'
+import Image from 'next/image'
 
 interface Court {
   id: string
   name: string
   sport: string
-  description: string
-  price: number
   location: string
-  image: string
+  price: number
   rating: number
-  reviews: number
+  description: string
+  image: string
   amenities: string[]
-  schedule: {
-    day: string
-    open: string
-    close: string
-  }[]
-  contact: {
-    phone: string
-    email: string
+  availability: {
+    [key: string]: string[]
   }
 }
 
@@ -38,24 +31,21 @@ interface TimeSlot {
   id: string
   time: string
   available: boolean
-  price: number
+  price?: number
 }
 
 export default function CourtDetail() {
-  const params = useParams()
-  const { user, isAuthenticated } = useAuth()
+  const { isAuthenticated } = useAuth()
   const [court, setCourt] = useState<Court | null>(null)
-  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([])
-  const [selectedDate, setSelectedDate] = useState<string>('')
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [selectedTime, setSelectedTime] = useState<string>('')
-  const [isLoading, setIsLoading] = useState(true)
-
-  const courtId = params.id as string
+  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const loadCourtDetails = async () => {
       try {
-        const response = await apiClient.getCourt(courtId)
+        const response = await apiClient.getCourt('1') // Mock court ID
         if (response.data) {
           setCourt(response.data as unknown as Court)
         }
@@ -63,21 +53,20 @@ export default function CourtDetail() {
         console.error('Error loading court details:', error)
         toast('Error: No se pudo cargar la información de la cancha')
       } finally {
-        setIsLoading(false)
+        setLoading(false)
       }
     }
 
-    if (courtId) {
-      loadCourtDetails()
-    }
-  }, [courtId])
+    loadCourtDetails()
+  }, [])
 
   useEffect(() => {
     const loadTimeSlots = async () => {
       if (!selectedDate) return
 
       try {
-        const response = await apiClient.getTimeSlots(courtId, selectedDate)
+        const dateString = selectedDate.toISOString().split('T')[0]
+        const response = await apiClient.getTimeSlots('1', dateString)
         if (response.data) {
           setTimeSlots(response.data as unknown as TimeSlot[])
         }
@@ -88,7 +77,7 @@ export default function CourtDetail() {
     }
 
     loadTimeSlots()
-  }, [courtId, selectedDate])
+  }, [selectedDate])
 
   const handleReservation = async () => {
     if (!isAuthenticated) {
@@ -102,18 +91,20 @@ export default function CourtDetail() {
     }
 
     try {
+      const dateString = selectedDate.toISOString().split('T')[0]
       const response = await apiClient.createReservation({
-        courtId,
-        fecha: selectedDate,
+        courtId: '1',
+        fecha: dateString,
         hora: selectedTime,
         duracion: 60, // 1 hora por defecto
       })
 
-      if (response.data) {
+      if (response.success) {
         toast('Reserva exitosa: Tu reserva ha sido creada correctamente')
-        // Reset selections
-        setSelectedDate('')
+        setSelectedDate(undefined)
         setSelectedTime('')
+      } else {
+        toast('Error: No se pudo crear la reserva')
       }
     } catch (error) {
       console.error('Error creating reservation:', error)
@@ -121,14 +112,17 @@ export default function CourtDetail() {
     }
   }
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="animate-pulse">
-          <div className="h-64 bg-gray-200 rounded-lg mb-6"></div>
-          <div className="h-8 bg-gray-200 rounded mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded"></div>
+          <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="h-64 bg-gray-200 rounded mb-6"></div>
+          <div className="space-y-4">
+            <div className="h-4 bg-gray-200 rounded"></div>
+            <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+          </div>
         </div>
       </div>
     )
@@ -138,8 +132,8 @@ export default function CourtDetail() {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Cancha no encontrada</h1>
-          <p className="text-muted-foreground">La cancha que buscas no existe o ha sido removida.</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Cancha no encontrada</h1>
+          <p className="text-gray-600">La cancha que buscas no existe o no está disponible.</p>
         </div>
       </div>
     )
@@ -147,142 +141,119 @@ export default function CourtDetail() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Court Image */}
-          <div className="relative">
-            <img
-              src={court.image}
-              alt={court.name}
-              className="w-full h-64 object-cover rounded-lg"
-            />
-            <Badge className="absolute top-4 left-4">
-              {court.sport}
-            </Badge>
-          </div>
-
-          {/* Court Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl">{court.name}</CardTitle>
-              <CardDescription>{court.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span>{court.location}</span>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Star className="h-4 w-4 text-yellow-500" />
-                <span>{court.rating} ({court.reviews} reseñas)</span>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <span>${court.price.toLocaleString()} por hora</span>
-              </div>
-
-              <Separator />
-
-              <div>
-                <h3 className="font-semibold mb-2">Amenities</h3>
-                <div className="flex flex-wrap gap-2">
-                  {court.amenities.map((amenity, index) => (
-                    <Badge key={index} variant="secondary">
-                      {amenity}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Schedule */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Horarios</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {court.schedule.map((day, index) => (
-                  <div key={index} className="flex justify-between items-center">
-                    <span className="font-medium">{day.day}</span>
-                    <span className="text-muted-foreground">
-                      {day.open} - {day.close}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Court Image */}
+        <div className="relative h-64 lg:h-96 rounded-lg overflow-hidden">
+          <Image
+            src={court.image}
+            alt={court.name}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 50vw"
+          />
         </div>
 
-        {/* Reservation Sidebar */}
+        {/* Court Info */}
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Hacer Reserva</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{court.name}</h1>
+            <div className="flex items-center space-x-4 text-sm text-gray-600 mb-4">
+              <div className="flex items-center">
+                <MapPin className="h-4 w-4 mr-1" />
+                {court.location}
+              </div>
+              <div className="flex items-center">
+                <Star className="h-4 w-4 mr-1 text-yellow-500" />
+                {court.rating}/5
+              </div>
+            </div>
+            <p className="text-gray-700">{court.description}</p>
+          </div>
+
+          {/* Amenities */}
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Amenities</h3>
+            <div className="flex flex-wrap gap-2">
+              {court.amenities.map((amenity, index) => (
+                <Badge key={index} variant="secondary">
+                  {amenity}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          {/* Price */}
+          <div className="flex items-center space-x-2">
+            <DollarSign className="h-5 w-5 text-green-600" />
+            <span className="text-2xl font-bold text-green-600">${court.price}</span>
+            <span className="text-gray-600">por hora</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Reservation Section */}
+      <div className="mt-12">
+        <Card>
+          <CardHeader>
+            <CardTitle>Reservar Cancha</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Date Selection */}
               <div>
-                <label className="block text-sm font-medium mb-2">Fecha</label>
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="w-full p-2 border rounded-md"
-                  min={new Date().toISOString().split('T')[0]}
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Seleccionar Fecha
+                </label>
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  className="rounded-md border"
+                  disabled={(date) => date < new Date()}
                 />
               </div>
 
-              {selectedDate && (
-                <div>
-                  <label className="block text-sm font-medium mb-2">Hora</label>
-                  <div className="grid grid-cols-2 gap-2">
+              {/* Time Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Seleccionar Hora
+                </label>
+                <Select value={selectedTime} onValueChange={setSelectedTime}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona una hora" />
+                  </SelectTrigger>
+                  <SelectContent>
                     {timeSlots.map((slot) => (
-                      <Button
+                      <SelectItem
                         key={slot.id}
-                        variant={selectedTime === slot.time ? 'default' : 'outline'}
-                        onClick={() => setSelectedTime(slot.time)}
+                        value={slot.time}
                         disabled={!slot.available}
-                        className="text-sm"
                       >
-                        {slot.time}
-                      </Button>
+                        <div className="flex items-center justify-between w-full">
+                          <span>{slot.time}</span>
+                          {!slot.available && (
+                            <Badge variant="destructive" className="ml-2">
+                              Ocupado
+                            </Badge>
+                          )}
+                        </div>
+                      </SelectItem>
                     ))}
-                  </div>
-                </div>
-              )}
-
-              <Button
-                onClick={handleReservation}
-                disabled={!selectedDate || !selectedTime}
-                className="w-full"
-              >
-                Reservar
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Contact Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Contacto</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Phone className="h-4 w-4 text-muted-foreground" />
-                <span>{court.contact.phone}</span>
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="flex items-center space-x-2">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <span>{court.contact.email}</span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+
+            <Button
+              onClick={handleReservation}
+              className="w-full mt-6"
+              disabled={!selectedDate || !selectedTime}
+            >
+              <Clock className="h-4 w-4 mr-2" />
+              Reservar Cancha
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

@@ -45,10 +45,9 @@ const mockCourts: Court[] = [
 ]
 
 export default function AdminCourtsPage() {
-  const [courts, setCourts] = useState<Court[]>(mockCourts)
   const [searchTerm, setSearchTerm] = useState('')
 
-  const filteredCourts = courts.filter(court =>
+  const filteredCourts = mockCourts.filter(court =>
     court.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     court.sport.toLowerCase().includes(searchTerm.toLowerCase()) ||
     court.location.toLowerCase().includes(searchTerm.toLowerCase())

@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Search, Filter, MapPin } from 'lucide-react'
+import { Search, Filter } from 'lucide-react'
 
 export default function CourtFilters() {
   const [filters, setFilters] = useState({

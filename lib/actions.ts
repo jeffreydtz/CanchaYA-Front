@@ -90,14 +90,13 @@ export async function registerAction(
 ): Promise<ActionState> {
   const userData: RegisterData = {
     nombre: formData.get('nombre') as string,
-    apellido: formData.get('apellido') as string,
     email: formData.get('email') as string,
     password: formData.get('password') as string,
     telefono: (formData.get('telefono') as string) || '',
   }
 
   // Validation
-  if (!userData.nombre || !userData.apellido || !userData.email || !userData.password) {
+  if (!userData.nombre || !userData.email || !userData.password) {
     return {
       error: 'Todos los campos obligatorios deben completarse',
       success: false,
@@ -210,7 +209,7 @@ export async function createReservationAction(
 }
 
 export async function confirmReservationAction(
-  reservationId: string
+  _reservationId: string
 ): Promise<ActionState> {
   try {
     // const response = await apiClient.confirmReservation(reservationId)
@@ -239,7 +238,7 @@ export async function confirmReservationAction(
 }
 
 export async function cancelReservationAction(
-  reservationId: string
+  _reservationId: string
 ): Promise<ActionState> {
   try {
     // const response = await apiClient.cancelReservation(reservationId)
@@ -274,15 +273,9 @@ export const confirmAttendanceAction = confirmReservationAction
 
 // Court Search Action
 export async function searchCourtsAction(
-  prevState: ActionState,
-  formData: FormData
+  _prevState: ActionState,
+  _formData: FormData
 ): Promise<ActionState> {
-  const filters = {
-    deporte: formData.get('deporte') as string,
-    club: formData.get('club') as string,
-    fecha: formData.get('fecha') as string,
-  }
-
   try {
     // Por ahora, usar getCourts sin filtros ya que no están implementados
     const response = await apiClient.getCourts()

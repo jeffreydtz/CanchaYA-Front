@@ -3,13 +3,26 @@
  * Tests navigation, authentication states, mobile behavior, and user interactions
  */
 
-import { render, screen, fireEvent } from '@testing-library/react'
-import { useAuth } from '@/components/auth/auth-context'
+import { render, screen } from '@testing-library/react'
+import { BrowserRouter } from 'react-router-dom'
 import Navbar from '../navbar'
+
+// Mock Next.js router
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    pathname: '/',
+  }),
+}))
 
 // Mock auth context
 jest.mock('@/components/auth/auth-context', () => ({
-  useAuth: jest.fn(),
+  useAuth: () => ({
+    user: null,
+    isAuthenticated: false,
+    isAdmin: false,
+    logout: jest.fn(),
+  }),
 }))
 
 // Mock notification bell component
@@ -18,14 +31,6 @@ jest.mock('@/components/notifications/notification-bell', () => {
     return <div data-testid="notification-bell">Notification Bell</div>
   }
 })
-
-const mockAuth = {
-  user: null,
-  isLoading: false,
-  login: jest.fn(),
-  logout: jest.fn(),
-  register: jest.fn(),
-}
 
 const mockUser = {
   id: '1',
@@ -43,6 +48,26 @@ const mockAdminUser = {
 describe('Navbar', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+  })
+
+  it('renders navbar with logo', () => {
+    render(
+      <BrowserRouter>
+        <Navbar />
+      </BrowserRouter>
+    )
+
+    expect(screen.getByText(/CanchaYA/i)).toBeInTheDocument()
+  })
+
+  it('shows login button when user is not authenticated', () => {
+    render(
+      <BrowserRouter>
+        <Navbar />
+      </BrowserRouter>
+    )
+
+    expect(screen.getByText(/Iniciar Sesión/i)).toBeInTheDocument()
   })
 
   describe('Rendering', () => {
