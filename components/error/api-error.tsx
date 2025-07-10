@@ -38,6 +38,19 @@ export function ApiError({
 
   const errorMessage = typeof error === 'string' ? error : error.message
 
+  const handleRetry = async () => {
+    if (!onRetry || isRetrying) return
+
+    setIsRetrying(true)
+    try {
+      await onRetry()
+    } catch (error) {
+      console.error('Retry failed:', error)
+    } finally {
+      setIsRetrying(false)
+    }
+  }
+
   // Monitor online/offline status
   useEffect(() => {
     const handleOnline = () => setIsOnline(true)
@@ -57,11 +70,11 @@ export function ApiError({
     if (retryCount < maxRetries) {
       const timer = setTimeout(() => {
         handleRetry()
-      }, retryDelay * Math.pow(2, retryCount))
+      }, 1000 * Math.pow(2, retryCount))
 
       return () => clearTimeout(timer)
     }
-  }, [retryCount, maxRetries, retryDelay, handleRetry])
+  }, [retryCount, maxRetries, handleRetry])
 
   const getErrorType = (): {
     type: string
@@ -156,19 +169,6 @@ export function ApiError({
   }
 
   const errorType = getErrorType()
-
-  const handleRetry = async () => {
-    if (!onRetry || isRetrying) return
-
-    setIsRetrying(true)
-    try {
-      await onRetry()
-    } catch (error) {
-      console.error('Retry failed:', error)
-    } finally {
-      setIsRetrying(false)
-    }
-  }
 
   const canRetry = retryCount < maxRetries && isOnline && showRetryButton
   const shouldAutoRetry = !isOnline && retryCount === 0
@@ -298,14 +298,18 @@ export function useApiError() {
   const [retryCount, setRetryCount] = useState(0)
 
   const maxRetries = 3
-  const retryDelay = 1000
+
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1)
+    setError(null)
+  }
 
   useEffect(() => {
     if (retryCount < maxRetries) {
       const timer = setTimeout(() => {
         setRetryCount(prev => prev + 1)
         setError(null)
-      }, retryDelay * Math.pow(2, retryCount))
+      }, 1000 * Math.pow(2, retryCount))
 
       return () => clearTimeout(timer)
     }
@@ -314,11 +318,6 @@ export function useApiError() {
   const handleError = (error: Error | string) => {
     const errorMessage = typeof error === 'string' ? error : error.message
     setError(errorMessage)
-  }
-
-  const handleRetry = () => {
-    setRetryCount(prev => prev + 1)
-    setError(null)
   }
 
   const retry = async (operation: () => Promise<unknown>) => {

@@ -43,7 +43,7 @@ export function LoginForm() {
     try {
       const response = await apiClient.login({ email: data.email, password: data.password })
       if (response.data?.token) {
-        login(response.data.token)
+        login(data.email, data.password)
         router.push('/')
       }
     } catch (error) {

@@ -54,7 +54,7 @@ export function RegisterForm() {
       })
       
       if (response.data?.token) {
-        login(response.data.token)
+        login(data.email, data.password)
         toast.success('¡Registro exitoso!')
         router.push('/')
       }
