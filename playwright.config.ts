@@ -55,6 +55,9 @@ export default defineConfig({
 
         /* Default timeout for navigation */
         navigationTimeout: 30000,
+
+        /* Test ID attribute for selecting elements */
+        testId: 'data-testid'
     },
 
     /* Configure global setup and teardown */
@@ -186,7 +189,4 @@ export default defineConfig({
 
     /* Test output directory */
     outputDir: 'test-results/',
-
-    /* Test artifacts */
-    testIdAttribute: 'data-testid',
 }) 
