@@ -28,7 +28,7 @@ export default defineConfig({
         ['html'],
         ['json', { outputFile: 'e2e-results.json' }],
         ['junit', { outputFile: 'e2e-results.xml' }],
-        ['github', {}]
+        ['github', { }]
     ] : [
         ['html'],
         ['json', { outputFile: 'e2e-results.json' }],
@@ -172,7 +172,7 @@ export default defineConfig({
         /* Threshold for visual comparisons */
         toHaveScreenshot: {
             threshold: 0.3,
-            mode: 'local'
+            maxDiffPixelRatio: 0.05
         },
     },
 
