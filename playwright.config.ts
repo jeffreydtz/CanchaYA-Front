@@ -54,10 +54,7 @@ export default defineConfig({
         actionTimeout: 10000,
 
         /* Default timeout for navigation */
-        navigationTimeout: 30000,
-
-        /* Test ID attribute for selecting elements */
-        testId: 'data-testid'
+        navigationTimeout: 30000
     },
 
     /* Configure global setup and teardown */
