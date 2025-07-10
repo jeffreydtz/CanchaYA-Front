@@ -5,188 +5,33 @@
  * Manages real-time notifications using SSE and Context API
  */
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
-import { useAuth } from '@/components/auth/auth-context'
-import { 
-  NotificationData, 
-  NotificationContextType, 
-  NotificationManager,
-  getNotifications,
-  markNotificationAsRead,
-  clearNotification,
-  requestNotificationPermission,
-  showBrowserNotification
-} from '@/lib/notifications'
-import { toast } from '@/hooks/use-toast'
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { toast } from 'sonner'
+import apiClient from '@/lib/api-client'
 
-const NotificationContext = createContext<NotificationContextType | null>(null)
-
-interface NotificationProviderProps {
-  children: React.ReactNode
+interface Notification {
+  id: string
+  title: string
+  message: string
+  type: 'info' | 'success' | 'warning' | 'error'
+  priority: 'low' | 'medium' | 'high'
+  read: boolean
+  createdAt: string
+  data?: Record<string, unknown>
 }
 
-export function NotificationProvider({ children }: NotificationProviderProps) {
-  const { user, token } = useAuth()
-  const [notifications, setNotifications] = useState<NotificationData[]>([])
-  const [isConnected, setIsConnected] = useState(false)
-  const [notificationManager, setNotificationManager] = useState<NotificationManager | null>(null)
-
-  // Initialize notification manager when user logs in
-  useEffect(() => {
-    if (user && token) {
-      const manager = new NotificationManager(user.id, token)
-      setNotificationManager(manager)
-
-      // Load existing notifications
-      loadNotifications()
-
-      // Request browser notification permission
-      requestNotificationPermission().then(permission => {
-        if (permission === 'granted') {
-          console.log('✅ Browser notifications enabled')
-        } else {
-          console.log('ℹ️ Browser notifications disabled')
-        }
-      })
-
-      return () => {
-        manager.disconnect()
-      }
-    } else {
-      // User logged out, clean up
-      if (notificationManager) {
-        notificationManager.disconnect()
-        setNotificationManager(null)
-      }
-      setNotifications([])
-      setIsConnected(false)
-    }
-  }, [user, token])
-
-  // Connect to SSE stream
-  useEffect(() => {
-    if (notificationManager && user && token) {
-      const handleNewNotification = (notification: NotificationData) => {
-        setNotifications(prev => {
-          // Avoid duplicates
-          const exists = prev.some(n => n.id === notification.id)
-          if (exists) return prev
-          
-          return [notification, ...prev].slice(0, 50) // Keep only last 50 notifications
-        })
-
-        // Show browser notification
-        showBrowserNotification(notification)
-
-        // Show toast notification
-        showToastNotification(notification)
-      }
-
-      notificationManager.addListener(handleNewNotification)
-
-      // Connect to SSE
-      notificationManager.connect().then(connected => {
-        setIsConnected(connected)
-        if (connected) {
-          console.log('🔔 Real-time notifications connected')
-        }
-      })
-
-      return () => {
-        notificationManager.removeListener(handleNewNotification)
-      }
-    }
-  }, [notificationManager, user, token])
-
-  const loadNotifications = async () => {
-    if (!token) return
-
-    try {
-      const fetchedNotifications = await getNotifications(token)
-      setNotifications(fetchedNotifications)
-    } catch (error) {
-      console.error('Failed to load notifications:', error)
-    }
-  }
-
-  const markAsRead = useCallback(async (notificationId: string) => {
-    if (!token) return
-
-    const success = await markNotificationAsRead(notificationId, token)
-    if (success) {
-      setNotifications(prev => 
-        prev.map(notification => 
-          notification.id === notificationId 
-            ? { ...notification, read: true }
-            : notification
-        )
-      )
-    }
-  }, [token])
-
-  const markAllAsRead = useCallback(async () => {
-    if (!token) return
-
-    // Mark all unread notifications as read
-    const unreadNotifications = notifications.filter(n => !n.read)
-    const promises = unreadNotifications.map(n => markNotificationAsRead(n.id, token))
-    
-    await Promise.all(promises)
-    
-    setNotifications(prev => 
-      prev.map(notification => ({ ...notification, read: true }))
-    )
-  }, [notifications, token])
-
-  const clearNotificationById = useCallback(async (notificationId: string) => {
-    if (!token) return
-
-    const success = await clearNotification(notificationId, token)
-    if (success) {
-      setNotifications(prev => 
-        prev.filter(notification => notification.id !== notificationId)
-      )
-    }
-  }, [token])
-
-  const clearAllNotifications = useCallback(async () => {
-    if (!token) return
-
-    const promises = notifications.map(n => clearNotification(n.id, token))
-    await Promise.all(promises)
-    
-    setNotifications([])
-  }, [notifications, token])
-
-  const showToastNotification = (notification: NotificationData) => {
-    const variant = notification.priority === 'high' ? 'destructive' : 'default'
-    
-    toast({
-      title: notification.title,
-      description: notification.message,
-      variant,
-      duration: notification.priority === 'low' ? 3000 : 5000,
-    })
-  }
-
-  const unreadCount = notifications.filter(n => !n.read).length
-
-  const contextValue: NotificationContextType = {
-    notifications,
-    unreadCount,
-    isConnected,
-    markAsRead,
-    markAllAsRead,
-    clearNotification: clearNotificationById,
-    clearAllNotifications,
-  }
-
-  return (
-    <NotificationContext.Provider value={contextValue}>
-      {children}
-    </NotificationContext.Provider>
-  )
+interface NotificationContextType {
+  notifications: Notification[]
+  unreadCount: number
+  addNotification: (notification: Omit<Notification, 'id' | 'createdAt' | 'read'>) => void
+  markAsRead: (id: string) => void
+  markAllAsRead: () => void
+  clearNotification: (id: string) => void
+  clearAllNotifications: () => void
+  loadNotifications: () => Promise<void>
 }
+
+const NotificationContext = createContext<NotificationContextType | undefined>(undefined)
 
 export function useNotifications() {
   const context = useContext(NotificationContext)
@@ -196,35 +41,150 @@ export function useNotifications() {
   return context
 }
 
-// Hook for showing custom notifications
-export function useNotificationActions() {
-  const { user, token } = useAuth()
+interface NotificationProviderProps {
+  children: React.ReactNode
+}
 
-  const showCustomNotification = useCallback((
-    title: string, 
-    message: string, 
-    priority: 'low' | 'medium' | 'high' = 'medium'
-  ) => {
-    const notification: NotificationData = {
+export function NotificationProvider({ children }: NotificationProviderProps) {
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [notificationManager, setNotificationManager] = useState<unknown>(null)
+
+  const unreadCount = notifications.filter(n => !n.read).length
+
+  const addNotification = useCallback((notification: Omit<Notification, 'id' | 'createdAt' | 'read'>) => {
+    const newNotification: Notification = {
+      ...notification,
       id: Date.now().toString(),
-      type: 'REMINDER',
-      title,
-      message,
-      userId: user?.id,
-      timestamp: new Date().toISOString(),
+      createdAt: new Date().toISOString(),
       read: false,
-      priority,
+    }
+    
+    setNotifications(prev => [newNotification, ...prev])
+    
+    // Show toast for high priority notifications
+    if (notification.priority === 'high') {
+      toast(notification.title, {
+        description: notification.message,
+        action: notification.data?.action ? {
+          label: notification.data.action.label as string,
+          onClick: notification.data.action.onClick as () => void,
+        } : undefined,
+      })
+    }
+  }, [])
+
+  const markAsRead = useCallback((id: string) => {
+    setNotifications(prev => 
+      prev.map(n => n.id === id ? { ...n, read: true } : n)
+    )
+  }, [])
+
+  const markAllAsRead = useCallback(() => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+  }, [])
+
+  const clearNotification = useCallback((id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id))
+  }, [])
+
+  const clearAllNotifications = useCallback(() => {
+    setNotifications([])
+  }, [])
+
+  const loadNotifications = useCallback(async () => {
+    try {
+      const response = await apiClient.getNotifications()
+      if (response.data) {
+        setNotifications(response.data)
+      }
+    } catch (error) {
+      console.error('Error loading notifications:', error)
+    }
+  }, [])
+
+  // Initialize notifications and request permission
+  useEffect(() => {
+    const initializeNotifications = async () => {
+      try {
+        // Request notification permission
+        await apiClient.requestNotificationPermission()
+        
+        // Load existing notifications
+        await loadNotifications()
+        
+        // Initialize real-time notification manager
+        if (typeof window !== 'undefined' && window.NotificationManager) {
+          const manager = new window.NotificationManager()
+          setNotificationManager(manager)
+          
+          // Connect to real-time stream
+          const connected = await manager.connect()
+          if (connected) {
+            manager.addListener('notification', (data: unknown) => {
+              const notificationData = data as {
+                title: string
+                message: string
+                type: string
+                priority: string
+                data?: Record<string, unknown>
+              }
+              
+              addNotification({
+                title: notificationData.title,
+                message: notificationData.message,
+                type: notificationData.type as 'info' | 'success' | 'warning' | 'error',
+                priority: notificationData.priority as 'low' | 'medium' | 'high',
+                data: notificationData.data,
+              })
+            })
+          }
+        }
+      } catch (error) {
+        console.error('Error initializing notifications:', error)
+      }
     }
 
-    showBrowserNotification(notification)
-    
-    toast({
-      title: notification.title,
-      description: notification.message,
-      variant: priority === 'high' ? 'destructive' : 'default',
-      duration: priority === 'low' ? 3000 : 5000,
-    })
-  }, [user])
+    initializeNotifications()
+  }, [loadNotifications, addNotification])
 
-  return { showCustomNotification }
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (notificationManager && typeof notificationManager === 'object' && notificationManager !== null) {
+        const manager = notificationManager as { disconnect?: () => void }
+        if (manager.disconnect) {
+          manager.disconnect()
+        }
+      }
+    }
+  }, [notificationManager])
+
+  const contextValue: NotificationContextType = {
+    notifications,
+    unreadCount,
+    addNotification,
+    markAsRead,
+    markAllAsRead,
+    clearNotification,
+    clearAllNotifications,
+    loadNotifications,
+  }
+
+  return (
+    <NotificationContext.Provider value={contextValue}>
+      {children}
+    </NotificationContext.Provider>
+  )
+}
+
+// Extend Window interface for NotificationManager
+declare global {
+  interface Window {
+    NotificationManager?: new () => {
+      connect: () => Promise<boolean>
+      disconnect: () => void
+      addListener: (event: string, callback: (data: unknown) => void) => void
+      removeListener: (event: string, callback: (data: unknown) => void) => void
+    }
+  }
 } 

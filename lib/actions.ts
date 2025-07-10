@@ -15,6 +15,7 @@ export type ActionState = {
   success?: boolean
   error?: string
   message?: string
+  data?: unknown
 }
 
 // Authentication Actions
@@ -189,7 +190,7 @@ export async function createReservationAction(
     revalidatePath('/')
 
     // Backend will trigger SSE notification for new reservation
-    
+
     return {
       success: true,
       message: 'Reserva creada exitosamente. Recuerda confirmar tu asistencia.',
@@ -270,14 +271,13 @@ export const confirmAttendanceAction = confirmReservationAction
 
 // Court Search Action
 export async function searchCourtsAction(
-  prevState: any,
+  prevState: ActionState,
   formData: FormData
-) {
+): Promise<ActionState> {
   const filters = {
-    deporte: formData.get('deporte') as string || undefined,
-    club: formData.get('club') as string || undefined,
-    fecha: formData.get('fecha') as string || undefined,
-    disponible: true,
+    deporte: formData.get('deporte') as string,
+    club: formData.get('club') as string,
+    fecha: formData.get('fecha') as string,
   }
 
   try {
@@ -286,21 +286,19 @@ export async function searchCourtsAction(
     if (response.error) {
       return {
         error: response.error,
-        courts: [],
+        success: false,
       }
     }
 
-    revalidatePath('/')
-
     return {
-      courts: response.data || [],
-      message: `Se encontraron ${response.data?.length || 0} canchas disponibles`,
+      success: true,
+      data: response.data,
     }
   } catch (error) {
-    console.error('Search courts error:', error)
+    console.error('Search error:', error)
     return {
-      error: 'Error al buscar canchas.',
-      courts: [],
+      error: 'Error al buscar canchas. Intenta nuevamente.',
+      success: false,
     }
   }
 }

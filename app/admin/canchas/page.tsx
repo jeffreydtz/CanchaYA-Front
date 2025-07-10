@@ -1,320 +1,128 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { Plus, Edit, Trash2, MapPin, DollarSign, Search } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
-import apiClient, { Court } from "@/lib/api-client"
+import { useState } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Plus, Search, Edit, Trash2 } from 'lucide-react'
 
-export default function AdminCanchasPage() {
-  const [courts, setCourts] = useState<Court[]>([])
-  const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  const [editingCourt, setEditingCourt] = useState<Court | null>(null)
-  const { toast } = useToast()
+interface Court {
+  id: string
+  name: string
+  sport: string
+  status: 'available' | 'maintenance' | 'reserved'
+  price: number
+  location: string
+}
 
-  useEffect(() => {
-    loadCourts()
-  }, [])
-
-  const loadCourts = async () => {
-    try {
-      const response = await apiClient.getCourts()
-      if (response.data) {
-        setCourts(response.data)
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar las canchas",
-        variant: "destructive",
-      })
-    } finally {
-      setLoading(false)
-    }
+const mockCourts: Court[] = [
+  {
+    id: '1',
+    name: 'Cancha de Fútbol 1',
+    sport: 'Fútbol',
+    status: 'available',
+    price: 50000,
+    location: 'Zona Norte'
+  },
+  {
+    id: '2',
+    name: 'Cancha de Baloncesto 1',
+    sport: 'Baloncesto',
+    status: 'maintenance',
+    price: 30000,
+    location: 'Zona Sur'
+  },
+  {
+    id: '3',
+    name: 'Cancha de Tenis 1',
+    sport: 'Tenis',
+    status: 'reserved',
+    price: 40000,
+    location: 'Zona Este'
   }
+]
 
-  const filteredCourts = courts.filter(
-    (court) =>
-      court.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      court.club.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      court.deporte.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+export default function AdminCourtsPage() {
+  const [courts, setCourts] = useState<Court[]>(mockCourts)
+  const [searchTerm, setSearchTerm] = useState('')
+
+  const filteredCourts = courts.filter(court =>
+    court.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    court.sport.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    court.location.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-      minimumFractionDigits: 0,
-    }).format(price)
-  }
-
-  const CourtForm = ({ court, onClose }: { court?: Court | null; onClose: () => void }) => {
-    const [formData, setFormData] = useState({
-      nombre: court?.nombre || "",
-      descripcion: court?.descripcion || "",
-      precio: court?.precio || 0,
-      disponible: court?.disponible ?? true,
-    })
-
-    const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault()
-      
-      // Here you would normally call the API to create/update the court
-      // For now, we'll just show a success message
-      toast({
-        title: court ? "Cancha actualizada" : "Cancha creada",
-        description: `La cancha ${formData.nombre} ha sido ${court ? "actualizada" : "creada"} exitosamente.`,
-      })
-      
-      onClose()
-      loadCourts()
+  const getStatusBadge = (status: Court['status']) => {
+    switch (status) {
+      case 'available':
+        return <Badge variant="default" className="bg-green-100 text-green-800">Disponible</Badge>
+      case 'maintenance':
+        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Mantenimiento</Badge>
+      case 'reserved':
+        return <Badge variant="destructive" className="bg-red-100 text-red-800">Reservada</Badge>
+      default:
+        return <Badge variant="outline">Desconocido</Badge>
     }
-
-    return (
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="nombre">Nombre de la cancha</Label>
-            <Input
-              id="nombre"
-              value={formData.nombre}
-              onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-              placeholder="Ej: Cancha de Fútbol 5 #1"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="precio">Precio por hora</Label>
-            <Input
-              id="precio"
-              type="number"
-              value={formData.precio}
-              onChange={(e) => setFormData({ ...formData, precio: Number(e.target.value) })}
-              placeholder="8000"
-              required
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="descripcion">Descripción</Label>
-          <Textarea
-            id="descripcion"
-            value={formData.descripcion}
-            onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
-            placeholder="Describe las características de la cancha..."
-            rows={3}
-          />
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Switch
-            id="disponible"
-            checked={formData.disponible}
-            onCheckedChange={(checked) => setFormData({ ...formData, disponible: checked })}
-          />
-          <Label htmlFor="disponible">Cancha disponible para reservas</Label>
-        </div>
-
-        <div className="flex justify-end space-x-2">
-          <Button type="button" variant="outline" onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button type="submit">
-            {court ? "Actualizar" : "Crear"} cancha
-          </Button>
-        </div>
-      </form>
-    )
-  }
-
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Gestión de Canchas</h1>
-          <p className="text-muted-foreground">Administra las canchas del sistema</p>
-        </div>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-lg">Cargando canchas...</div>
-        </div>
-      </div>
-    )
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Gestión de Canchas</h1>
-          <p className="text-muted-foreground">Administra las canchas del sistema</p>
+          <p className="text-muted-foreground">Administra las canchas deportivas del sistema</p>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Nueva Cancha
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Crear nueva cancha</DialogTitle>
-              <DialogDescription>
-                Completa la información para crear una nueva cancha.
-              </DialogDescription>
-            </DialogHeader>
-            <CourtForm onClose={() => setIsCreateDialogOpen(false)} />
-          </DialogContent>
-        </Dialog>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" />
+          Nueva Cancha
+        </Button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Canchas</CardTitle>
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{courts.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Disponibles</CardTitle>
-            <MapPin className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {courts.filter(c => c.disponible).length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">No Disponibles</CardTitle>
-            <MapPin className="h-4 w-4 text-red-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {courts.filter(c => !c.disponible).length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Precio Promedio</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {formatPrice(courts.reduce((sum, court) => sum + court.precio, 0) / courts.length || 0)}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Search */}
-      <div className="flex items-center space-x-2">
-        <Search className="h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Buscar canchas por nombre, club o deporte..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm"
-        />
-      </div>
-
-      {/* Courts Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Lista de Canchas ({filteredCourts.length})</CardTitle>
+          <CardTitle>Canchas Registradas</CardTitle>
+          <CardDescription>
+            Lista de todas las canchas deportivas en el sistema
+          </CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="flex items-center space-x-2 mb-4">
+            <Search className="h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar canchas..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="max-w-sm"
+            />
+          </div>
+
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Nombre</TableHead>
-                <TableHead>Club</TableHead>
                 <TableHead>Deporte</TableHead>
-                <TableHead>Precio/hora</TableHead>
                 <TableHead>Estado</TableHead>
-                <TableHead className="w-[100px]">Acciones</TableHead>
+                <TableHead>Precio</TableHead>
+                <TableHead>Ubicación</TableHead>
+                <TableHead>Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredCourts.map((court) => (
                 <TableRow key={court.id}>
-                  <TableCell className="font-medium">{court.nombre}</TableCell>
-                  <TableCell>{court.club.nombre}</TableCell>
-                  <TableCell>{court.deporte.nombre}</TableCell>
-                  <TableCell>{formatPrice(court.precio)}</TableCell>
+                  <TableCell className="font-medium">{court.name}</TableCell>
+                  <TableCell>{court.sport}</TableCell>
+                  <TableCell>{getStatusBadge(court.status)}</TableCell>
+                  <TableCell>${court.price.toLocaleString()}</TableCell>
+                  <TableCell>{court.location}</TableCell>
                   <TableCell>
-                    <Badge variant={court.disponible ? "default" : "secondary"}>
-                      {court.disponible ? "Disponible" : "No disponible"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setEditingCourt(court)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-2xl">
-                          <DialogHeader>
-                            <DialogTitle>Editar cancha</DialogTitle>
-                            <DialogDescription>
-                              Modifica la información de la cancha.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <CourtForm 
-                            court={editingCourt} 
-                            onClose={() => setEditingCourt(null)} 
-                          />
-                        </DialogContent>
-                      </Dialog>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          toast({
-                            title: "Función no disponible",
-                            description: "La eliminación de canchas estará disponible próximamente.",
-                            variant: "destructive",
-                          })
-                        }}
-                      >
+                    <div className="flex space-x-2">
+                      <Button variant="outline" size="sm">
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="outline" size="sm">
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -323,12 +131,6 @@ export default function AdminCanchasPage() {
               ))}
             </TableBody>
           </Table>
-          
-          {filteredCourts.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              {searchTerm ? "No se encontraron canchas con ese criterio" : "No hay canchas registradas"}
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

@@ -3,29 +3,29 @@
  * Tests navigation, authentication states, mobile behavior, and user interactions
  */
 
-import { screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { Navbar } from '../navbar'
-import { renderWithProviders } from '@/__tests__/utils/test-utils'
-import * as actions from '@/lib/actions'
+import { render, screen, fireEvent } from '@testing-library/react'
+import { useAuth } from '@/components/auth/auth-context'
+import Navbar from '../navbar'
 
-// Mock server actions
-jest.mock('@/lib/actions', () => ({
-  logoutAction: jest.fn()
+// Mock auth context
+jest.mock('@/components/auth/auth-context', () => ({
+  useAuth: jest.fn(),
 }))
 
-// Mock useRouter
-const mockPush = jest.fn()
-jest.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push: mockPush,
-  })
-}))
+// Mock notification bell component
+jest.mock('@/components/notifications/notification-bell', () => {
+  return function MockNotificationBell() {
+    return <div data-testid="notification-bell">Notification Bell</div>
+  }
+})
 
-// Mock NotificationBell component
-jest.mock('@/components/notifications/notification-bell', () => ({
-  NotificationBell: () => <div data-testid="notification-bell">🔔</div>
-}))
+const mockAuth = {
+  user: null,
+  isLoading: false,
+  login: jest.fn(),
+  logout: jest.fn(),
+  register: jest.fn(),
+}
 
 const mockUser = {
   id: '1',
@@ -47,35 +47,35 @@ describe('Navbar', () => {
 
   describe('Rendering', () => {
     it('renders brand logo and name', () => {
-      renderWithProviders(<Navbar />)
+      render(<Navbar />)
 
       expect(screen.getByText('CanchaYA')).toBeInTheDocument()
       expect(screen.getByText('C')).toBeInTheDocument() // Logo letter
     })
 
     it('renders authentication buttons for unauthenticated users', () => {
-      renderWithProviders(<Navbar />)
+      render(<Navbar />)
 
       expect(screen.getByRole('link', { name: /iniciar sesión/i })).toBeInTheDocument()
       expect(screen.getByRole('link', { name: /registrarse/i })).toBeInTheDocument()
     })
 
     it('renders user menu for authenticated users', () => {
-      renderWithProviders(<Navbar user={mockUser} />)
+      render(<Navbar user={mockUser} />)
 
       expect(screen.getByText('JD')).toBeInTheDocument() // Avatar initials
       expect(screen.getByRole('button', { name: /john doe/i })).toBeInTheDocument()
     })
 
     it('renders admin link for admin users', () => {
-      renderWithProviders(<Navbar user={mockAdminUser} />)
+      render(<Navbar user={mockAdminUser} />)
 
       expect(screen.getByRole('link', { name: /admin/i })).toBeInTheDocument()
       expect(screen.getByText('Administrador')).toBeInTheDocument()
     })
 
     it('renders notification bell for authenticated users', () => {
-      renderWithProviders(<Navbar user={mockUser} />)
+      render(<Navbar user={mockUser} />)
 
       expect(screen.getByTestId('notification-bell')).toBeInTheDocument()
     })
@@ -84,7 +84,7 @@ describe('Navbar', () => {
   describe('User Menu Interactions', () => {
     it('shows user information in dropdown menu', async () => {
       const user = userEvent.setup()
-      renderWithProviders(<Navbar user={mockUser} />)
+      render(<Navbar user={mockUser} />)
 
       // Open dropdown
       await user.click(screen.getByRole('button', { name: /john doe/i }))
@@ -96,7 +96,7 @@ describe('Navbar', () => {
 
     it('navigates to correct pages from dropdown menu', async () => {
       const user = userEvent.setup()
-      renderWithProviders(<Navbar user={mockUser} />)
+      render(<Navbar user={mockUser} />)
 
       // Open dropdown
       await user.click(screen.getByRole('button', { name: /john doe/i }))
@@ -115,7 +115,7 @@ describe('Navbar', () => {
     it('handles logout correctly', async () => {
       const user = userEvent.setup()
       const logoutSpy = jest.spyOn(actions, 'logoutAction')
-      renderWithProviders(<Navbar user={mockUser} />)
+      render(<Navbar user={mockUser} />)
 
       // Open dropdown and click logout
       await user.click(screen.getByRole('button', { name: /john doe/i }))
@@ -127,14 +127,14 @@ describe('Navbar', () => {
 
   describe('Mobile Menu', () => {
     it('shows mobile menu button on mobile', () => {
-      renderWithProviders(<Navbar user={mockUser} />)
+      render(<Navbar user={mockUser} />)
 
       expect(screen.getByRole('button', { name: /abrir menú/i })).toBeInTheDocument()
     })
 
     it('opens mobile menu when button is clicked', async () => {
       const user = userEvent.setup()
-      renderWithProviders(<Navbar user={mockUser} />)
+      render(<Navbar user={mockUser} />)
 
       await user.click(screen.getByRole('button', { name: /abrir menú/i }))
 
@@ -144,7 +144,7 @@ describe('Navbar', () => {
 
     it('shows correct navigation links in mobile menu', async () => {
       const user = userEvent.setup()
-      renderWithProviders(<Navbar user={mockAdminUser} />)
+      render(<Navbar user={mockAdminUser} />)
 
       await user.click(screen.getByRole('button', { name: /abrir menú/i }))
 
@@ -156,7 +156,7 @@ describe('Navbar', () => {
 
     it('closes mobile menu when a link is clicked', async () => {
       const user = userEvent.setup()
-      renderWithProviders(<Navbar user={mockUser} />)
+      render(<Navbar user={mockUser} />)
 
       // Open menu
       await user.click(screen.getByRole('button', { name: /abrir menú/i }))
@@ -171,7 +171,7 @@ describe('Navbar', () => {
 
   describe('Navigation Links', () => {
     it('renders correct desktop navigation links for authenticated users', () => {
-      renderWithProviders(<Navbar user={mockUser} />)
+      render(<Navbar user={mockUser} />)
 
       const nav = screen.getByRole('navigation')
       expect(nav).toHaveClass('hidden md:flex')
@@ -180,7 +180,7 @@ describe('Navbar', () => {
     })
 
     it('includes admin link in desktop navigation for admin users', () => {
-      renderWithProviders(<Navbar user={mockAdminUser} />)
+      render(<Navbar user={mockAdminUser} />)
 
       const nav = screen.getByRole('navigation')
       expect(nav).toHaveClass('hidden md:flex')

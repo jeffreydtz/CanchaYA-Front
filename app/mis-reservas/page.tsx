@@ -1,29 +1,30 @@
-import { Navbar } from "@/components/navbar"
-import { MyReservations } from "@/components/reservations/my-reservations"
-import { getServerUser } from '@/lib/auth-server'
-import { redirect } from 'next/navigation'
-import apiClient from '@/lib/api-client'
+import { Suspense } from 'react'
+import MyReservations from '@/components/reservations/my-reservations'
+import Navbar from '@/components/navbar/navbar'
 
-export default async function MyReservationsPage() {
-  const user = await getServerUser()
-
-  // Redirect to login if not authenticated
-  if (!user) {
-    redirect('/login')
-  }
-
-  // Fetch user's reservations
-  const reservationsResponse = await apiClient.getMyReservations()
-  const reservations = reservationsResponse.data || []
-
+function LoadingSkeleton() {
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar user={user} />
+    <div className="container mx-auto px-4 py-8">
+      <div className="animate-pulse">
+        <div className="h-8 bg-gray-200 rounded w-1/3 mb-6"></div>
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function MisReservasPage() {
+  return (
+    <div>
+      <Navbar />
       <main className="container mx-auto px-4 py-8">
-        <MyReservations 
-          reservations={reservations}
-          userId={user.id}
-        />
+        <Suspense fallback={<LoadingSkeleton />}>
+          <MyReservations userId="user1" />
+        </Suspense>
       </main>
     </div>
   )

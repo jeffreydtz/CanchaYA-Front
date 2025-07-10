@@ -3,138 +3,49 @@
  * Custom render functions and test helpers
  */
 
-import React, { createContext, useContext } from 'react'
-import { render, RenderOptions, RenderResult } from '@testing-library/react'
-import type { User, Court, Reservation } from '@/lib/api-client'
+import React, { ReactElement } from 'react'
+import { render, RenderOptions } from '@testing-library/react'
+import { ThemeProvider } from '@/components/theme-provider'
+import { AuthProvider } from '@/components/auth/auth-context'
+import { NotificationProvider } from '@/components/notifications/notification-provider'
 
-// Types imports (you might need to adjust these paths)
-type User = any
-type Court = any
-type Reservation = any
-
-// Mock auth context values
-export const mockAuthContextValue = {
-  user: global.testUser,
-  loading: false,
-  login: jest.fn(),
-  logout: jest.fn(),
-  register: jest.fn(),
-  updateProfile: jest.fn(),
-  changePassword: jest.fn(),
-  refreshToken: jest.fn(),
-  hasPermission: jest.fn(() => true),
-  isAdmin: false,
-  error: null,
-  clearError: jest.fn(),
-}
-
-// Mock notification context values
-export const mockNotificationContextValue = {
-  notifications: [],
-  markAsRead: jest.fn(),
-  markAllAsRead: jest.fn(),
-  deleteNotification: jest.fn(),
-  addNotification: jest.fn(),
-  updateNotification: jest.fn(),
-  removeNotification: jest.fn(),
-  unreadCount: 0,
-  isConnected: true,
-  connectionRetries: 0,
-}
-
-// Create mock contexts
-const MockAuthContext = createContext(mockAuthContextValue)
-const MockNotificationContext = createContext(mockNotificationContextValue)
-
-// Mock providers components
-interface MockProvidersProps {
-  children: React.ReactNode
-  authValue?: typeof mockAuthContextValue
-  notificationValue?: typeof mockNotificationContextValue
-}
-
-function MockAuthProvider({ children, authValue = mockAuthContextValue }: { children: React.ReactNode, authValue?: typeof mockAuthContextValue }) {
+const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
   return (
-    <MockAuthContext.Provider value={authValue}>
-      {children}
-    </MockAuthContext.Provider>
-  )
-}
-
-function MockNotificationProvider({ children, notificationValue = mockNotificationContextValue }: { children: React.ReactNode, notificationValue?: typeof mockNotificationContextValue }) {
-  return (
-    <MockNotificationContext.Provider value={notificationValue}>
-      {children}
-    </MockNotificationContext.Provider>
-  )
-}
-
-function MockProviders({ 
-  children, 
-  authValue = mockAuthContextValue,
-  notificationValue = mockNotificationContextValue 
-}: MockProvidersProps) {
-  return (
-    <MockAuthProvider authValue={authValue}>
-      <MockNotificationProvider notificationValue={notificationValue}>
-        <div data-testid="mock-providers">
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      disableTransitionOnChange
+    >
+      <AuthProvider>
+        <NotificationProvider>
           {children}
-        </div>
-      </MockNotificationProvider>
-    </MockAuthProvider>
+        </NotificationProvider>
+      </AuthProvider>
+    </ThemeProvider>
   )
 }
 
-// Custom render function with providers
-interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
-  authValue?: typeof mockAuthContextValue
-  notificationValue?: typeof mockNotificationContextValue
-  withProviders?: boolean
-}
+const customRender = (
+  ui: ReactElement,
+  options?: Omit<RenderOptions, 'wrapper'>,
+) => render(ui, { wrapper: AllTheProviders, ...options })
 
-export function renderWithProviders(
-  ui: React.ReactElement,
-  options: CustomRenderOptions = {}
-): RenderResult {
-  const {
-    authValue = mockAuthContextValue,
-    notificationValue = mockNotificationContextValue,
-    withProviders = true,
-    ...renderOptions
-  } = options
-
-  if (!withProviders) {
-    return render(ui, renderOptions)
-  }
-
-  const Wrapper = ({ children }: { children: React.ReactNode }) => (
-    <MockProviders authValue={authValue} notificationValue={notificationValue}>
-      {children}
-    </MockProviders>
-  )
-
-  return render(ui, { wrapper: Wrapper, ...renderOptions })
-}
-
-// Re-export everything from RTL
 export * from '@testing-library/react'
-export { default as userEvent } from '@testing-library/user-event'
-
-// Custom render as default export
-export { renderWithProviders as render }
+export { customRender as render }
 
 // Test data factories
-export const createTestUser = (overrides: Partial<User> = {}): User => ({
+export const createTestUser = (overrides: Partial<any> = {}): any => ({
   ...global.testUser,
   ...overrides,
 })
 
-export const createTestCourt = (overrides: Partial<Court> = {}): Court => ({
+export const createTestCourt = (overrides: Partial<any> = {}): any => ({
   ...global.testCourt,
   ...overrides,
 })
 
-export const createTestReservation = (overrides: Partial<Reservation> = {}): Reservation => ({
+export const createTestReservation = (overrides: Partial<any> = {}): any => ({
   ...global.testReservation,
   ...overrides,
 })

@@ -3,83 +3,49 @@
  * Tests reservation display, confirmation, cancellation, and status management
  */
 
-import { screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { MyReservations } from '../my-reservations'
-import { renderWithProviders } from '@/__tests__/utils/test-utils'
-import { addHours, subHours, parseISO, format } from 'date-fns'
-import { es } from 'date-fns/locale'
-import * as actions from '@/lib/actions'
+import { render, screen, waitFor } from '@testing-library/react'
+import MyReservations from '../my-reservations'
+import apiClient from '@/lib/api-client'
 
-// Mock server actions
-jest.mock('@/lib/actions', () => ({
-  confirmReservationAction: jest.fn(),
-  cancelReservationAction: jest.fn()
+// Mock API client
+jest.mock('@/lib/api-client', () => ({
+  __esModule: true,
+  default: {
+    getMyReservations: jest.fn(),
+    cancelReservation: jest.fn(),
+  },
 }))
-
-const mockDate = new Date('2024-03-20T12:00:00Z')
 
 const mockReservations = [
   {
     id: '1',
-    fecha: '2024-03-20',
-    horaInicio: '14:00',
-    horaFin: '15:00',
-    estado: 'PENDIENTE',
-    confirmada: false,
+    courtId: 'court1',
+    userId: 'user1',
+    fecha: '2024-01-15',
+    hora: '14:00',
+    duracion: 2,
     precio: 5000,
-    cancha: {
-      id: '1',
-      nombre: 'Cancha Fútbol 1',
-      deporte: { nombre: 'Fútbol' },
-      club: {
-        nombre: 'Club Deportivo',
-        direccion: 'Av. Principal 123'
-      }
-    }
+    estado: 'confirmada',
+    court: {
+      id: 'court1',
+      nombre: 'Cancha de Fútbol 1',
+      deporte: 'Fútbol',
+      club: 'Club Deportivo',
+      direccion: 'Av. Principal 123',
+      precio: 5000,
+      imagen: '/placeholder.jpg',
+      descripcion: 'Cancha profesional',
+      horarios: 'Lun-Dom 8:00-22:00',
+      telefono: '123-456-7890',
+      email: 'info@club.com',
+    },
   },
-  {
-    id: '2',
-    fecha: '2024-03-20',
-    horaInicio: '16:00',
-    horaFin: '17:00',
-    estado: 'CONFIRMADA',
-    confirmada: true,
-    precio: 6000,
-    cancha: {
-      id: '2',
-      nombre: 'Cancha Tenis 1',
-      deporte: { nombre: 'Tenis' },
-      club: {
-        nombre: 'Club Deportivo',
-        direccion: 'Av. Principal 123'
-      }
-    }
-  },
-  {
-    id: '3',
-    fecha: '2024-03-19',
-    horaInicio: '10:00',
-    horaFin: '11:00',
-    estado: 'CANCELADA',
-    confirmada: false,
-    precio: 4500,
-    cancha: {
-      id: '3',
-      nombre: 'Cancha Básquet 1',
-      deporte: { nombre: 'Básquet' },
-      club: {
-        nombre: 'Club Deportivo',
-        direccion: 'Av. Principal 123'
-      }
-    }
-  }
 ]
 
 describe('MyReservations', () => {
   beforeEach(() => {
     jest.useFakeTimers()
-    jest.setSystemTime(mockDate)
+    jest.setSystemTime(new Date('2024-03-20T12:00:00Z'))
   })
 
   afterEach(() => {
@@ -89,7 +55,7 @@ describe('MyReservations', () => {
 
   describe('Reservation Display', () => {
     it('displays all reservation information correctly', () => {
-      renderWithProviders(
+      render(
         <MyReservations 
           reservations={mockReservations} 
           userId="test-user" 
@@ -97,7 +63,7 @@ describe('MyReservations', () => {
       )
 
       // Check first reservation
-      expect(screen.getByText('Cancha Fútbol 1')).toBeInTheDocument()
+      expect(screen.getByText('Cancha de Fútbol 1')).toBeInTheDocument()
       expect(screen.getByText('Fútbol')).toBeInTheDocument()
       expect(screen.getByText(/miércoles, 20 de marzo de 2024/i)).toBeInTheDocument()
       expect(screen.getByText(/14:00 - 15:00 hs/i)).toBeInTheDocument()
@@ -106,7 +72,7 @@ describe('MyReservations', () => {
     })
 
     it('shows correct status badges', () => {
-      renderWithProviders(
+      render(
         <MyReservations 
           reservations={mockReservations} 
           userId="test-user" 
@@ -126,10 +92,10 @@ describe('MyReservations', () => {
       const futureReservation = {
         ...mockReservations[0],
         fecha: '2024-03-20',
-        horaInicio: '16:00'
+        hora: '16:00'
       }
 
-      renderWithProviders(
+      render(
         <MyReservations 
           reservations={[futureReservation]} 
           userId="test-user" 
@@ -142,17 +108,16 @@ describe('MyReservations', () => {
 
   describe('Reservation Actions', () => {
     it('allows confirming a pending reservation within the time window', async () => {
-      const user = userEvent.setup()
-      const confirmSpy = jest.spyOn(actions, 'confirmReservationAction')
+      const confirmSpy = jest.spyOn(apiClient.default, 'confirmReservation')
       confirmSpy.mockResolvedValue({ success: true })
 
       const pendingReservation = {
         ...mockReservations[0],
         fecha: '2024-03-20',
-        horaInicio: '16:00' // 4 hours from mock current time
+        hora: '16:00' // 4 hours from mock current time
       }
 
-      renderWithProviders(
+      render(
         <MyReservations 
           reservations={[pendingReservation]} 
           userId="test-user" 
@@ -160,26 +125,32 @@ describe('MyReservations', () => {
       )
 
       // Open confirm dialog
-      await user.click(screen.getByRole('button', { name: /confirmar asistencia/i }))
-      
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /confirmar asistencia/i })).toBeInTheDocument()
+      })
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /confirmar/i })).toBeInTheDocument()
+      })
+
       // Confirm reservation
-      await user.click(screen.getByRole('button', { name: /confirmar/i }))
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /confirmar/i })).toBeInTheDocument()
+      })
 
       expect(confirmSpy).toHaveBeenCalledWith(pendingReservation.id)
     })
 
     it('allows cancelling an upcoming reservation', async () => {
-      const user = userEvent.setup()
-      const cancelSpy = jest.spyOn(actions, 'cancelReservationAction')
+      const cancelSpy = jest.spyOn(apiClient.default, 'cancelReservation')
       cancelSpy.mockResolvedValue({ success: true })
 
       const upcomingReservation = {
         ...mockReservations[0],
         fecha: '2024-03-20',
-        horaInicio: '16:00'
+        hora: '16:00'
       }
 
-      renderWithProviders(
+      render(
         <MyReservations 
           reservations={[upcomingReservation]} 
           userId="test-user" 
@@ -187,20 +158,26 @@ describe('MyReservations', () => {
       )
 
       // Open cancel dialog
-      await user.click(screen.getByRole('button', { name: /cancelar reserva/i }))
-      
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /cancelar reserva/i })).toBeInTheDocument()
+      })
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /sí, cancelar/i })).toBeInTheDocument()
+      })
+
       // Cancel reservation
-      await user.click(screen.getByRole('button', { name: /sí, cancelar/i }))
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /sí, cancelar/i })).toBeInTheDocument()
+      })
 
       expect(cancelSpy).toHaveBeenCalledWith(upcomingReservation.id)
     })
 
     it('shows error toast when confirmation fails', async () => {
-      const user = userEvent.setup()
-      const confirmSpy = jest.spyOn(actions, 'confirmReservationAction')
+      const confirmSpy = jest.spyOn(apiClient.default, 'confirmReservation')
       confirmSpy.mockResolvedValue({ success: false, error: 'Error de confirmación' })
 
-      renderWithProviders(
+      render(
         <MyReservations 
           reservations={[mockReservations[0]]} 
           userId="test-user" 
@@ -208,10 +185,17 @@ describe('MyReservations', () => {
       )
 
       // Open confirm dialog
-      await user.click(screen.getByRole('button', { name: /confirmar asistencia/i }))
-      
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /confirmar asistencia/i })).toBeInTheDocument()
+      })
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /confirmar/i })).toBeInTheDocument()
+      })
+
       // Try to confirm
-      await user.click(screen.getByRole('button', { name: /confirmar/i }))
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /confirmar/i })).toBeInTheDocument()
+      })
 
       await waitFor(() => {
         expect(screen.getByText('Error de confirmación')).toBeInTheDocument()
@@ -219,11 +203,10 @@ describe('MyReservations', () => {
     })
 
     it('shows error toast when cancellation fails', async () => {
-      const user = userEvent.setup()
-      const cancelSpy = jest.spyOn(actions, 'cancelReservationAction')
+      const cancelSpy = jest.spyOn(apiClient.default, 'cancelReservation')
       cancelSpy.mockResolvedValue({ success: false, error: 'Error de cancelación' })
 
-      renderWithProviders(
+      render(
         <MyReservations 
           reservations={[mockReservations[0]]} 
           userId="test-user" 
@@ -231,10 +214,17 @@ describe('MyReservations', () => {
       )
 
       // Open cancel dialog
-      await user.click(screen.getByRole('button', { name: /cancelar reserva/i }))
-      
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /cancelar reserva/i })).toBeInTheDocument()
+      })
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /sí, cancelar/i })).toBeInTheDocument()
+      })
+
       // Try to cancel
-      await user.click(screen.getByRole('button', { name: /sí, cancelar/i }))
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /sí, cancelar/i })).toBeInTheDocument()
+      })
 
       await waitFor(() => {
         expect(screen.getByText('Error de cancelación')).toBeInTheDocument()
@@ -245,10 +235,10 @@ describe('MyReservations', () => {
       const pastDeadlineReservation = {
         ...mockReservations[0],
         fecha: '2024-03-20',
-        horaInicio: '13:00' // 1 hour from mock current time
+        hora: '13:00' // 1 hour from mock current time
       }
 
-      renderWithProviders(
+      render(
         <MyReservations 
           reservations={[pastDeadlineReservation]} 
           userId="test-user" 
@@ -262,10 +252,10 @@ describe('MyReservations', () => {
       const pastReservation = {
         ...mockReservations[0],
         fecha: '2024-03-19',
-        horaInicio: '10:00'
+        hora: '10:00'
       }
 
-      renderWithProviders(
+      render(
         <MyReservations 
           reservations={[pastReservation]} 
           userId="test-user" 

@@ -5,13 +5,12 @@
 
 'use client'
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { 
   getClientUser, 
   isClientAuthenticated, 
-  isClientAdmin, 
   logoutUser,
   type AuthState 
 } from '@/lib/auth'
@@ -49,6 +48,70 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const isAuthenticated = !!user && !!token
   const isAdmin = user?.rol === 'ADMINISTRADOR'
 
+  const handleRealtimeEvent = useCallback((data: unknown) => {
+    const eventData = data as {
+      type: string
+      cancha?: string
+      fecha?: string
+      hora?: string
+      canchaId?: string
+      horasRestantes?: number
+    }
+    
+    switch (eventData.type) {
+      case 'TURNO_LIBERADO':
+        toast.success('🔥 Turno disponible!', {
+          description: `Se liberó un turno en ${eventData.cancha} para ${eventData.fecha} a las ${eventData.hora}`,
+          action: {
+            label: 'Ver cancha',
+            onClick: () => router.push(`/cancha/${eventData.canchaId}`)
+          }
+        })
+        break
+        
+      case 'RESERVA_CONFIRMADA':
+        toast.success('✅ Reserva confirmada', {
+          description: 'Tu reserva ha sido confirmada exitosamente'
+        })
+        break
+        
+      case 'RECORDATORIO_CONFIRMACION':
+        toast.warning('⏰ Confirma tu asistencia', {
+          description: `Tienes ${eventData.horasRestantes}h para confirmar tu reserva`,
+          action: {
+            label: 'Confirmar',
+            onClick: () => router.push('/mis-reservas')
+          }
+        })
+        break
+        
+      case 'RESERVA_LIBERADA':
+        toast.error('⚠️ Reserva liberada', {
+          description: 'Tu reserva fue liberada por falta de confirmación'
+        })
+        break
+        
+      default:
+        console.log('Unknown event type:', eventData.type)
+    }
+  }, [router])
+
+  const logout = useCallback(() => {
+    try {
+      if (eventSource) {
+        eventSource.close()
+        setEventSource(null)
+      }
+      
+      setUser(null)
+      setToken(null)
+      logoutUser()
+      toast.info('Sesión cerrada')
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+  }, [eventSource])
+
   // Initialize auth state
   useEffect(() => {
     const initAuth = () => {
@@ -67,83 +130,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     initAuth()
-  }, [])
+  }, [logout])
 
   // Setup real-time events when user is authenticated
   useEffect(() => {
-    if (user && !eventSource) {
-      try {
-        const es = apiClient.createEventSource(user.id)
-        
-        es.onmessage = (event) => {
-          const data = JSON.parse(event.data)
-          handleRealtimeEvent(data)
-        }
-
-        es.onerror = (error) => {
-          console.error('EventSource error:', error)
-          es.close()
-          setEventSource(null)
-          
-          // Retry connection after 5 seconds
-          setTimeout(() => {
-            if (user) {
-              const newEs = apiClient.createEventSource(user.id)
-              setEventSource(newEs)
-            }
-          }, 5000)
-        }
-
-        setEventSource(es)
-
-        return () => {
-          es.close()
-          setEventSource(null)
-        }
-      } catch (error) {
-        console.error('Failed to setup EventSource:', error)
+    if (user) {
+      // Set up real-time connection for notifications
+      const eventSource = new EventSource(`/api/notifications/stream?token=${user.token}`)
+      
+      eventSource.onmessage = handleRealtimeEvent
+      eventSource.onerror = () => {
+        eventSource.close()
+      }
+      
+      return () => {
+        eventSource.close()
       }
     }
-  }, [user, eventSource])
-
-  const handleRealtimeEvent = (data: any) => {
-    switch (data.type) {
-      case 'TURNO_LIBERADO':
-        toast.success('🔥 Turno disponible!', {
-          description: `Se liberó un turno en ${data.cancha} para ${data.fecha} a las ${data.hora}`,
-          action: {
-            label: 'Ver cancha',
-            onClick: () => router.push(`/cancha/${data.canchaId}`)
-          }
-        })
-        break
-        
-      case 'RESERVA_CONFIRMADA':
-        toast.success('✅ Reserva confirmada', {
-          description: 'Tu reserva ha sido confirmada exitosamente'
-        })
-        break
-        
-      case 'RECORDATORIO_CONFIRMACION':
-        toast.warning('⏰ Confirma tu asistencia', {
-          description: `Tienes ${data.horasRestantes}h para confirmar tu reserva`,
-          action: {
-            label: 'Confirmar',
-            onClick: () => router.push('/mis-reservas')
-          }
-        })
-        break
-        
-      case 'RESERVA_LIBERADA':
-        toast.error('⚠️ Reserva liberada', {
-          description: 'Tu reserva fue liberada por falta de confirmación'
-        })
-        break
-        
-      default:
-        console.log('Unknown event type:', data.type)
-    }
-  }
+  }, [user, handleRealtimeEvent])
 
   const login = (newToken: string) => {
     try {
@@ -156,22 +160,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } catch (error) {
       console.error('Login error:', error)
       toast.error('Error en el inicio de sesión')
-    }
-  }
-
-  const logout = () => {
-    try {
-      if (eventSource) {
-        eventSource.close()
-        setEventSource(null)
-      }
-      
-      setUser(null)
-      setToken(null)
-      logoutUser()
-      toast.info('Sesión cerrada')
-    } catch (error) {
-      console.error('Logout error:', error)
     }
   }
 

@@ -43,7 +43,7 @@ export interface ErrorReport {
     error: ClassifiedError
     stackTrace?: string
     componentStack?: string
-    metadata: Record<string, any>
+    metadata: Record<string, unknown>
 }
 
 // Error classification function
@@ -200,7 +200,7 @@ export function classifyError(error: Error | string, context?: string): Classifi
 }
 
 // Error logging function
-export function logError(classifiedError: ClassifiedError, additionalData?: Record<string, any>): ErrorReport {
+export function logError(classifiedError: ClassifiedError, additionalData?: Record<string, unknown>): ErrorReport {
     const errorId = `err_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
     const report: ErrorReport = {
@@ -213,7 +213,7 @@ export function logError(classifiedError: ClassifiedError, additionalData?: Reco
             type: classifiedError.type,
             retryable: classifiedError.retryable,
             ...additionalData
-        }
+        } as Record<string, unknown>
     }
 
     // Log to console with appropriate level

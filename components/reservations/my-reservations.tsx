@@ -1,393 +1,261 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import Link from "next/link"
-import { Card, CardContent } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { MapPin, Calendar, Clock, Check, AlertCircle, Plus } from "lucide-react"
-import { format, isAfter, isBefore, parseISO } from "date-fns"
-import { es } from "date-fns/locale"
-import { useToast } from "@/hooks/use-toast"
-import { confirmReservationAction, cancelReservationAction } from "@/lib/actions"
-import { Reservation } from "@/lib/api-client"
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Calendar, Clock, MapPin, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { useAuth } from '@/components/auth/auth-context'
+import { useToast } from '@/hooks/use-toast'
+import apiClient from '@/lib/api-client'
+import Link from 'next/link'
 
-interface ReservationCardProps {
-  reservation: Reservation
-  showConfirmButton: boolean
-  onConfirm: (id: string) => void
-  onCancel: (id: string) => void
-  isConfirming: boolean
-  isCancelling: boolean
+interface Reservation {
+  id: string
+  courtName: string
+  courtId: string
+  date: string
+  time: string
+  status: 'confirmed' | 'pending' | 'cancelled' | 'completed'
+  price: number
+  createdAt: string
 }
 
-export function ReservationCard({
-  reservation,
-  showConfirmButton,
-  onConfirm,
-  onCancel,
-  isConfirming,
-  isCancelling,
-}: ReservationCardProps) {
-  const startDate = parseISO(`${reservation.fecha}T${reservation.horaInicio}`)
-  const endDate = parseISO(`${reservation.fecha}T${reservation.horaFin}`)
-  const confirmationDeadline = parseISO(`${reservation.fecha}T${reservation.horaInicio}`)
-  const isPastDeadline = isAfter(new Date(), confirmationDeadline)
-  const isPastReservation = isAfter(new Date(), endDate)
-
-  // Calculate time until deadline
-  const getTimeUntilDeadline = (reservation: Reservation) => {
-    const deadline = parseISO(`${reservation.fecha}T${reservation.horaInicio}`)
-    const now = new Date()
-    const diffInMs = deadline.getTime() - now.getTime()
-    const diffInMinutes = Math.floor(diffInMs / (1000 * 60))
-    const hours = Math.floor(diffInMinutes / 60)
-    const minutes = diffInMinutes % 60
-
-    if (hours > 0) {
-      return `${hours}h ${minutes}m`
-    }
-    return `${minutes}m`
-  }
-
-  const timeUntilDeadline = getTimeUntilDeadline(reservation)
-
-  // Get status display text
-  const getStatusText = (estado: string) => {
-    switch (estado) {
-      case 'PENDIENTE':
-        return 'Pendiente'
-      case 'CONFIRMADA':
-        return 'Confirmada'
-      case 'CANCELADA':
-        return 'Cancelada'
-      default:
-        return estado
-    }
-  }
-
-  // Get status badge variant
-  const getStatusVariant = (estado: string) => {
-    switch (estado) {
-      case 'PENDIENTE':
-        return 'outline'
-      case 'CONFIRMADA':
-        return 'default'
-      case 'CANCELADA':
-        return 'destructive'
-      default:
-        return 'outline'
-    }
-  }
-
-  return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-lg">{reservation.cancha.nombre}</h3>
-                <Badge variant="outline">{reservation.cancha.deporte.nombre}</Badge>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPin className="h-4 w-4" />
-                <span>{reservation.cancha.club.nombre} - {reservation.cancha.club.direccion}</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <div
-                className={
-                  reservation.estado === 'PENDIENTE'
-                    ? 'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold border-yellow-500 text-yellow-700'
-                    : reservation.estado === 'CONFIRMADA'
-                    ? 'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-green-100 text-green-800'
-                    : reservation.estado === 'CANCELADA'
-                    ? 'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-destructive text-destructive-foreground'
-                    : 'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold'
-                }
-              >
-                {reservation.estado === "PENDIENTE" && (
-                  <><Clock className="h-3 w-3 mr-1" /><span>&nbsp;{getStatusText(reservation.estado)}</span></>
-                )}
-                {reservation.estado === "CONFIRMADA" && (
-                  <><Check className="h-3 w-3 mr-1" /><span>&nbsp;{getStatusText(reservation.estado)}</span></>
-                )}
-                {reservation.estado === "CANCELADA" && (
-                  <><AlertCircle className="h-3 w-3 mr-1" /><span>&nbsp;{getStatusText(reservation.estado)}</span></>
-                )}
-                {["PENDIENTE", "CONFIRMADA", "CANCELADA"].indexOf(reservation.estado) === -1 && (
-                  <span>{getStatusText(reservation.estado)}</span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span>
-                {format(startDate, "EEEE, d 'de' MMMM 'de' yyyy", { locale: es }).toLocaleLowerCase()}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <span>
-                {format(startDate, "HH:mm")} - {format(endDate, "HH:mm")} hs
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="text-lg font-semibold">
-              $ {reservation.precio.toLocaleString()}
-            </div>
-            {reservation.estado === "PENDIENTE" && !isPastDeadline && (
-              <div className="text-sm text-muted-foreground">
-                Confirma en {timeUntilDeadline}
-              </div>
-            )}
-          </div>
-
-          {reservation.estado === "PENDIENTE" && showConfirmButton && !isPastDeadline && (
-            <div className="flex flex-col sm:flex-row gap-2">
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    size="sm"
-                    className="w-full sm:w-auto"
-                    disabled={isConfirming}
-                  >
-                    <Check className="h-4 w-4 mr-2" />
-                    Confirmar asistencia
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>
-                      ¿Confirmar asistencia a la reserva?
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Al confirmar tu asistencia, te comprometes a asistir a la
-                      cancha en el horario reservado.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => onConfirm(reservation.id)}>
-                      Confirmar
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full sm:w-auto"
-                    disabled={isCancelling}
-                  >
-                    <AlertCircle className="h-4 w-4 mr-2" />
-                    Cancelar reserva
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>¿Cancelar la reserva?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Al cancelar la reserva, el horario quedará disponible para
-                      otros usuarios.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Volver</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => onCancel(reservation.id)}>
-                      Sí, cancelar
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          )}
-
-          {reservation.estado === "CONFIRMADA" && !isPastReservation && (
-            <div>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full sm:w-auto"
-                    disabled={isCancelling}
-                  >
-                    <AlertCircle className="h-4 w-4 mr-2" />
-                    Cancelar reserva
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>¿Cancelar la reserva?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Al cancelar la reserva, el horario quedará disponible para
-                      otros usuarios.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Volver</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => onCancel(reservation.id)}>
-                      Sí, cancelar
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
-interface MyReservationsProps {
-  reservations: Reservation[]
-  userId: string
-}
-
-export function MyReservations({ reservations, userId }: MyReservationsProps) {
+export default function MyReservations() {
+  const { user } = useAuth()
   const { toast } = useToast()
-  const [isConfirming, setIsConfirming] = useState(false)
-  const [isCancelling, setIsCancelling] = useState(false)
+  const [reservations, setReservations] = useState<Reservation[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-  const handleConfirmAttendance = async (id: string) => {
-    try {
-      setIsConfirming(true)
-      const result = await confirmReservationAction(id)
-      if (result.success) {
+  useEffect(() => {
+    const loadReservations = async () => {
+      if (!user?.id) return
+
+      try {
+        const response = await apiClient.getUserReservations(user.id)
+        if (response.data) {
+          setReservations(response.data)
+        }
+      } catch (error) {
+        console.error('Error loading reservations:', error)
         toast({
-          title: "Reserva confirmada",
-          description: "Tu asistencia ha sido confirmada correctamente.",
+          title: 'Error',
+          description: 'No se pudieron cargar las reservas',
+          variant: 'destructive',
         })
-      } else {
-        throw new Error("No se pudo confirmar la reserva")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadReservations()
+  }, [user?.id, toast])
+
+  const handleConfirmReservation = async (reservationId: string) => {
+    try {
+      const response = await apiClient.confirmReservation(reservationId)
+      if (response.data) {
+        setReservations(prev => 
+          prev.map(r => r.id === reservationId ? { ...r, status: 'confirmed' as const } : r)
+        )
+        toast({
+          title: 'Reserva confirmada',
+          description: 'Tu reserva ha sido confirmada exitosamente',
+        })
       }
     } catch (error) {
+      console.error('Error confirming reservation:', error)
       toast({
-        title: "Error al confirmar",
-        description: "No se pudo confirmar tu asistencia. Intenta nuevamente.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'No se pudo confirmar la reserva',
+        variant: 'destructive',
       })
-    } finally {
-      setIsConfirming(false)
     }
   }
 
-  const handleCancelReservation = async (id: string) => {
+  const handleCancelReservation = async (reservationId: string) => {
     try {
-      setIsCancelling(true)
-      const result = await cancelReservationAction(id)
-      if (result.success) {
+      const response = await apiClient.cancelReservation(reservationId)
+      if (response.data) {
+        setReservations(prev => 
+          prev.map(r => r.id === reservationId ? { ...r, status: 'cancelled' as const } : r)
+        )
         toast({
-          title: "Reserva cancelada",
-          description: "La reserva ha sido cancelada correctamente.",
+          title: 'Reserva cancelada',
+          description: 'Tu reserva ha sido cancelada',
         })
-      } else {
-        throw new Error("No se pudo cancelar la reserva")
       }
     } catch (error) {
+      console.error('Error cancelling reservation:', error)
       toast({
-        title: "Error al cancelar",
-        description: "No se pudo cancelar la reserva. Intenta nuevamente.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'No se pudo cancelar la reserva',
+        variant: 'destructive',
       })
-    } finally {
-      setIsCancelling(false)
     }
   }
 
-  const upcomingReservations = reservations.filter((reservation) => {
-    const endDate = parseISO(`${reservation.fecha}T${reservation.horaFin}`)
-    return !isAfter(new Date(), endDate)
-  })
+  const getStatusBadge = (status: Reservation['status']) => {
+    switch (status) {
+      case 'confirmed':
+        return (
+          <Badge variant="default" className="bg-green-100 text-green-800">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Confirmada
+          </Badge>
+        )
+      case 'pending':
+        return (
+          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+            <AlertCircle className="w-3 h-3 mr-1" />
+            Pendiente
+          </Badge>
+        )
+      case 'cancelled':
+        return (
+          <Badge variant="destructive" className="bg-red-100 text-red-800">
+            <XCircle className="w-3 h-3 mr-1" />
+            Cancelada
+          </Badge>
+        )
+      case 'completed':
+        return (
+          <Badge variant="outline" className="bg-gray-100 text-gray-800">
+            Completada
+          </Badge>
+        )
+      default:
+        return <Badge variant="outline">Desconocido</Badge>
+    }
+  }
 
-  const pastReservations = reservations.filter((reservation) => {
-    const endDate = parseISO(`${reservation.fecha}T${reservation.horaFin}`)
-    return isAfter(new Date(), endDate)
-  })
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('es-ES', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  }
+
+  const formatTime = (timeString: string) => {
+    return timeString
+  }
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded mb-4"></div>
+          <div className="h-64 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold tracking-tight">Mis Reservas</h2>
-        <Link href="/reservations/new">
-          <Button size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Nueva reserva
-          </Button>
-        </Link>
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">Mis Reservas</h1>
+        <p className="text-muted-foreground">
+          Gestiona todas tus reservas de canchas deportivas
+        </p>
       </div>
 
-      <Tabs defaultValue="upcoming" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="upcoming">Próximas</TabsTrigger>
-          <TabsTrigger value="past">Historial</TabsTrigger>
-        </TabsList>
-        <TabsContent value="upcoming" className="space-y-4">
-          {upcomingReservations.length === 0 ? (
-            <div className="text-center py-6">
-              <p className="text-sm text-muted-foreground">
-                No tienes reservas próximas
-              </p>
-            </div>
-          ) : (
-            upcomingReservations.map((reservation) => (
-              <ReservationCard
-                key={reservation.id}
-                reservation={reservation}
-                showConfirmButton={true}
-                onConfirm={handleConfirmAttendance}
-                onCancel={handleCancelReservation}
-                isConfirming={isConfirming}
-                isCancelling={isCancelling}
-              />
-            ))
-          )}
-        </TabsContent>
-        <TabsContent value="past" className="space-y-4">
-          {pastReservations.length === 0 ? (
-            <div className="text-center py-6">
-              <p className="text-sm text-muted-foreground">
-                No tienes reservas pasadas
-              </p>
-            </div>
-          ) : (
-            pastReservations.map((reservation) => (
-              <ReservationCard
-                key={reservation.id}
-                reservation={reservation}
-                showConfirmButton={false}
-                onConfirm={handleConfirmAttendance}
-                onCancel={handleCancelReservation}
-                isConfirming={isConfirming}
-                isCancelling={isCancelling}
-              />
-            ))
-          )}
-        </TabsContent>
-      </Tabs>
+      {reservations.length === 0 ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No tienes reservas</h3>
+            <p className="text-muted-foreground mb-4">
+              Aún no has realizado ninguna reserva. ¡Explora nuestras canchas y reserva tu espacio!
+            </p>
+            <Button asChild>
+              <Link href="/">Ver Canchas</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Reservas Activas</CardTitle>
+            <CardDescription>
+              Lista de todas tus reservas de canchas deportivas
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Cancha</TableHead>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Hora</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead>Precio</TableHead>
+                  <TableHead>Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {reservations.map((reservation) => (
+                  <TableRow key={reservation.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center">
+                        <MapPin className="h-4 w-4 text-muted-foreground mr-2" />
+                        {reservation.courtName}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <Calendar className="h-4 w-4 text-muted-foreground mr-2" />
+                        {formatDate(reservation.date)}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <Clock className="h-4 w-4 text-muted-foreground mr-2" />
+                        {formatTime(reservation.time)}
+                      </div>
+                    </TableCell>
+                    <TableCell>{getStatusBadge(reservation.status)}</TableCell>
+                    <TableCell>${reservation.price.toLocaleString()}</TableCell>
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        {reservation.status === 'pending' && (
+                          <>
+                            <Button
+                              size="sm"
+                              onClick={() => handleConfirmReservation(reservation.id)}
+                            >
+                              Confirmar
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleCancelReservation(reservation.id)}
+                            >
+                              Cancelar
+                            </Button>
+                          </>
+                        )}
+                        {reservation.status === 'confirmed' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleCancelReservation(reservation.id)}
+                          >
+                            Cancelar
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

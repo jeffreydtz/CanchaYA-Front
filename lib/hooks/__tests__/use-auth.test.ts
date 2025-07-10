@@ -3,18 +3,30 @@
  * Tests authentication state management, login/logout flows, and error handling
  */
 
-import { renderHook, act, waitFor } from '@testing-library/react'
-import { useAuth } from '../use-auth'
-import { renderWithProviders } from '@/__tests__/utils/test-utils'
+import { renderHook, act } from '@testing-library/react'
+import { useAuth } from '@/components/auth/auth-context'
+import apiClient from '@/lib/api-client'
 
-// Mock API calls
-const mockApiCall = jest.fn()
+// Mock API client
 jest.mock('@/lib/api-client', () => ({
-    api: {
-        post: mockApiCall,
-        get: mockApiCall,
-    }
+    __esModule: true,
+    default: {
+        login: jest.fn(),
+        register: jest.fn(),
+        logout: jest.fn(),
+    },
 }))
+
+// Mock localStorage
+const localStorageMock = {
+    getItem: jest.fn(),
+    setItem: jest.fn(),
+    removeItem: jest.fn(),
+    clear: jest.fn(),
+}
+Object.defineProperty(window, 'localStorage', {
+    value: localStorageMock,
+})
 
 // Mock Next.js router
 const mockPush = jest.fn()
@@ -115,12 +127,12 @@ describe('useAuth Hook', () => {
 
             const { result } = renderHook(() => useAuth())
 
-            let loginResult: any
+            let loginResult: unknown
             await act(async () => {
                 loginResult = await result.current.login(credentials)
             })
 
-            expect(loginResult.success).toBe(true)
+            expect((loginResult as any).success).toBe(true)
             expect(result.current.user).toEqual(global.testUser)
             expect(result.current.isAuthenticated).toBe(true)
             expect(result.current.isLoading).toBe(false)
@@ -149,13 +161,13 @@ describe('useAuth Hook', () => {
 
             const { result } = renderHook(() => useAuth())
 
-            let loginResult: any
+            let loginResult: unknown
             await act(async () => {
                 loginResult = await result.current.login(credentials)
             })
 
-            expect(loginResult.success).toBe(false)
-            expect(loginResult.error).toBe('Credenciales inválidas')
+            expect((loginResult as any).success).toBe(false)
+            expect((loginResult as any).error).toBe('Credenciales inválidas')
             expect(result.current.user).toBeNull()
             expect(result.current.isAuthenticated).toBe(false)
 
@@ -172,13 +184,13 @@ describe('useAuth Hook', () => {
 
             const { result } = renderHook(() => useAuth())
 
-            let loginResult: any
+            let loginResult: unknown
             await act(async () => {
                 loginResult = await result.current.login(credentials)
             })
 
-            expect(loginResult.success).toBe(false)
-            expect(loginResult.error).toBe('Error de conexión. Intenta nuevamente.')
+            expect((loginResult as any).success).toBe(false)
+            expect((loginResult as any).error).toBe('Error de conexión. Intenta nuevamente.')
             expect(result.current.user).toBeNull()
             expect(result.current.isAuthenticated).toBe(false)
         })
@@ -307,12 +319,12 @@ describe('useAuth Hook', () => {
 
             const { result } = renderHook(() => useAuth())
 
-            let registerResult: any
+            let registerResult: unknown
             await act(async () => {
                 registerResult = await result.current.register(registerData)
             })
 
-            expect(registerResult.success).toBe(true)
+            expect((registerResult as any).success).toBe(true)
             expect(result.current.user).toEqual(global.testUser)
             expect(result.current.isAuthenticated).toBe(true)
 
@@ -349,14 +361,14 @@ describe('useAuth Hook', () => {
 
             const { result } = renderHook(() => useAuth())
 
-            let registerResult: any
+            let registerResult: unknown
             await act(async () => {
                 registerResult = await result.current.register(registerData)
             })
 
-            expect(registerResult.success).toBe(false)
-            expect(registerResult.errors).toBeDefined()
-            expect(registerResult.errors.nombre).toBe('El nombre es requerido')
+            expect((registerResult as any).success).toBe(false)
+            expect((registerResult as any).errors).toBeDefined()
+            expect((registerResult as any).errors.nombre).toBe('El nombre es requerido')
             expect(result.current.user).toBeNull()
             expect(result.current.isAuthenticated).toBe(false)
         })
@@ -377,13 +389,13 @@ describe('useAuth Hook', () => {
 
             const { result } = renderHook(() => useAuth())
 
-            let registerResult: any
+            let registerResult: unknown
             await act(async () => {
                 registerResult = await result.current.register(registerData)
             })
 
-            expect(registerResult.success).toBe(false)
-            expect(registerResult.error).toBe('El email ya está registrado')
+            expect((registerResult as any).success).toBe(false)
+            expect((registerResult as any).error).toBe('El email ya está registrado')
         })
     })
 
@@ -405,12 +417,12 @@ describe('useAuth Hook', () => {
             const updatedUser = { ...global.testUser, ...updateData }
             mockApiCall.mockResolvedValue({ user: updatedUser })
 
-            let updateResult: any
+            let updateResult: unknown
             await act(async () => {
                 updateResult = await result.current.updateProfile(updateData)
             })
 
-            expect(updateResult.success).toBe(true)
+            expect((updateResult as any).success).toBe(true)
             expect(result.current.user).toEqual(updatedUser)
 
             expect(mockApiCall).toHaveBeenCalledWith('/auth/profile', {
@@ -436,13 +448,13 @@ describe('useAuth Hook', () => {
                 status: 400
             })
 
-            let updateResult: any
+            let updateResult: unknown
             await act(async () => {
                 updateResult = await result.current.updateProfile(updateData)
             })
 
-            expect(updateResult.success).toBe(false)
-            expect(updateResult.error).toBe('Email inválido')
+            expect((updateResult as any).success).toBe(false)
+            expect((updateResult as any).error).toBe('Email inválido')
             // User should remain unchanged
             expect(result.current.user).toEqual(global.testUser)
         })
@@ -464,12 +476,12 @@ describe('useAuth Hook', () => {
 
             mockApiCall.mockResolvedValue({ success: true })
 
-            let changeResult: any
+            let changeResult: unknown
             await act(async () => {
                 changeResult = await result.current.changePassword(passwordData)
             })
 
-            expect(changeResult.success).toBe(true)
+            expect((changeResult as any).success).toBe(true)
 
             expect(mockApiCall).toHaveBeenCalledWith('/auth/change-password', {
                 method: 'POST',
@@ -498,13 +510,13 @@ describe('useAuth Hook', () => {
                 status: 400
             })
 
-            let changeResult: any
+            let changeResult: unknown
             await act(async () => {
                 changeResult = await result.current.changePassword(passwordData)
             })
 
-            expect(changeResult.success).toBe(false)
-            expect(changeResult.error).toBe('Contraseña actual incorrecta')
+            expect((changeResult as any).success).toBe(false)
+            expect((changeResult as any).error).toBe('Contraseña actual incorrecta')
         })
     })
 
@@ -611,13 +623,13 @@ describe('useAuth Hook', () => {
 
             const { result } = renderHook(() => useAuth())
 
-            let loginResult: any
+            let loginResult: unknown
             await act(async () => {
                 loginResult = await result.current.login(credentials)
             })
 
-            expect(loginResult.success).toBe(false)
-            expect(loginResult.error).toBe('La conexión tardó demasiado. Intenta nuevamente.')
+            expect((loginResult as any).success).toBe(false)
+            expect((loginResult as any).error).toBe('La conexión tardó demasiado. Intenta nuevamente.')
         })
 
         it('handles server errors', async () => {
@@ -633,13 +645,13 @@ describe('useAuth Hook', () => {
 
             const { result } = renderHook(() => useAuth())
 
-            let loginResult: any
+            let loginResult: unknown
             await act(async () => {
                 loginResult = await result.current.login(credentials)
             })
 
-            expect(loginResult.success).toBe(false)
-            expect(loginResult.error).toBe('Error del servidor. Intenta más tarde.')
+            expect((loginResult as any).success).toBe(false)
+            expect((loginResult as any).error).toBe('Error del servidor. Intenta más tarde.')
         })
 
         it('clears errors after successful operations', async () => {

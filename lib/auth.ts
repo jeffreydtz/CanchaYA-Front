@@ -3,7 +3,18 @@
  * Handles JWT token management, cookies, and auth state on client-side only
  */
 
-import { User } from './api-client'
+import { redirect } from 'next/navigation'
+import { cookies } from 'next/headers'
+import { verify } from 'jsonwebtoken'
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key'
+
+export interface User {
+    id: string
+    nombre: string
+    email: string
+    rol: 'usuario' | 'admin'
+}
 
 export interface JWTPayload {
     sub: string

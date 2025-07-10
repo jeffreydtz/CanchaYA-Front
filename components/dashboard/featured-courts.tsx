@@ -5,268 +5,139 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardFooter } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { AspectRatio } from '@/components/ui/aspect-ratio'
+import { Button } from '@/components/ui/button'
 import { 
   MapPin, 
+  DollarSign, 
   Star, 
-  Clock, 
-  Users, 
-  CheckCircle, 
-  AlertCircle,
+  Users,
   Calendar,
-  ArrowRight
+  Clock,
+  AlertCircle
 } from 'lucide-react'
+import apiClient from '@/lib/api-client'
 import { Court } from '@/lib/api-client'
+import { formatPrice } from '@/lib/utils'
 
-interface FeaturedCourtsProps {
-  courts: Court[]
-  isAuthenticated: boolean
-  searchQuery?: string
-}
+export default function FeaturedCourts() {
+  const [courts, setCourts] = useState<Court[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-export function FeaturedCourts({ courts, isAuthenticated, searchQuery }: FeaturedCourtsProps) {
-  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set())
-
-  const handleImageError = (courtId: string) => {
-    setImageErrors(prev => new Set(prev).add(courtId))
-  }
-
-  const getCourtImage = (court: Court) => {
-    if (imageErrors.has(court.id) || !court.imagenes || court.imagenes.length === 0) {
-      return '/placeholder.jpg'
+  const loadFeaturedCourts = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const response = await apiClient.getCourts({ featured: true })
+      if (response.data) {
+        setCourts(response.data)
+      }
+    } catch (err) {
+      console.error('Error loading featured courts:', err)
+    } finally {
+      setIsLoading(false)
     }
-    return court.imagenes[0]
-  }
+  }, [])
 
-  const getDeporteIcon = (deporte: string) => {
-    const icons: Record<string, string> = {
-      futbol: '⚽',
-      padel: '🎾',
-      tenis: '🎾',
-      basquet: '🏀',
-      voley: '🏐',
-    }
-    return icons[deporte.toLowerCase()] || '🏃'
-  }
+  useEffect(() => {
+    loadFeaturedCourts()
+  }, [loadFeaturedCourts])
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-      minimumFractionDigits: 0,
-    }).format(price)
-  }
-
-  if (courts.length === 0) {
+  if (isLoading) {
     return (
-      <div className="text-center py-16">
-        <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <AlertCircle className="h-12 w-12 text-gray-400" />
-        </div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">
-          {searchQuery ? 'No se encontraron canchas' : 'No hay canchas disponibles'}
-        </h3>
-        <p className="text-gray-600 mb-8 max-w-md mx-auto">
-          {searchQuery 
-            ? `No encontramos canchas que coincidan con "${searchQuery}". Intenta con otros términos de búsqueda.`
-            : 'No hay canchas disponibles en este momento. Vuelve a intentar más tarde.'
-          }
-        </p>
-        {searchQuery && (
-          <Button asChild variant="outline">
-            <Link href="/">Ver todas las canchas</Link>
-          </Button>
-        )}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[...Array(6)].map((_, i) => (
+          <Card key={i} className="animate-pulse">
+            <div className="h-48 bg-gray-200 rounded-t-lg"></div>
+            <CardContent className="p-4">
+              <div className="h-4 bg-gray-200 rounded mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded mb-4"></div>
+              <div className="h-6 bg-gray-200 rounded"></div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      {/* Results Summary */}
-      {searchQuery && (
-        <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
-          <p className="text-primary-800">
-            <strong>{courts.length}</strong> cancha{courts.length !== 1 ? 's' : ''} encontrada{courts.length !== 1 ? 's' : ''} para "{searchQuery}"
+    <section className="py-12">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold mb-4">Canchas Destacadas</h2>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            Descubre las mejores canchas deportivas con instalaciones de primer nivel
           </p>
         </div>
-      )}
 
-      {/* Courts Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {courts.map((court) => (
-          <Card key={court.id} className="group hover:shadow-lg transition-all duration-300 border-0 shadow-md bg-white overflow-hidden">
-            <div className="relative">
-              <AspectRatio ratio={16 / 10}>
-                <Image
-                  src={getCourtImage(court)}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {courts.map((court) => (
+            <Card key={court.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+              <div className="relative">
+                <img
+                  src={court.imagen}
                   alt={court.nombre}
-                  fill
-                  className="object-cover transition-transform duration-300 group-hover:scale-105"
-                  onError={() => handleImageError(court.id)}
+                  className="w-full h-48 object-cover"
                 />
-              </AspectRatio>
-              
-              {/* Status Badge */}
-              <div className="absolute top-3 right-3">
-                <Badge
-                  variant={court.disponible ? "default" : "secondary"}
-                  className={court.disponible 
-                    ? "bg-green-500 hover:bg-green-600 text-white shadow-lg" 
-                    : "bg-gray-500 text-white"
-                  }
-                >
-                  {court.disponible ? (
-                    <>
-                      <CheckCircle className="w-3 h-3 mr-1" />
-                      Disponible
-                    </>
-                  ) : (
-                    <>
-                      <Clock className="w-3 h-3 mr-1" />
-                      Ocupada
-                    </>
-                  )}
-                </Badge>
-              </div>
-
-              {/* Sport Icon */}
-              <div className="absolute top-3 left-3">
-                <div className="bg-white/90 backdrop-blur-sm rounded-full p-2 text-lg">
-                  {getDeporteIcon(court.deporte.nombre)}
-                </div>
-              </div>
-
-              {/* Price Badge */}
-              <div className="absolute bottom-3 left-3">
-                <Badge variant="secondary" className="bg-white/90 text-gray-900 font-semibold">
-                  {formatPrice(court.precio)}/hora
-                </Badge>
-              </div>
-            </div>
-
-            <CardContent className="p-6">
-              <div className="space-y-3">
-                {/* Title and Rating */}
-                <div className="flex items-start justify-between">
-                  <h3 className="font-bold text-lg text-gray-900 group-hover:text-primary-600 transition-colors line-clamp-2">
-                    {court.nombre}
-                  </h3>
-                  <div className="flex items-center ml-2 text-sm text-yellow-600">
-                    <Star className="w-4 h-4 fill-current" />
-                    <span className="ml-1 font-medium">4.8</span>
-                  </div>
-                </div>
-
-                {/* Location */}
-                <div className="flex items-center text-gray-600 text-sm">
-                  <MapPin className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <span className="line-clamp-1">{court.club.nombre} - {court.club.direccion}</span>
-                </div>
-
-                {/* Sport and Description */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs">
-                      {court.deporte.nombre}
-                    </Badge>
-                    <Badge variant="outline" className="text-xs">
-                      <Users className="w-3 h-3 mr-1" />
-                      8-10 jugadores
-                    </Badge>
-                  </div>
-                  
-                  {court.descripcion && (
-                    <p className="text-sm text-gray-600 line-clamp-2">
-                      {court.descripcion}
-                    </p>
-                  )}
-                </div>
-
-                {/* Features */}
-                <div className="flex flex-wrap gap-1 text-xs text-gray-500">
-                  <span className="bg-gray-100 px-2 py-1 rounded-full">Iluminación LED</span>
-                  <span className="bg-gray-100 px-2 py-1 rounded-full">Vestuarios</span>
-                  <span className="bg-gray-100 px-2 py-1 rounded-full">Estacionamiento</span>
-                </div>
-              </div>
-            </CardContent>
-
-            <CardFooter className="p-6 pt-0">
-              <div className="flex gap-2 w-full">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  asChild
-                  className="flex-1"
-                >
-                  <Link href={`/cancha/${court.id}`}>
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Ver horarios
-                  </Link>
-                </Button>
-                
-                {isAuthenticated ? (
-                  <Button
-                    size="sm"
-                    asChild
-                    className="flex-1 group"
-                    disabled={!court.disponible}
-                  >
-                    <Link href={`/cancha/${court.id}?action=reserve`}>
-                      Reservar
-                      <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                  </Button>
-                ) : (
-                  <Button
-                    size="sm"
-                    asChild
-                    className="flex-1"
-                  >
-                    <Link href="/login">
-                      Iniciar sesión
-                    </Link>
-                  </Button>
+                {court.featured && (
+                  <Badge className="absolute top-2 right-2 bg-yellow-500">
+                    <Star className="h-3 w-3 mr-1" />
+                    Destacada
+                  </Badge>
                 )}
               </div>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
+              
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h3 className="text-xl font-semibold mb-1">{court.nombre}</h3>
+                    <p className="text-gray-600 text-sm">{court.club}</p>
+                  </div>
+                  <Badge variant="secondary">{court.deporte}</Badge>
+                </div>
 
-      {/* Load More Button */}
-      {courts.length >= 6 && (
-        <div className="text-center pt-8">
-          <Button variant="outline" size="lg">
-            Ver más canchas
-            <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center text-sm text-gray-600">
+                    <MapPin className="h-4 w-4 mr-2" />
+                    {court.direccion}
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600">
+                    <Clock className="h-4 w-4 mr-2" />
+                    {court.horarios}
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600">
+                    <DollarSign className="h-4 w-4 mr-2" />
+                    {formatPrice(court.precio)} por hora
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Link href={`/cancha/${court.id}`} className="flex-1">
+                    <Button className="w-full">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Reservar
+                    </Button>
+                  </Link>
+                  <Link href={`/cancha/${court.id}`}>
+                    <Button variant="outline" size="icon">
+                      <AlertCircle className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-      )}
 
-      {/* Empty State for Search */}
-      {courts.length > 0 && !searchQuery && (
-        <div className="text-center pt-8 border-t">
-          <p className="text-gray-600 mb-4">
-            ¿No encuentras lo que buscas?
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button variant="outline" asChild>
-              <Link href="/#filtros">Usar filtros avanzados</Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link href="/contact">Solicitar nueva cancha</Link>
-            </Button>
+        {courts.length === 0 && !isLoading && (
+          <div className="text-center py-12">
+            <AlertCircle className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+            <p className="text-gray-600">No se encontraron canchas destacadas</p>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
+    </section>
   )
 }

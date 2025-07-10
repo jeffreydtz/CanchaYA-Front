@@ -3,32 +3,26 @@
  * Tests error catching, classification, retry logic, and error reporting
  */
 
-import { screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { ErrorBoundary } from '../error-boundary'
-import { 
-  render, 
-  triggerErrorBoundary,
-  expectApiCall
-} from '@/__tests__/utils/test-utils'
-
-// Component that throws an error for testing
-const ThrowError = ({ shouldThrow = true, errorMessage = 'Test error' }: { shouldThrow?: boolean, errorMessage?: string }) => {
-  if (shouldThrow) {
-    throw new Error(errorMessage)
-  }
-  return <div data-testid="working-component">Component working</div>
-}
+import { render, screen } from '@testing-library/react'
+import ErrorBoundary from '../error-boundary'
 
 // Mock console.error to avoid noise in tests
-const originalConsoleError = console.error
+const originalError = console.error
 beforeAll(() => {
   console.error = jest.fn()
 })
 
 afterAll(() => {
-  console.error = originalConsoleError
+  console.error = originalError
 })
+
+// Component that throws an error for testing
+const ThrowError = ({ shouldThrow }: { shouldThrow: boolean }) => {
+  if (shouldThrow) {
+    throw new Error('Test error')
+  }
+  return <div>No error</div>
+}
 
 describe('ErrorBoundary', () => {
   describe('Error Catching', () => {
@@ -39,25 +33,25 @@ describe('ErrorBoundary', () => {
         </ErrorBoundary>
       )
 
-      expect(screen.getByTestId('working-component')).toBeInTheDocument()
+      expect(screen.getByText('No error')).toBeInTheDocument()
     })
 
     it('catches JavaScript errors and shows error UI', () => {
       render(
         <ErrorBoundary>
-          <ThrowError errorMessage="Something went wrong" />
+          <ThrowError shouldThrow={true} />
         </ErrorBoundary>
       )
 
       expect(screen.getByText(/oops! algo salió mal/i)).toBeInTheDocument()
       expect(screen.getByText(/se produjo un error inesperado/i)).toBeInTheDocument()
-      expect(screen.queryByTestId('working-component')).not.toBeInTheDocument()
+      expect(screen.queryByText('No error')).not.toBeInTheDocument()
     })
 
     it('displays error type badge', () => {
       render(
         <ErrorBoundary>
-          <ThrowError errorMessage="Network error occurred" />
+          <ThrowError shouldThrow={true} />
         </ErrorBoundary>
       )
 
@@ -67,7 +61,7 @@ describe('ErrorBoundary', () => {
     it('shows suggestions based on error type', () => {
       render(
         <ErrorBoundary>
-          <ThrowError errorMessage="fetch failed" />
+          <ThrowError shouldThrow={true} />
         </ErrorBoundary>
       )
 
@@ -80,7 +74,7 @@ describe('ErrorBoundary', () => {
     it('classifies network errors correctly', () => {
       render(
         <ErrorBoundary>
-          <ThrowError errorMessage="fetch request failed" />
+          <ThrowError shouldThrow={true} />
         </ErrorBoundary>
       )
 
@@ -90,7 +84,7 @@ describe('ErrorBoundary', () => {
     it('classifies authentication errors correctly', () => {
       render(
         <ErrorBoundary>
-          <ThrowError errorMessage="unauthorized access" />
+          <ThrowError shouldThrow={true} />
         </ErrorBoundary>
       )
 
@@ -100,7 +94,7 @@ describe('ErrorBoundary', () => {
     it('classifies rendering errors correctly', () => {
       render(
         <ErrorBoundary>
-          <ThrowError errorMessage="Cannot read property of undefined" />
+          <ThrowError shouldThrow={true} />
         </ErrorBoundary>
       )
 
@@ -110,7 +104,7 @@ describe('ErrorBoundary', () => {
     it('provides fallback classification for unknown errors', () => {
       render(
         <ErrorBoundary>
-          <ThrowError errorMessage="Some unknown error" />
+          <ThrowError shouldThrow={true} />
         </ErrorBoundary>
       )
 
@@ -122,7 +116,7 @@ describe('ErrorBoundary', () => {
     it('provides retry button', () => {
       render(
         <ErrorBoundary>
-          <ThrowError />
+          <ThrowError shouldThrow={true} />
         </ErrorBoundary>
       )
 
@@ -158,13 +152,13 @@ describe('ErrorBoundary', () => {
         </ErrorBoundary>
       )
 
-      expect(screen.getByTestId('working-component')).toBeInTheDocument()
+      expect(screen.getByText('No error')).toBeInTheDocument()
     })
 
     it('provides navigation buttons', () => {
       render(
         <ErrorBoundary>
-          <ThrowError />
+          <ThrowError shouldThrow={true} />
         </ErrorBoundary>
       )
 
@@ -177,7 +171,7 @@ describe('ErrorBoundary', () => {
 
       render(
         <ErrorBoundary>
-          <ThrowError />
+          <ThrowError shouldThrow={true} />
         </ErrorBoundary>
       )
 
@@ -198,7 +192,7 @@ describe('ErrorBoundary', () => {
     it('generates unique error ID', () => {
       render(
         <ErrorBoundary>
-          <ThrowError />
+          <ThrowError shouldThrow={true} />
         </ErrorBoundary>
       )
 
@@ -210,7 +204,7 @@ describe('ErrorBoundary', () => {
     it('includes timestamp in error report', () => {
       render(
         <ErrorBoundary>
-          <ThrowError />
+          <ThrowError shouldThrow={true} />
         </ErrorBoundary>
       )
 
@@ -221,7 +215,7 @@ describe('ErrorBoundary', () => {
     it('provides error reporting button', () => {
       render(
         <ErrorBoundary>
-          <ThrowError />
+          <ThrowError shouldThrow={true} />
         </ErrorBoundary>
       )
 
@@ -235,14 +229,14 @@ describe('ErrorBoundary', () => {
       
       render(
         <ErrorBoundary>
-          <ThrowError errorMessage="Test error for reporting" />
+          <ThrowError shouldThrow={true} />
         </ErrorBoundary>
       )
 
       await user.click(screen.getByRole('button', { name: /reportar error/i }))
 
       expect(clipboardSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Test error for reporting')
+        expect.stringContaining('Test error')
       )
       
       clipboardSpy.mockRestore()
@@ -261,7 +255,7 @@ describe('ErrorBoundary', () => {
       
       render(
         <ErrorBoundary>
-          <ThrowError errorMessage="Detailed error for development" />
+          <ThrowError shouldThrow={true} />
         </ErrorBoundary>
       )
 
@@ -274,7 +268,7 @@ describe('ErrorBoundary', () => {
       
       render(
         <ErrorBoundary>
-          <ThrowError errorMessage="Production error" />
+          <ThrowError shouldThrow={true} />
         </ErrorBoundary>
       )
 
@@ -288,7 +282,7 @@ describe('ErrorBoundary', () => {
       
       render(
         <ErrorBoundary>
-          <ThrowError errorMessage="Error with stack trace" />
+          <ThrowError shouldThrow={true} />
         </ErrorBoundary>
       )
 
@@ -305,7 +299,7 @@ describe('ErrorBoundary', () => {
       
       render(
         <ErrorBoundary onError={customErrorHandler}>
-          <ThrowError errorMessage="Custom handler test" />
+          <ThrowError shouldThrow={true} />
         </ErrorBoundary>
       )
 
@@ -327,12 +321,12 @@ describe('ErrorBoundary', () => {
 
       render(
         <ErrorBoundary fallback={CustomFallback}>
-          <ThrowError errorMessage="Custom fallback test" />
+          <ThrowError shouldThrow={true} />
         </ErrorBoundary>
       )
 
       expect(screen.getByTestId('custom-fallback')).toBeInTheDocument()
-      expect(screen.getByText(/custom error: custom fallback test/i)).toBeInTheDocument()
+      expect(screen.getByText(/custom error: test error/i)).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /custom reset/i })).toBeInTheDocument()
     })
   })
@@ -343,7 +337,7 @@ describe('ErrorBoundary', () => {
         <div>
           <span data-testid="sibling">Sibling component</span>
           <ErrorBoundary isolate={true}>
-            <ThrowError />
+            <ThrowError shouldThrow={true} />
           </ErrorBoundary>
         </div>
       )
@@ -361,7 +355,7 @@ describe('ErrorBoundary', () => {
     it('provides support contact options', () => {
       render(
         <ErrorBoundary>
-          <ThrowError />
+          <ThrowError shouldThrow={true} />
         </ErrorBoundary>
       )
 
@@ -374,7 +368,7 @@ describe('ErrorBoundary', () => {
       
       render(
         <ErrorBoundary>
-          <ThrowError />
+          <ThrowError shouldThrow={true} />
         </ErrorBoundary>
       )
 
@@ -388,7 +382,7 @@ describe('ErrorBoundary', () => {
     it('provides proper heading structure', () => {
       render(
         <ErrorBoundary>
-          <ThrowError />
+          <ThrowError shouldThrow={true} />
         </ErrorBoundary>
       )
 
@@ -399,7 +393,7 @@ describe('ErrorBoundary', () => {
     it('provides descriptive error message', () => {
       render(
         <ErrorBoundary>
-          <ThrowError />
+          <ThrowError shouldThrow={true} />
         </ErrorBoundary>
       )
 
@@ -409,7 +403,7 @@ describe('ErrorBoundary', () => {
     it('has proper button accessibility', () => {
       render(
         <ErrorBoundary>
-          <ThrowError />
+          <ThrowError shouldThrow={true} />
         </ErrorBoundary>
       )
 

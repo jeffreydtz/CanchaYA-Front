@@ -4,7 +4,16 @@
  */
 
 import { cookies } from 'next/headers'
-import { User } from './api-client'
+import { verify } from 'jsonwebtoken'
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key'
+
+export interface User {
+    id: string
+    nombre: string
+    email: string
+    rol: 'usuario' | 'admin'
+}
 
 export interface JWTPayload {
     sub: string
