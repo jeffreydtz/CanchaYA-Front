@@ -1,442 +1,277 @@
 /**
  * Unit Tests for MyReservations Component
- * Tests reservation loading, filtering, cancellation, and status management
+ * Tests reservation display, confirmation, cancellation, and status management
  */
 
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MyReservations } from '../my-reservations'
-import { 
-  renderWithProviders, 
-  mockFetchSuccess, 
-  mockFetchError,
-  expectToastMessage,
-  expectApiCall
-} from '@/__tests__/utils/test-utils'
+import { renderWithProviders } from '@/__tests__/utils/test-utils'
+import { addHours, subHours } from 'date-fns'
+import * as actions from '@/lib/actions'
 
-// Mock API calls
-const mockApiCall = jest.fn()
-jest.mock('@/lib/api-client', () => ({
-  api: {
-    get: mockApiCall,
-    delete: mockApiCall,
-    patch: mockApiCall,
-  }
+// Mock server actions
+jest.mock('@/lib/actions', () => ({
+  confirmReservationAction: jest.fn(),
+  cancelReservationAction: jest.fn()
 }))
+
+const mockDate = new Date('2024-03-20T12:00:00Z')
 
 const mockReservations = [
   {
-    ...global.testReservation,
     id: '1',
-    fecha: '2024-12-25',
-    horaInicio: '10:00',
-    horaFin: '11:00',
-    estado: 'CONFIRMADA',
-    cancha: {
-      ...global.testCourt,
-      nombre: 'Cancha Fútbol 1'
-    }
-  },
-  {
-    ...global.testReservation,
-    id: '2',
-    fecha: '2024-12-26',
+    fecha: '2024-03-20',
     horaInicio: '14:00',
     horaFin: '15:00',
     estado: 'PENDIENTE',
+    confirmada: false,
+    precio: 5000,
     cancha: {
-      ...global.testCourt,
-      nombre: 'Cancha Tenis 1'
+      id: '1',
+      nombre: 'Cancha Fútbol 1',
+      deporte: { nombre: 'Fútbol' },
+      club: {
+        nombre: 'Club Deportivo',
+        direccion: 'Av. Principal 123'
+      }
     }
   },
   {
-    ...global.testReservation,
-    id: '3',
-    fecha: '2024-12-20',
-    horaInicio: '09:00',
-    horaFin: '10:00',
-    estado: 'CANCELADA',
+    id: '2',
+    fecha: '2024-03-20',
+    horaInicio: '16:00',
+    horaFin: '17:00',
+    estado: 'CONFIRMADA',
+    confirmada: true,
+    precio: 6000,
     cancha: {
-      ...global.testCourt,
-      nombre: 'Cancha Básquet 1'
+      id: '2',
+      nombre: 'Cancha Tenis 1',
+      deporte: { nombre: 'Tenis' },
+      club: {
+        nombre: 'Club Deportivo',
+        direccion: 'Av. Principal 123'
+      }
+    }
+  },
+  {
+    id: '3',
+    fecha: '2024-03-19',
+    horaInicio: '10:00',
+    horaFin: '11:00',
+    estado: 'CANCELADA',
+    confirmada: false,
+    precio: 4500,
+    cancha: {
+      id: '3',
+      nombre: 'Cancha Básquet 1',
+      deporte: { nombre: 'Básquet' },
+      club: {
+        nombre: 'Club Deportivo',
+        direccion: 'Av. Principal 123'
+      }
     }
   }
 ]
 
 describe('MyReservations', () => {
   beforeEach(() => {
-    mockApiCall.mockClear()
+    jest.useFakeTimers()
+    jest.setSystemTime(mockDate)
   })
 
-  describe('Loading States', () => {
-    it('shows loading spinner while fetching reservations', () => {
-      mockApiCall.mockImplementation(() => new Promise(() => {})) // Never resolves
-      
-      renderWithProviders(<MyReservations />)
-
-      expect(screen.getByTestId('loader-icon')).toBeInTheDocument()
-      expect(screen.getByText(/cargando reservas/i)).toBeInTheDocument()
-    })
-
-    it('displays reservations after successful fetch', async () => {
-      mockFetchSuccess(mockReservations)
-      
-      renderWithProviders(<MyReservations />)
-
-      await waitFor(() => {
-        expect(screen.getByText('Cancha Fútbol 1')).toBeInTheDocument()
-        expect(screen.getByText('Cancha Tenis 1')).toBeInTheDocument()
-        expect(screen.getByText('Cancha Básquet 1')).toBeInTheDocument()
-      })
-    })
-
-    it('shows error message when fetch fails', async () => {
-      mockFetchError('Error al cargar reservas')
-      
-      renderWithProviders(<MyReservations />)
-
-      await waitFor(() => {
-        expect(screen.getByText(/error al cargar reservas/i)).toBeInTheDocument()
-        expect(screen.getByRole('button', { name: /intentar nuevamente/i })).toBeInTheDocument()
-      })
-    })
-
-    it('shows empty state when no reservations exist', async () => {
-      mockFetchSuccess([])
-      
-      renderWithProviders(<MyReservations />)
-
-      await waitFor(() => {
-        expect(screen.getByText(/no tienes reservas/i)).toBeInTheDocument()
-        expect(screen.getByText(/¡es hora de reservar tu primera cancha!/i)).toBeInTheDocument()
-        expect(screen.getByRole('link', { name: /explorar canchas/i })).toBeInTheDocument()
-      })
-    })
+  afterEach(() => {
+    jest.useRealTimers()
+    jest.clearAllMocks()
   })
 
   describe('Reservation Display', () => {
-    beforeEach(async () => {
-      mockFetchSuccess(mockReservations)
-      renderWithProviders(<MyReservations />)
-      
-      await waitFor(() => {
-        expect(screen.getByText('Cancha Fútbol 1')).toBeInTheDocument()
-      })
-    })
-
     it('displays all reservation information correctly', () => {
+      renderWithProviders(
+        <MyReservations 
+          reservations={mockReservations} 
+          userId="test-user" 
+        />
+      )
+
       // Check first reservation
       expect(screen.getByText('Cancha Fútbol 1')).toBeInTheDocument()
-      expect(screen.getByText('25 de diciembre, 2024')).toBeInTheDocument()
-      expect(screen.getByText('10:00 - 11:00')).toBeInTheDocument()
-      expect(screen.getByText('CONFIRMADA')).toBeInTheDocument()
-      expect(screen.getByText('$5.000')).toBeInTheDocument()
+      expect(screen.getByText('Fútbol')).toBeInTheDocument()
+      expect(screen.getByText(/miércoles, 20 de marzo de 2024/i)).toBeInTheDocument()
+      expect(screen.getByText(/14:00 - 15:00 hs/i)).toBeInTheDocument()
+      expect(screen.getByText('Club Deportivo - Av. Principal 123')).toBeInTheDocument()
+      expect(screen.getByText('$ 5.000')).toBeInTheDocument()
     })
 
-    it('shows correct status badges with appropriate colors', () => {
-      const confirmedBadge = screen.getByText('CONFIRMADA')
-      const pendingBadge = screen.getByText('PENDIENTE')
-      const cancelledBadge = screen.getByText('CANCELADA')
+    it('shows correct status badges', () => {
+      renderWithProviders(
+        <MyReservations 
+          reservations={mockReservations} 
+          userId="test-user" 
+        />
+      )
 
+      const pendingBadge = screen.getByText('Pendiente')
+      const confirmedBadge = screen.getByText('Confirmada')
+      const cancelledBadge = screen.getByText('Cancelada')
+
+      expect(pendingBadge).toHaveClass('border-yellow-500', 'text-yellow-700')
       expect(confirmedBadge).toHaveClass('bg-green-100', 'text-green-800')
-      expect(pendingBadge).toHaveClass('bg-yellow-100', 'text-yellow-800')
-      expect(cancelledBadge).toHaveClass('bg-red-100', 'text-red-800')
+      expect(cancelledBadge).toHaveClass('bg-destructive')
     })
 
-    it('displays court information with images', () => {
-      const courtImages = screen.getAllByRole('img', { name: /cancha/i })
-      expect(courtImages).toHaveLength(3)
-      
-      courtImages.forEach(img => {
-        expect(img).toHaveAttribute('src')
-        expect(img).toHaveAttribute('alt')
-      })
-    })
+    it('shows confirmation deadline for pending reservations', () => {
+      const futureReservation = {
+        ...mockReservations[0],
+        fecha: '2024-03-20',
+        horaInicio: '16:00'
+      }
 
-    it('shows action buttons for appropriate reservations', () => {
-      // Confirmed reservations should have cancel button
-      const cancelButtons = screen.getAllByRole('button', { name: /cancelar/i })
-      expect(cancelButtons).toHaveLength(1) // Only for confirmed reservation
+      renderWithProviders(
+        <MyReservations 
+          reservations={[futureReservation]} 
+          userId="test-user" 
+        />
+      )
 
-      // Pending reservations should have modify button
-      const modifyButtons = screen.getAllByRole('button', { name: /modificar/i })
-      expect(modifyButtons).toHaveLength(1) // Only for pending reservation
-
-      // Cancelled reservations should have no action buttons
-      const cancelledSection = screen.getByText('CANCELADA').closest('[data-testid="reservation-card"]')
-      expect(cancelledSection?.querySelector('button[data-action]')).toBeNull()
-    })
-  })
-
-  describe('Filtering and Sorting', () => {
-    beforeEach(async () => {
-      mockFetchSuccess(mockReservations)
-      renderWithProviders(<MyReservations />)
-      
-      await waitFor(() => {
-        expect(screen.getByText('Cancha Fútbol 1')).toBeInTheDocument()
-      })
-    })
-
-    it('filters reservations by status', async () => {
-      const user = userEvent.setup()
-      
-      // Filter by confirmed
-      await user.click(screen.getByRole('button', { name: /confirmadas/i }))
-      
-      expect(screen.getByText('Cancha Fútbol 1')).toBeInTheDocument()
-      expect(screen.queryByText('Cancha Tenis 1')).not.toBeInTheDocument()
-      expect(screen.queryByText('Cancha Básquet 1')).not.toBeInTheDocument()
-    })
-
-    it('filters reservations by date range', async () => {
-      const user = userEvent.setup()
-      
-      // Open date filter
-      await user.click(screen.getByTestId('date-filter-button'))
-      
-      // Select "Próximas" filter
-      await user.click(screen.getByText(/próximas/i))
-      
-      // Should only show future reservations
-      expect(screen.getByText('Cancha Fútbol 1')).toBeInTheDocument()
-      expect(screen.getByText('Cancha Tenis 1')).toBeInTheDocument()
-      expect(screen.queryByText('Cancha Básquet 1')).not.toBeInTheDocument()
-    })
-
-    it('sorts reservations by date', async () => {
-      const user = userEvent.setup()
-      
-      // Open sort dropdown
-      await user.click(screen.getByTestId('sort-dropdown'))
-      
-      // Sort by date ascending
-      await user.click(screen.getByText(/fecha \(más antigua\)/i))
-      
-      const reservationCards = screen.getAllByTestId('reservation-card')
-      expect(reservationCards[0]).toHaveTextContent('Cancha Básquet 1') // Dec 20
-      expect(reservationCards[1]).toHaveTextContent('Cancha Fútbol 1')  // Dec 25
-      expect(reservationCards[2]).toHaveTextContent('Cancha Tenis 1')   // Dec 26
-    })
-
-    it('searches reservations by court name', async () => {
-      const user = userEvent.setup()
-      
-      const searchInput = screen.getByPlaceholderText(/buscar por cancha/i)
-      await user.type(searchInput, 'Fútbol')
-      
-      expect(screen.getByText('Cancha Fútbol 1')).toBeInTheDocument()
-      expect(screen.queryByText('Cancha Tenis 1')).not.toBeInTheDocument()
-      expect(screen.queryByText('Cancha Básquet 1')).not.toBeInTheDocument()
-    })
-
-    it('clears all filters when reset button is clicked', async () => {
-      const user = userEvent.setup()
-      
-      // Apply some filters
-      await user.click(screen.getByRole('button', { name: /confirmadas/i }))
-      await user.type(screen.getByPlaceholderText(/buscar por cancha/i), 'test')
-      
-      // Clear filters
-      await user.click(screen.getByRole('button', { name: /limpiar filtros/i }))
-      
-      // All reservations should be visible again
-      expect(screen.getByText('Cancha Fútbol 1')).toBeInTheDocument()
-      expect(screen.getByText('Cancha Tenis 1')).toBeInTheDocument()
-      expect(screen.getByText('Cancha Básquet 1')).toBeInTheDocument()
+      expect(screen.getByText(/confirma en 2h/i)).toBeInTheDocument()
     })
   })
 
   describe('Reservation Actions', () => {
-    beforeEach(async () => {
-      mockFetchSuccess(mockReservations)
-      renderWithProviders(<MyReservations />)
-      
-      await waitFor(() => {
-        expect(screen.getByText('Cancha Fútbol 1')).toBeInTheDocument()
-      })
-    })
-
-    it('cancels reservation when cancel button is clicked', async () => {
+    it('allows confirming a pending reservation within the time window', async () => {
       const user = userEvent.setup()
-      mockApiCall.mockResolvedValueOnce({ success: true })
-      
-      const cancelButton = screen.getByRole('button', { name: /cancelar/i })
-      await user.click(cancelButton)
-      
-      // Confirmation dialog should appear
-      expect(screen.getByText(/¿estás seguro de que quieres cancelar/i)).toBeInTheDocument()
-      
-      // Confirm cancellation
-      await user.click(screen.getByRole('button', { name: /sí, cancelar/i }))
-      
-      await waitFor(() => {
-        expect(mockApiCall).toHaveBeenCalledWith(`/reservas/1/cancelar`, expect.objectContaining({
-          method: 'PATCH'
-        }))
-        expectToastMessage('Reserva cancelada exitosamente', 'success')
-      })
-    })
+      const confirmSpy = jest.spyOn(actions, 'confirmReservationAction')
+      confirmSpy.mockResolvedValue({ success: true })
 
-    it('shows error when cancellation fails', async () => {
-      const user = userEvent.setup()
-      mockFetchError('Error al cancelar reserva')
-      
-      const cancelButton = screen.getByRole('button', { name: /cancelar/i })
-      await user.click(cancelButton)
-      await user.click(screen.getByRole('button', { name: /sí, cancelar/i }))
-      
-      await waitFor(() => {
-        expectToastMessage('Error al cancelar reserva', 'error')
-      })
-    })
-
-    it('allows modifying pending reservations', async () => {
-      const user = userEvent.setup()
-      
-      const modifyButton = screen.getByRole('button', { name: /modificar/i })
-      await user.click(modifyButton)
-      
-      // Should navigate to modify reservation page
-      expect(mockApiCall).toHaveBeenCalledWith('/modificar-reserva/2')
-    })
-
-    it('prevents cancellation within 2 hours of start time', async () => {
-      const nearReservation = {
+      const pendingReservation = {
         ...mockReservations[0],
-        fecha: new Date().toISOString().split('T')[0],
-        horaInicio: new Date(Date.now() + 60 * 60 * 1000).toTimeString().slice(0, 5) // 1 hour from now
+        fecha: '2024-03-20',
+        horaInicio: '16:00' // 4 hours from mock current time
       }
-      
-      mockFetchSuccess([nearReservation])
-      renderWithProviders(<MyReservations />)
-      
-      await waitFor(() => {
-        const cancelButton = screen.queryByRole('button', { name: /cancelar/i })
-        expect(cancelButton).toBeDisabled()
-        expect(screen.getByText(/no se puede cancelar/i)).toBeInTheDocument()
-      })
-    })
-  })
 
-  describe('Pagination', () => {
-    it('shows pagination controls when there are many reservations', async () => {
-      const manyReservations = Array.from({ length: 25 }, (_, i) => ({
-        ...global.testReservation,
-        id: `${i + 1}`,
-        cancha: { ...global.testCourt, nombre: `Cancha ${i + 1}` }
-      }))
+      renderWithProviders(
+        <MyReservations 
+          reservations={[pendingReservation]} 
+          userId="test-user" 
+        />
+      )
+
+      // Open confirm dialog
+      await user.click(screen.getByRole('button', { name: /confirmar asistencia/i }))
       
-      mockFetchSuccess(manyReservations)
-      renderWithProviders(<MyReservations />)
-      
-      await waitFor(() => {
-        expect(screen.getByTestId('pagination')).toBeInTheDocument()
-        expect(screen.getByText('1 de 3')).toBeInTheDocument() // 25 items, 10 per page = 3 pages
-      })
+      // Confirm reservation
+      await user.click(screen.getByRole('button', { name: /confirmar/i }))
+
+      expect(confirmSpy).toHaveBeenCalledWith(pendingReservation.id)
     })
 
-    it('navigates to next page when next button is clicked', async () => {
+    it('allows cancelling an upcoming reservation', async () => {
       const user = userEvent.setup()
-      const manyReservations = Array.from({ length: 25 }, (_, i) => ({
-        ...global.testReservation,
-        id: `${i + 1}`,
-        cancha: { ...global.testCourt, nombre: `Cancha ${i + 1}` }
-      }))
-      
-      mockFetchSuccess(manyReservations)
-      renderWithProviders(<MyReservations />)
-      
-      await waitFor(() => {
-        expect(screen.getByText('Cancha 1')).toBeInTheDocument()
-      })
-      
-      // Click next page
-      await user.click(screen.getByRole('button', { name: /siguiente/i }))
-      
-      await waitFor(() => {
-        expect(screen.getByText('Cancha 11')).toBeInTheDocument()
-        expect(screen.queryByText('Cancha 1')).not.toBeInTheDocument()
-      })
-    })
-  })
+      const cancelSpy = jest.spyOn(actions, 'cancelReservationAction')
+      cancelSpy.mockResolvedValue({ success: true })
 
-  describe('Reservation Details Modal', () => {
-    beforeEach(async () => {
-      mockFetchSuccess(mockReservations)
-      renderWithProviders(<MyReservations />)
+      const upcomingReservation = {
+        ...mockReservations[0],
+        fecha: '2024-03-20',
+        horaInicio: '16:00'
+      }
+
+      renderWithProviders(
+        <MyReservations 
+          reservations={[upcomingReservation]} 
+          userId="test-user" 
+        />
+      )
+
+      // Open cancel dialog
+      await user.click(screen.getByRole('button', { name: /cancelar reserva/i }))
       
-      await waitFor(() => {
-        expect(screen.getByText('Cancha Fútbol 1')).toBeInTheDocument()
-      })
+      // Cancel reservation
+      await user.click(screen.getByRole('button', { name: /sí, cancelar/i }))
+
+      expect(cancelSpy).toHaveBeenCalledWith(upcomingReservation.id)
     })
 
-    it('opens details modal when reservation card is clicked', async () => {
+    it('shows error toast when confirmation fails', async () => {
       const user = userEvent.setup()
-      
-      const reservationCard = screen.getByText('Cancha Fútbol 1').closest('[data-testid="reservation-card"]')
-      await user.click(reservationCard!)
-      
-      expect(screen.getByText(/detalles de la reserva/i)).toBeInTheDocument()
-      expect(screen.getByText(/información de la cancha/i)).toBeInTheDocument()
-      expect(screen.getByText(/Club Test/i)).toBeInTheDocument()
-    })
+      const confirmSpy = jest.spyOn(actions, 'confirmReservationAction')
+      confirmSpy.mockResolvedValue({ success: false, error: 'Error de confirmación' })
 
-    it('shows QR code for confirmed reservations', async () => {
-      const user = userEvent.setup()
-      
-      const reservationCard = screen.getByText('Cancha Fútbol 1').closest('[data-testid="reservation-card"]')
-      await user.click(reservationCard!)
-      
-      expect(screen.getByTestId('qr-code')).toBeInTheDocument()
-      expect(screen.getByText(/código qr de acceso/i)).toBeInTheDocument()
-    })
+      renderWithProviders(
+        <MyReservations 
+          reservations={[mockReservations[0]]} 
+          userId="test-user" 
+        />
+      )
 
-    it('closes modal when close button is clicked', async () => {
-      const user = userEvent.setup()
+      // Open confirm dialog
+      await user.click(screen.getByRole('button', { name: /confirmar asistencia/i }))
       
-      const reservationCard = screen.getByText('Cancha Fútbol 1').closest('[data-testid="reservation-card"]')
-      await user.click(reservationCard!)
-      
-      await user.click(screen.getByTestId('close-modal'))
-      
-      expect(screen.queryByText(/detalles de la reserva/i)).not.toBeInTheDocument()
-    })
-  })
+      // Try to confirm
+      await user.click(screen.getByRole('button', { name: /confirmar/i }))
 
-  describe('Accessibility', () => {
-    beforeEach(async () => {
-      mockFetchSuccess(mockReservations)
-      renderWithProviders(<MyReservations />)
-      
       await waitFor(() => {
-        expect(screen.getByText('Cancha Fútbol 1')).toBeInTheDocument()
+        expect(screen.getByText('Error de confirmación')).toBeInTheDocument()
       })
     })
 
-    it('has proper ARIA labels', () => {
-      expect(screen.getByRole('main')).toHaveAttribute('aria-label', 'Mis Reservas')
-      expect(screen.getByRole('region', { name: /filtros/i })).toBeInTheDocument()
-      expect(screen.getByRole('list', { name: /lista de reservas/i })).toBeInTheDocument()
+    it('shows error toast when cancellation fails', async () => {
+      const user = userEvent.setup()
+      const cancelSpy = jest.spyOn(actions, 'cancelReservationAction')
+      cancelSpy.mockResolvedValue({ success: false, error: 'Error de cancelación' })
+
+      renderWithProviders(
+        <MyReservations 
+          reservations={[mockReservations[0]]} 
+          userId="test-user" 
+        />
+      )
+
+      // Open cancel dialog
+      await user.click(screen.getByRole('button', { name: /cancelar reserva/i }))
+      
+      // Try to cancel
+      await user.click(screen.getByRole('button', { name: /sí, cancelar/i }))
+
+      await waitFor(() => {
+        expect(screen.getByText('Error de cancelación')).toBeInTheDocument()
+      })
     })
 
-    it('supports keyboard navigation', async () => {
-      const user = userEvent.setup()
-      
-      // Tab through filter buttons
-      await user.tab()
-      expect(screen.getByRole('button', { name: /todas/i })).toHaveFocus()
-      
-      await user.tab()
-      expect(screen.getByRole('button', { name: /confirmadas/i })).toHaveFocus()
+    it('disables confirmation button when past deadline', () => {
+      const pastDeadlineReservation = {
+        ...mockReservations[0],
+        fecha: '2024-03-20',
+        horaInicio: '13:00' // 1 hour from mock current time
+      }
+
+      renderWithProviders(
+        <MyReservations 
+          reservations={[pastDeadlineReservation]} 
+          userId="test-user" 
+        />
+      )
+
+      expect(screen.queryByRole('button', { name: /confirmar asistencia/i })).not.toBeInTheDocument()
     })
 
-    it('announces filter changes to screen readers', async () => {
-      const user = userEvent.setup()
-      
-      await user.click(screen.getByRole('button', { name: /confirmadas/i }))
-      
-      expect(screen.getByRole('status')).toHaveTextContent('Mostrando 1 reserva confirmada')
+    it('disables cancellation button for past reservations', () => {
+      const pastReservation = {
+        ...mockReservations[0],
+        fecha: '2024-03-19',
+        horaInicio: '10:00'
+      }
+
+      renderWithProviders(
+        <MyReservations 
+          reservations={[pastReservation]} 
+          userId="test-user" 
+        />
+      )
+
+      expect(screen.queryByRole('button', { name: /cancelar reserva/i })).not.toBeInTheDocument()
     })
   })
 }) 

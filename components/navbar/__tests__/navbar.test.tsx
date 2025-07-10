@@ -6,34 +6,43 @@
 import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Navbar } from '../navbar'
-import { 
-  renderWithProviders, 
-  mockAuthContextValue,
-  setMobileViewport,
-  setDesktopViewport,
-  expectNavigation
-} from '@/__tests__/utils/test-utils'
+import { renderWithProviders } from '@/__tests__/utils/test-utils'
+import * as actions from '@/lib/actions'
+
+// Mock server actions
+jest.mock('@/lib/actions', () => ({
+  logoutAction: jest.fn()
+}))
 
 // Mock useRouter
 const mockPush = jest.fn()
-const mockReplace = jest.fn()
 jest.mock('next/navigation', () => ({
   useRouter: () => ({
     push: mockPush,
-    replace: mockReplace,
-    prefetch: jest.fn(),
-    back: jest.fn(),
-    forward: jest.fn(),
-    refresh: jest.fn(),
-  }),
-  usePathname: () => '/dashboard',
-  useSearchParams: () => new URLSearchParams(),
+  })
 }))
+
+// Mock NotificationBell component
+jest.mock('@/components/notifications/notification-bell', () => ({
+  NotificationBell: () => <div data-testid="notification-bell">🔔</div>
+}))
+
+const mockUser = {
+  id: '1',
+  nombre: 'John',
+  apellido: 'Doe',
+  email: 'john@example.com',
+  rol: 'USUARIO'
+}
+
+const mockAdminUser = {
+  ...mockUser,
+  rol: 'ADMINISTRADOR'
+}
 
 describe('Navbar', () => {
   beforeEach(() => {
-    mockPush.mockClear()
-    mockReplace.mockClear()
+    jest.clearAllMocks()
   })
 
   describe('Rendering', () => {
@@ -41,321 +50,141 @@ describe('Navbar', () => {
       renderWithProviders(<Navbar />)
 
       expect(screen.getByText('CanchaYA')).toBeInTheDocument()
-      expect(screen.getByRole('img', { name: /logo/i })).toBeInTheDocument()
+      expect(screen.getByText('C')).toBeInTheDocument() // Logo letter
     })
 
-    it('renders navigation links for authenticated users', () => {
+    it('renders authentication buttons for unauthenticated users', () => {
       renderWithProviders(<Navbar />)
-
-      expect(screen.getByRole('link', { name: /inicio/i })).toBeInTheDocument()
-      expect(screen.getByRole('link', { name: /mis reservas/i })).toBeInTheDocument()
-      expect(screen.getByRole('link', { name: /explorar canchas/i })).toBeInTheDocument()
-    })
-
-    it('renders user menu for authenticated users', () => {
-      renderWithProviders(<Navbar />)
-
-      expect(screen.getByTestId('user-menu')).toBeInTheDocument()
-      expect(screen.getByText('Test User')).toBeInTheDocument()
-    })
-
-    it('renders login/register buttons for unauthenticated users', () => {
-      const unauthenticatedContext = {
-        ...mockAuthContextValue,
-        user: null,
-        isAuthenticated: false,
-      }
-
-      renderWithProviders(<Navbar />, { authValue: unauthenticatedContext })
 
       expect(screen.getByRole('link', { name: /iniciar sesión/i })).toBeInTheDocument()
       expect(screen.getByRole('link', { name: /registrarse/i })).toBeInTheDocument()
-      expect(screen.queryByTestId('user-menu')).not.toBeInTheDocument()
     })
 
-    it('shows admin link for admin users', () => {
-      const adminContext = {
-        ...mockAuthContextValue,
-        user: { ...global.testUser, rol: 'ADMINISTRADOR' },
-      }
+    it('renders user menu for authenticated users', () => {
+      renderWithProviders(<Navbar user={mockUser} />)
 
-      renderWithProviders(<Navbar />, { authValue: adminContext })
-
-      expect(screen.getByRole('link', { name: /administración/i })).toBeInTheDocument()
-    })
-  })
-
-  describe('Mobile Responsiveness', () => {
-    it('shows mobile menu toggle on small screens', () => {
-      setMobileViewport()
-      renderWithProviders(<Navbar />)
-
-      expect(screen.getByTestId('mobile-menu-toggle')).toBeInTheDocument()
-      expect(screen.queryByRole('navigation')).toHaveClass('hidden')
+      expect(screen.getByText('JD')).toBeInTheDocument() // Avatar initials
+      expect(screen.getByRole('button', { name: /john doe/i })).toBeInTheDocument()
     })
 
-    it('opens mobile menu when toggle is clicked', async () => {
-      const user = userEvent.setup()
-      setMobileViewport()
-      renderWithProviders(<Navbar />)
+    it('renders admin link for admin users', () => {
+      renderWithProviders(<Navbar user={mockAdminUser} />)
 
-      const toggleButton = screen.getByTestId('mobile-menu-toggle')
-      await user.click(toggleButton)
-
-      expect(screen.getByRole('navigation')).toHaveClass('block')
-      expect(screen.getByTestId('close-mobile-menu')).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: /admin/i })).toBeInTheDocument()
+      expect(screen.getByText('Administrador')).toBeInTheDocument()
     })
 
-    it('closes mobile menu when close button is clicked', async () => {
-      const user = userEvent.setup()
-      setMobileViewport()
-      renderWithProviders(<Navbar />)
+    it('renders notification bell for authenticated users', () => {
+      renderWithProviders(<Navbar user={mockUser} />)
 
-      // Open menu
-      await user.click(screen.getByTestId('mobile-menu-toggle'))
-      
-      // Close menu
-      await user.click(screen.getByTestId('close-mobile-menu'))
-
-      expect(screen.getByRole('navigation')).toHaveClass('hidden')
-    })
-
-    it('shows full navigation on desktop screens', () => {
-      setDesktopViewport()
-      renderWithProviders(<Navbar />)
-
-      expect(screen.queryByTestId('mobile-menu-toggle')).not.toBeInTheDocument()
-      expect(screen.getByRole('navigation')).toHaveClass('block')
-    })
-  })
-
-  describe('Navigation Interactions', () => {
-    it('navigates to home when logo is clicked', async () => {
-      const user = userEvent.setup()
-      renderWithProviders(<Navbar />)
-
-      await user.click(screen.getByText('CanchaYA'))
-
-      await expectNavigation('/')
-    })
-
-    it('navigates to dashboard when "Inicio" is clicked', async () => {
-      const user = userEvent.setup()
-      renderWithProviders(<Navbar />)
-
-      await user.click(screen.getByRole('link', { name: /inicio/i }))
-
-      await expectNavigation('/dashboard')
-    })
-
-    it('navigates to reservations when "Mis Reservas" is clicked', async () => {
-      const user = userEvent.setup()
-      renderWithProviders(<Navbar />)
-
-      await user.click(screen.getByRole('link', { name: /mis reservas/i }))
-
-      await expectNavigation('/mis-reservas')
-    })
-
-    it('navigates to courts when "Explorar Canchas" is clicked', async () => {
-      const user = userEvent.setup()
-      renderWithProviders(<Navbar />)
-
-      await user.click(screen.getByRole('link', { name: /explorar canchas/i }))
-
-      await expectNavigation('/canchas')
-    })
-
-    it('navigates to admin panel for admin users', async () => {
-      const user = userEvent.setup()
-      const adminContext = {
-        ...mockAuthContextValue,
-        user: { ...global.testUser, rol: 'ADMINISTRADOR' },
-      }
-
-      renderWithProviders(<Navbar />, { authValue: adminContext })
-
-      await user.click(screen.getByRole('link', { name: /administración/i }))
-
-      await expectNavigation('/admin')
+      expect(screen.getByTestId('notification-bell')).toBeInTheDocument()
     })
   })
 
   describe('User Menu Interactions', () => {
-    it('opens user dropdown when clicked', async () => {
+    it('shows user information in dropdown menu', async () => {
       const user = userEvent.setup()
-      renderWithProviders(<Navbar />)
+      renderWithProviders(<Navbar user={mockUser} />)
 
-      await user.click(screen.getByTestId('user-menu'))
+      // Open dropdown
+      await user.click(screen.getByRole('button', { name: /john doe/i }))
 
-      expect(screen.getByText(/perfil/i)).toBeInTheDocument()
-      expect(screen.getByText(/configuración/i)).toBeInTheDocument()
-      expect(screen.getByText(/cerrar sesión/i)).toBeInTheDocument()
+      // Check user info
+      expect(screen.getByText('John Doe')).toBeInTheDocument()
+      expect(screen.getByText('john@example.com')).toBeInTheDocument()
     })
 
-    it('shows user name and email in dropdown', async () => {
+    it('navigates to correct pages from dropdown menu', async () => {
       const user = userEvent.setup()
-      renderWithProviders(<Navbar />)
+      renderWithProviders(<Navbar user={mockUser} />)
 
-      await user.click(screen.getByTestId('user-menu'))
+      // Open dropdown
+      await user.click(screen.getByRole('button', { name: /john doe/i }))
 
-      expect(screen.getByText('Test User')).toBeInTheDocument()
-      expect(screen.getByText('test@example.com')).toBeInTheDocument()
+      // Click menu items
+      await user.click(screen.getByText('Perfil'))
+      expect(mockPush).toHaveBeenCalledWith('/perfil')
+
+      await user.click(screen.getByText('Mis Reservas'))
+      expect(mockPush).toHaveBeenCalledWith('/mis-reservas')
+
+      await user.click(screen.getByText('Configuración'))
+      expect(mockPush).toHaveBeenCalledWith('/configuracion')
     })
 
-    it('calls logout when logout option is clicked', async () => {
+    it('handles logout correctly', async () => {
       const user = userEvent.setup()
-      const mockLogout = jest.fn()
-      const contextWithLogout = {
-        ...mockAuthContextValue,
-        logout: mockLogout,
-      }
+      const logoutSpy = jest.spyOn(actions, 'logoutAction')
+      renderWithProviders(<Navbar user={mockUser} />)
 
-      renderWithProviders(<Navbar />, { authValue: contextWithLogout })
-
-      await user.click(screen.getByTestId('user-menu'))
+      // Open dropdown and click logout
+      await user.click(screen.getByRole('button', { name: /john doe/i }))
       await user.click(screen.getByText(/cerrar sesión/i))
 
-      expect(mockLogout).toHaveBeenCalled()
-    })
-
-    it('navigates to profile when profile option is clicked', async () => {
-      const user = userEvent.setup()
-      renderWithProviders(<Navbar />)
-
-      await user.click(screen.getByTestId('user-menu'))
-      await user.click(screen.getByText(/perfil/i))
-
-      await expectNavigation('/perfil')
+      expect(logoutSpy).toHaveBeenCalled()
     })
   })
 
-  describe('Search Functionality', () => {
-    it('renders search input', () => {
-      renderWithProviders(<Navbar />)
+  describe('Mobile Menu', () => {
+    it('shows mobile menu button on mobile', () => {
+      renderWithProviders(<Navbar user={mockUser} />)
 
-      expect(screen.getByPlaceholderText(/buscar canchas/i)).toBeInTheDocument()
-      expect(screen.getByTestId('search-icon')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /abrir menú/i })).toBeInTheDocument()
     })
 
-    it('performs search when Enter is pressed', async () => {
+    it('opens mobile menu when button is clicked', async () => {
       const user = userEvent.setup()
-      renderWithProviders(<Navbar />)
+      renderWithProviders(<Navbar user={mockUser} />)
 
-      const searchInput = screen.getByPlaceholderText(/buscar canchas/i)
-      await user.type(searchInput, 'fútbol')
-      await user.keyboard('{Enter}')
+      await user.click(screen.getByRole('button', { name: /abrir menú/i }))
 
-      await expectNavigation('/canchas?q=fútbol')
+      expect(screen.getByRole('dialog')).toBeInTheDocument()
+      expect(screen.getByText('Menú')).toBeInTheDocument()
     })
 
-    it('clears search input when clear button is clicked', async () => {
+    it('shows correct navigation links in mobile menu', async () => {
       const user = userEvent.setup()
-      renderWithProviders(<Navbar />)
+      renderWithProviders(<Navbar user={mockAdminUser} />)
 
-      const searchInput = screen.getByPlaceholderText(/buscar canchas/i) as HTMLInputElement
-      await user.type(searchInput, 'test search')
+      await user.click(screen.getByRole('button', { name: /abrir menú/i }))
 
-      expect(searchInput.value).toBe('test search')
+      expect(screen.getByRole('dialog')).toBeInTheDocument()
+      expect(screen.getAllByText(/inicio/i)[1]).toBeInTheDocument() // One in desktop nav, one in mobile
+      expect(screen.getAllByText(/mis reservas/i)[1]).toBeInTheDocument()
+      expect(screen.getAllByText(/panel admin/i)[1]).toBeInTheDocument()
+    })
 
-      await user.click(screen.getByTestId('clear-search'))
+    it('closes mobile menu when a link is clicked', async () => {
+      const user = userEvent.setup()
+      renderWithProviders(<Navbar user={mockUser} />)
 
-      expect(searchInput.value).toBe('')
+      // Open menu
+      await user.click(screen.getByRole('button', { name: /abrir menú/i }))
+      
+      // Click a link
+      await user.click(screen.getAllByText(/inicio/i)[1])
+
+      // Menu should close
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     })
   })
 
-  describe('Notifications', () => {
-    it('shows notification bell for authenticated users', () => {
-      renderWithProviders(<Navbar />)
+  describe('Navigation Links', () => {
+    it('renders correct desktop navigation links for authenticated users', () => {
+      renderWithProviders(<Navbar user={mockUser} />)
 
-      expect(screen.getByTestId('notification-bell')).toBeInTheDocument()
+      const nav = screen.getByRole('navigation')
+      expect(nav).toHaveClass('hidden md:flex')
+      expect(screen.getByRole('link', { name: /inicio/i })).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: /mis reservas/i })).toBeInTheDocument()
     })
 
-    it('shows notification count badge when there are unread notifications', () => {
-      const contextWithNotifications = {
-        ...mockAuthContextValue,
-        user: { ...global.testUser, unreadNotifications: 3 },
-      }
+    it('includes admin link in desktop navigation for admin users', () => {
+      renderWithProviders(<Navbar user={mockAdminUser} />)
 
-      renderWithProviders(<Navbar />, { authValue: contextWithNotifications })
-
-      expect(screen.getByText('3')).toBeInTheDocument()
-      expect(screen.getByTestId('notification-count')).toBeInTheDocument()
-    })
-
-    it('opens notification dropdown when bell is clicked', async () => {
-      const user = userEvent.setup()
-      renderWithProviders(<Navbar />)
-
-      await user.click(screen.getByTestId('notification-bell'))
-
-      expect(screen.getByText(/notificaciones/i)).toBeInTheDocument()
-      expect(screen.getByText(/marcar todas como leídas/i)).toBeInTheDocument()
-    })
-  })
-
-  describe('Authentication State Changes', () => {
-    it('updates UI when user logs in', () => {
-      const { rerender } = renderWithProviders(<Navbar />, {
-        authValue: { ...mockAuthContextValue, user: null, isAuthenticated: false }
-      })
-
-      expect(screen.getByRole('link', { name: /iniciar sesión/i })).toBeInTheDocument()
-      expect(screen.queryByTestId('user-menu')).not.toBeInTheDocument()
-
-      rerender(<Navbar />)
-
-      expect(screen.getByTestId('user-menu')).toBeInTheDocument()
-      expect(screen.queryByRole('link', { name: /iniciar sesión/i })).not.toBeInTheDocument()
-    })
-
-    it('shows loading state during authentication', () => {
-      const loadingContext = {
-        ...mockAuthContextValue,
-        isLoading: true,
-        user: null,
-        isAuthenticated: false,
-      }
-
-      renderWithProviders(<Navbar />, { authValue: loadingContext })
-
-      expect(screen.getByTestId('auth-loading')).toBeInTheDocument()
-    })
-  })
-
-  describe('Accessibility', () => {
-    it('has proper ARIA labels', () => {
-      renderWithProviders(<Navbar />)
-
-      expect(screen.getByRole('navigation')).toHaveAttribute('aria-label', 'Main navigation')
-      expect(screen.getByTestId('user-menu')).toHaveAttribute('aria-label', 'User menu')
-      expect(screen.getByTestId('notification-bell')).toHaveAttribute('aria-label', 'Notifications')
-    })
-
-    it('supports keyboard navigation', async () => {
-      const user = userEvent.setup()
-      renderWithProviders(<Navbar />)
-
-      // Tab through navigation items
-      await user.tab()
-      expect(screen.getByRole('link', { name: /inicio/i })).toHaveFocus()
-
-      await user.tab()
-      expect(screen.getByRole('link', { name: /mis reservas/i })).toHaveFocus()
-
-      await user.tab()
-      expect(screen.getByRole('link', { name: /explorar canchas/i })).toHaveFocus()
-    })
-
-    it('opens user menu with Enter key', async () => {
-      const user = userEvent.setup()
-      renderWithProviders(<Navbar />)
-
-      const userMenu = screen.getByTestId('user-menu')
-      userMenu.focus()
-      await user.keyboard('{Enter}')
-
-      expect(screen.getByText(/perfil/i)).toBeInTheDocument()
+      const nav = screen.getByRole('navigation')
+      expect(nav).toHaveClass('hidden md:flex')
+      expect(screen.getByRole('link', { name: /admin/i })).toBeInTheDocument()
     })
   })
 }) 
