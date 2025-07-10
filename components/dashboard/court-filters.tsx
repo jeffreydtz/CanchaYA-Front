@@ -51,8 +51,8 @@ export function CourtFilters({ initialFilters = {} }: CourtFiltersProps) {
   
   const [filters, setFilters] = useState({
     busqueda: initialFilters.busqueda || '',
-    deporte: initialFilters.deporte || '',
-    club: initialFilters.club || '',
+    deporte: initialFilters.deporte || 'all',
+    club: initialFilters.club || 'all',
     fecha: initialFilters.fecha || '',
   })
   
@@ -80,7 +80,7 @@ export function CourtFilters({ initialFilters = {} }: CourtFiltersProps) {
       const params = new URLSearchParams()
       
       Object.entries(filters).forEach(([key, value]) => {
-        if (value.trim()) {
+        if (value.trim() && value !== 'all') {
           params.set(key, value.trim())
         }
       })
@@ -142,7 +142,7 @@ export function CourtFilters({ initialFilters = {} }: CourtFiltersProps) {
                 <SelectValue placeholder="Todos los deportes" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos los deportes</SelectItem>
+                <SelectItem value="all">Todos los deportes</SelectItem>
                 {deportes.map((deporte) => (
                   <SelectItem key={deporte.value} value={deporte.value}>
                     {deporte.label}
@@ -163,7 +163,7 @@ export function CourtFilters({ initialFilters = {} }: CourtFiltersProps) {
                 <SelectValue placeholder="Todos los clubes" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos los clubes</SelectItem>
+                <SelectItem value="all">Todos los clubes</SelectItem>
                 {clubes.map((club) => (
                   <SelectItem key={club.value} value={club.value}>
                     {club.label}
