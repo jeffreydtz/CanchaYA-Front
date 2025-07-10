@@ -7,7 +7,8 @@ import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MyReservations } from '../my-reservations'
 import { renderWithProviders } from '@/__tests__/utils/test-utils'
-import { addHours, subHours } from 'date-fns'
+import { addHours, subHours, parseISO, format } from 'date-fns'
+import { es } from 'date-fns/locale'
 import * as actions from '@/lib/actions'
 
 // Mock server actions
