@@ -188,6 +188,8 @@ export async function createReservationAction(
     revalidatePath('/mis-reservas')
     revalidatePath('/')
 
+    // Backend will trigger SSE notification for new reservation
+    
     return {
       success: true,
       message: 'Reserva creada exitosamente. Recuerda confirmar tu asistencia.',
@@ -215,6 +217,8 @@ export async function confirmReservationAction(
     }
 
     revalidatePath('/mis-reservas')
+
+    // Backend will trigger SSE notification for reservation confirmation
 
     return {
       success: true,
@@ -244,6 +248,8 @@ export async function cancelReservationAction(
 
     revalidatePath('/mis-reservas')
     revalidatePath('/admin')
+
+    // Backend will trigger SSE notification for cancellation and slot release
 
     return {
       success: true,

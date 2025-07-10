@@ -38,6 +38,7 @@ import {
   Search,
   Home
 } from 'lucide-react'
+import { NotificationBell } from '@/components/notifications/notification-bell'
 import { useAuth } from '@/components/auth/auth-context'
 import { logoutAction } from '@/lib/actions'
 import { User as UserType } from '@/lib/api-client'
@@ -127,16 +128,7 @@ export function Navbar({ user: serverUser }: NavbarProps) {
             {isAuthenticated ? (
               <>
                 {/* Notifications */}
-                <Button variant="ghost" size="icon" className="relative">
-                  <Bell className="h-4 w-4" />
-                  <Badge 
-                    variant="destructive" 
-                    className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs flex items-center justify-center"
-                  >
-                    2
-                  </Badge>
-                  <span className="sr-only">Notificaciones</span>
-                </Button>
+                <NotificationBell />
 
                 {/* User Menu */}
                 <DropdownMenu>

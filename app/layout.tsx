@@ -4,6 +4,8 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/components/auth/auth-context"
+import { NotificationProvider } from "@/components/notifications/notification-provider"
+import { ErrorBoundary } from "@/components/error/error-boundary"
 import { Toaster } from "@/components/ui/sonner"
 
 const inter = Inter({ 
@@ -48,15 +50,19 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AuthProvider>
-            {children}
-            <Toaster
-              position="top-right"
-              expand={true}
-              richColors
-              closeButton
-            />
-          </AuthProvider>
+          <ErrorBoundary>
+            <AuthProvider>
+              <NotificationProvider>
+                {children}
+                <Toaster
+                  position="top-right"
+                  expand={true}
+                  richColors
+                  closeButton
+                />
+              </NotificationProvider>
+            </AuthProvider>
+          </ErrorBoundary>
         </ThemeProvider>
       </body>
     </html>

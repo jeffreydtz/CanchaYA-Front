@@ -28,7 +28,7 @@ import {
 import { format, parseISO } from "date-fns"
 import { es } from "date-fns/locale"
 import { useToast } from "@/hooks/use-toast"
-import apiClient, { User } from "@/lib/api-client"
+import apiClient, { type User } from "@/lib/api-client"
 
 export default function AdminUsuariosPage() {
   const [users, setUsers] = useState<User[]>([])

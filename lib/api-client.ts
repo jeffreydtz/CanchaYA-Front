@@ -5,6 +5,7 @@
  */
 
 import { getCookie } from '@/lib/auth'
+import { classifyError, logError, ErrorRecovery, formatErrorForUser } from '@/lib/error-utils'
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
 
@@ -99,21 +100,64 @@ class ApiClient {
 
         try {
             const response = await fetch(`${this.baseURL}${endpoint}`, config)
-            const data = await response.json()
+
+            // Handle non-JSON responses (like network errors)
+            let data
+            try {
+                data = await response.json()
+            } catch (parseError) {
+                data = { message: 'Respuesta inválida del servidor' }
+            }
+
+            if (!response.ok) {
+                // Create error from HTTP status and response
+                const error = new Error(`HTTP ${response.status}: ${data.message || response.statusText}`)
+                const classifiedError = classifyError(error, `API ${options.method || 'GET'} ${endpoint}`)
+                const errorReport = logError(classifiedError, {
+                    endpoint,
+                    method: options.method || 'GET',
+                    status: response.status,
+                    response: data
+                })
+
+                return {
+                    error: formatErrorForUser(classifiedError),
+                    status: response.status,
+                }
+            }
 
             return {
-                data: response.ok ? data : undefined,
+                data: data,
                 message: data.message,
-                error: !response.ok ? data.message || 'Error en la solicitud' : undefined,
                 status: response.status,
             }
         } catch (error) {
-            console.error('API Error:', error)
+            // Network or other fetch errors
+            const classifiedError = classifyError(error as Error, `API ${options.method || 'GET'} ${endpoint}`)
+            const errorReport = logError(classifiedError, {
+                endpoint,
+                method: options.method || 'GET'
+            })
+
             return {
-                error: 'Error de conexión con el servidor',
-                status: 500,
+                error: formatErrorForUser(classifiedError),
+                status: 0, // Network error
             }
         }
+    }
+
+    // Request with retry logic
+    private async requestWithRetry<T>(
+        endpoint: string,
+        options: RequestInit = {},
+        maxRetries: number = 3
+    ): Promise<ApiResponse<T>> {
+        return ErrorRecovery.withRetry(
+            () => this.request<T>(endpoint, options),
+            maxRetries,
+            1000,
+            `API ${options.method || 'GET'} ${endpoint}`
+        )
     }
 
     // Authentication endpoints

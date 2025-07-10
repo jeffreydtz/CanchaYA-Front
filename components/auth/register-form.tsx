@@ -174,10 +174,12 @@ export function RegisterForm() {
                   {...register('password')}
                   disabled={isPending}
                 />
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+                  className="absolute right-1 top-1 h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
                   disabled={isPending}
                 >
                   {showPassword ? (
@@ -185,7 +187,7 @@ export function RegisterForm() {
                   ) : (
                     <Eye className="h-4 w-4" />
                   )}
-                </button>
+                </Button>
               </div>
               {errors.password && (
                 <p className="text-sm text-destructive">{errors.password.message}</p>
@@ -204,10 +206,12 @@ export function RegisterForm() {
                   {...register('confirmPassword')}
                   disabled={isPending}
                 />
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+                  className="absolute right-1 top-1 h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
                   disabled={isPending}
                 >
                   {showConfirmPassword ? (
@@ -215,7 +219,7 @@ export function RegisterForm() {
                   ) : (
                     <Eye className="h-4 w-4" />
                   )}
-                </button>
+                </Button>
               </div>
               {errors.confirmPassword && (
                 <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>
