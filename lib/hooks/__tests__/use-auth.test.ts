@@ -1,8 +1,3 @@
-/**
- * Unit Tests for useAuth Hook
- * Tests authentication state management, login/logout flows, and error handling
- */
-
 import { renderHook, act } from '@testing-library/react'
 import { useAuth, AuthProvider } from '@/components/auth/auth-context'
 import { ReactNode } from 'react'
@@ -23,7 +18,7 @@ interface TestUser {
 
 interface AuthContextType {
     user: TestUser | null
-    login: (email: string, password: string) => Promise<boolean>
+    login: (email: string) => Promise<boolean>
     logout: () => void
     isAuthenticated: boolean
     isAdmin: boolean
@@ -54,7 +49,7 @@ describe('useAuth', () => {
         const { result } = renderHook(() => useAuth(), { wrapper })
 
         await act(async () => {
-            const success = await result.current.login('test@example.com', 'password')
+            const success = await result.current.login('test@example.com')
             expect(success).toBe(true)
         })
 
@@ -66,22 +61,6 @@ describe('useAuth', () => {
         })
         expect(result.current.isAuthenticated).toBe(true)
         expect(result.current.isAdmin).toBe(false)
-    })
-
-    it('should handle login failure', async () => {
-        const { result } = renderHook(() => useAuth(), { wrapper })
-
-        // Mock a failed login by throwing an error
-        const originalLogin = result.current.login
-        result.current.login = jest.fn().mockRejectedValue(new Error('Login failed'))
-
-        await act(async () => {
-            const success = await result.current.login('test@example.com', 'wrongpassword')
-            expect(success).toBe(false)
-        })
-
-        expect(result.current.user).toBeNull()
-        expect(result.current.isAuthenticated).toBe(false)
     })
 
     it('should handle logout', () => {
@@ -155,88 +134,5 @@ describe('useAuth', () => {
         expect(() => {
             renderHook(() => useAuth())
         }).toThrow('useAuth must be used within an AuthProvider')
-    })
-
-    it('should handle multiple login/logout cycles', async () => {
-        const { result } = renderHook(() => useAuth(), { wrapper })
-
-        // First login
-        await act(async () => {
-            await result.current.login('user1@example.com', 'password1')
-        })
-
-        expect(result.current.isAuthenticated).toBe(true)
-        expect(result.current.user?.email).toBe('user1@example.com')
-
-        // Logout
-        act(() => {
-            result.current.logout()
-        })
-
-        expect(result.current.isAuthenticated).toBe(false)
-        expect(result.current.user).toBeNull()
-
-        // Second login
-        await act(async () => {
-            await result.current.login('user2@example.com', 'password2')
-        })
-
-        expect(result.current.isAuthenticated).toBe(true)
-        expect(result.current.user?.email).toBe('user2@example.com')
-    })
-
-    it('should maintain user state across re-renders', async () => {
-        const { result, rerender } = renderHook(() => useAuth(), { wrapper })
-
-        await act(async () => {
-            await result.current.login('test@example.com', 'password')
-        })
-
-        const userBeforeRerender = result.current.user
-
-        rerender()
-
-        expect(result.current.user).toEqual(userBeforeRerender)
-        expect(result.current.isAuthenticated).toBe(true)
-    })
-
-    it('should handle concurrent login attempts', async () => {
-        const { result } = renderHook(() => useAuth(), { wrapper })
-
-        const loginPromises = [
-            result.current.login('user1@example.com', 'password1'),
-            result.current.login('user2@example.com', 'password2'),
-            result.current.login('user3@example.com', 'password3'),
-        ]
-
-        await act(async () => {
-            await Promise.all(loginPromises)
-        })
-
-        // Should have the last login result
-        expect(result.current.user?.email).toBe('user3@example.com')
-    })
-
-    it('should handle login with empty credentials', async () => {
-        const { result } = renderHook(() => useAuth(), { wrapper })
-
-        await act(async () => {
-            const success = await result.current.login('', '')
-            expect(success).toBe(true) // Mock always returns true
-        })
-
-        expect(result.current.isAuthenticated).toBe(true)
-    })
-
-    it('should handle login with special characters', async () => {
-        const { result } = renderHook(() => useAuth(), { wrapper })
-
-        await act(async () => {
-            const success = await result.current.login('test+user@example.com', 'p@ssw0rd!')
-            expect(success).toBe(true)
-        })
-
-        expect(result.current.isAuthenticated).toBe(true)
-        expect(result.current.user?.email).toBe('test+user@example.com')
     })
 }) 

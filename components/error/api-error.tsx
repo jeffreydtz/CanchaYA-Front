@@ -294,8 +294,22 @@ export function ApiError({
 
 // Hook for API error handling
 export function useApiError() {
-  const [error, setError] = useState<Error | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [retryCount, setRetryCount] = useState(0)
+
+  const maxRetries = 3
+  const retryDelay = 1000
+
+  useEffect(() => {
+    if (retryCount < maxRetries) {
+      const timer = setTimeout(() => {
+        setRetryCount(prev => prev + 1)
+        setError(null)
+      }, retryDelay * Math.pow(2, retryCount))
+
+      return () => clearTimeout(timer)
+    }
+  }, [retryCount, maxRetries])
 
   const handleError = (error: Error | string) => {
     const errorMessage = typeof error === 'string' ? error : error.message
@@ -307,29 +321,24 @@ export function useApiError() {
     setError(null)
   }
 
-  const retry = async (operation: () => Promise<any>) => {
-    setRetryCount(prev => prev + 1)
+  const retry = async (operation: () => Promise<unknown>) => {
     try {
-      const result = await operation()
+      await operation()
       setError(null)
       setRetryCount(0)
-      return result
-    } catch (error) {
-      handleError(error as Error)
-      throw error
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err)
+      handleError(errorMessage)
     }
-  }
-
-  const clearError = () => {
-    setError(null)
-    setRetryCount(0)
   }
 
   return {
     error,
     retryCount,
+    maxRetries,
     handleError,
+    handleRetry,
     retry,
-    clearError
+    clearError: () => setError(null),
   }
 } 
