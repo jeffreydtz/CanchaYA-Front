@@ -46,7 +46,7 @@ export default function CourtFilters() {
                 <SelectValue placeholder="Seleccionar deporte" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos los deportes</SelectItem>
+                <SelectItem value="all">Todos los deportes</SelectItem>
                 <SelectItem value="futbol">Fútbol</SelectItem>
                 <SelectItem value="tenis">Tenis</SelectItem>
                 <SelectItem value="paddle">Paddle</SelectItem>
@@ -62,7 +62,7 @@ export default function CourtFilters() {
                 <SelectValue placeholder="Seleccionar club" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos los clubs</SelectItem>
+                <SelectItem value="all">Todos los clubs</SelectItem>
                 <SelectItem value="club-central">Club Deportivo Central</SelectItem>
                 <SelectItem value="tenis-premium">Club de Tenis Premium</SelectItem>
                 <SelectItem value="paddle-elite">Club Paddle Elite</SelectItem>
