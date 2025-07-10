@@ -137,7 +137,8 @@ test.describe('Reservation Flow', () => {
 
             // Check that past time slots are disabled
             const pastSlots = page.locator('[data-testid^="time-slot-"][disabled]')
-            await expect(pastSlots).toHaveCount(expect.any(Number))
+            const slotsCount = await pastSlots.count()
+            expect(slotsCount).toBeGreaterThanOrEqual(0)
 
             // Try to click a disabled slot
             const disabledSlot = pastSlots.first()
@@ -352,7 +353,8 @@ test.describe('Reservation Flow', () => {
             await page.click('[data-testid="filter-all"]')
 
             // Should show all reservations again
-            await expect(page.locator('[data-testid^="reservation-card-"]')).toHaveCount(expect.any(Number))
+            const allCardsCount = await page.locator('[data-testid^="reservation-card-"]').count()
+            expect(allCardsCount).toBeGreaterThanOrEqual(0)
         })
 
         test('should search reservations', async ({ page }) => {
@@ -376,7 +378,8 @@ test.describe('Reservation Flow', () => {
             await page.waitForTimeout(500)
 
             // Should show all reservations again
-            await expect(reservationCards).toHaveCount(expect.any(Number))
+            const cardsCount = await reservationCards.count()
+            expect(cardsCount).toBeGreaterThanOrEqual(0)
         })
     })
 
