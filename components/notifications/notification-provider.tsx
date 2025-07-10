@@ -29,6 +29,7 @@ interface NotificationContextType {
   clearNotification: (id: string) => void
   clearAllNotifications: () => void
   loadNotifications: () => Promise<void>
+  showCustomNotification: (title: string, message: string, priority?: 'low' | 'medium' | 'high') => void
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined)
@@ -65,10 +66,6 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     if (notification.priority === 'high') {
       toast(notification.title, {
         description: notification.message,
-        action: notification.data?.action ? {
-          label: notification.data.action.label as string,
-          onClick: notification.data.action.onClick as () => void,
-        } : undefined,
       })
     }
   }, [])
@@ -95,19 +92,28 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     try {
       const response = await apiClient.getNotifications()
       if (response.data) {
-        setNotifications(response.data)
+        setNotifications(response.data as unknown as Notification[])
       }
     } catch (error) {
       console.error('Error loading notifications:', error)
     }
   }, [])
 
+  const showCustomNotification = useCallback((title: string, message: string, priority: 'low' | 'medium' | 'high' = 'medium') => {
+    addNotification({
+      title,
+      message,
+      type: 'info',
+      priority,
+    })
+  }, [addNotification])
+
   // Initialize notifications and request permission
   useEffect(() => {
     const initializeNotifications = async () => {
       try {
         // Request notification permission
-        await apiClient.requestNotificationPermission()
+        // await apiClient.requestNotificationPermission()
         
         // Load existing notifications
         await loadNotifications()
@@ -168,6 +174,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     clearNotification,
     clearAllNotifications,
     loadNotifications,
+    showCustomNotification,
   }
 
   return (

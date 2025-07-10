@@ -41,7 +41,7 @@ export function LoginForm() {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
     try {
-      const response = await apiClient.login(data.email, data.password)
+      const response = await apiClient.login({ email: data.email, password: data.password })
       if (response.data?.token) {
         login(response.data.token)
         router.push('/')

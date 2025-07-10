@@ -39,14 +39,14 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<any>(null)
   const [token, setToken] = useState<string | null>(null)
   const [eventSource, setEventSource] = useState<EventSource | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
   const isAuthenticated = !!user && !!token
-  const isAdmin = user?.rol === 'ADMINISTRADOR'
+  const isAdmin = user?.rol === 'admin'
 
   const handleRealtimeEvent = useCallback((data: unknown) => {
     const eventData = data as {
@@ -165,12 +165,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const refreshUser = async () => {
     try {
-      const response = await apiClient.me()
-      if (response.data) {
-        setUser(response.data)
-      } else if (response.status === 401) {
-        logout()
-      }
+      // const response = await apiClient.me()
+      // if (response.data) {
+      //   setUser(response.data)
+      // } else if (response.status === 401) {
+      //   logout()
+      // }
+      // Por ahora, no hay endpoint me, así que no hacemos nada
     } catch (error) {
       console.error('Refresh user error:', error)
       logout()

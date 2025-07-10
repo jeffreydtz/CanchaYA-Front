@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Bell, Zap, AlertTriangle, Info } from 'lucide-react'
-import { useNotificationActions } from './notification-provider'
+import { useNotifications } from './notification-provider'
 import { NotificationData, showBrowserNotification } from '@/lib/notifications'
 
 interface NotificationDemoProps {
@@ -19,7 +19,7 @@ interface NotificationDemoProps {
 }
 
 export function NotificationDemo({ className }: NotificationDemoProps) {
-  const { showCustomNotification } = useNotificationActions()
+  const { showCustomNotification } = useNotifications()
   const [selectedType, setSelectedType] = useState<'high' | 'medium' | 'low'>('medium')
 
   // Mock notification templates

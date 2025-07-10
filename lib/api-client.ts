@@ -97,6 +97,12 @@ export interface Report {
     }>
 }
 
+export interface TimeSlot {
+    id: string;
+    time: string;
+    available: boolean;
+}
+
 // Mock data for development
 const mockCourts: Court[] = [
     {
@@ -464,6 +470,25 @@ const apiClient = {
                 success: false,
                 error: 'Error al obtener reportes',
             }
+        }
+    },
+
+    getTimeSlots: async (courtId: string, date: string): Promise<ApiResponse<TimeSlot[]>> => {
+        // Mock temporal
+        return {
+            success: true,
+            data: [
+                { id: '1', time: '09:00', available: true },
+                { id: '2', time: '10:00', available: true },
+                { id: '3', time: '11:00', available: false },
+                { id: '4', time: '12:00', available: true },
+                { id: '5', time: '13:00', available: true },
+                { id: '6', time: '14:00', available: true },
+                { id: '7', time: '15:00', available: false },
+                { id: '8', time: '16:00', available: true },
+                { id: '9', time: '17:00', available: true },
+                { id: '10', time: '18:00', available: true },
+            ]
         }
     },
 }

@@ -50,6 +50,7 @@ export function RegisterForm() {
         nombre: data.nombre,
         email: data.email,
         password: data.password,
+        telefono: '',
       })
       
       if (response.data?.token) {

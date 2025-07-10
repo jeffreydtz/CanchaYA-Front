@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator'
 import { MapPin, Clock, Users, Star, Phone, Mail } from 'lucide-react'
 import { useAuth } from '@/components/auth/auth-context'
 import { useToast } from '@/hooks/use-toast'
+import { toast } from 'sonner'
 import apiClient from '@/lib/api-client'
 
 interface Court {
@@ -43,7 +44,6 @@ interface TimeSlot {
 export default function CourtDetail() {
   const params = useParams()
   const { user, isAuthenticated } = useAuth()
-  const { toast } = useToast()
   const [court, setCourt] = useState<Court | null>(null)
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([])
   const [selectedDate, setSelectedDate] = useState<string>('')
@@ -57,15 +57,11 @@ export default function CourtDetail() {
       try {
         const response = await apiClient.getCourt(courtId)
         if (response.data) {
-          setCourt(response.data)
+          setCourt(response.data as unknown as Court)
         }
       } catch (error) {
         console.error('Error loading court details:', error)
-        toast({
-          title: 'Error',
-          description: 'No se pudo cargar la información de la cancha',
-          variant: 'destructive',
-        })
+        toast('Error: No se pudo cargar la información de la cancha')
       } finally {
         setIsLoading(false)
       }
@@ -74,7 +70,7 @@ export default function CourtDetail() {
     if (courtId) {
       loadCourtDetails()
     }
-  }, [courtId, toast])
+  }, [courtId])
 
   useEffect(() => {
     const loadTimeSlots = async () => {
@@ -83,64 +79,45 @@ export default function CourtDetail() {
       try {
         const response = await apiClient.getTimeSlots(courtId, selectedDate)
         if (response.data) {
-          setTimeSlots(response.data)
+          setTimeSlots(response.data as unknown as TimeSlot[])
         }
       } catch (error) {
         console.error('Error loading time slots:', error)
-        toast({
-          title: 'Error',
-          description: 'No se pudieron cargar los horarios disponibles',
-          variant: 'destructive',
-        })
+        toast('Error: No se pudieron cargar los horarios disponibles')
       }
     }
 
     loadTimeSlots()
-  }, [courtId, selectedDate, toast])
+  }, [courtId, selectedDate])
 
   const handleReservation = async () => {
     if (!isAuthenticated) {
-      toast({
-        title: 'Acceso requerido',
-        description: 'Debes iniciar sesión para hacer una reserva',
-        variant: 'destructive',
-      })
+      toast('Acceso requerido: Debes iniciar sesión para hacer una reserva')
       return
     }
 
     if (!selectedDate || !selectedTime) {
-      toast({
-        title: 'Selección requerida',
-        description: 'Debes seleccionar una fecha y hora',
-        variant: 'destructive',
-      })
+      toast('Selección requerida: Debes seleccionar una fecha y hora')
       return
     }
 
     try {
       const response = await apiClient.createReservation({
         courtId,
-        date: selectedDate,
-        time: selectedTime,
-        userId: user?.id || '',
+        fecha: selectedDate,
+        hora: selectedTime,
+        duracion: 60, // 1 hora por defecto
       })
 
       if (response.data) {
-        toast({
-          title: 'Reserva exitosa',
-          description: 'Tu reserva ha sido creada correctamente',
-        })
+        toast('Reserva exitosa: Tu reserva ha sido creada correctamente')
         // Reset selections
         setSelectedDate('')
         setSelectedTime('')
       }
     } catch (error) {
       console.error('Error creating reservation:', error)
-      toast({
-        title: 'Error',
-        description: 'No se pudo crear la reserva',
-        variant: 'destructive',
-      })
+      toast('Error: No se pudo crear la reserva')
     }
   }
 
