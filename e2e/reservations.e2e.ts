@@ -42,7 +42,7 @@ test.describe('Reservation Flow', () => {
 
             // Should filter by price range
             const priceElements = page.locator('[data-testid*="court-price"]')
-            const prices = await priceElements.allTextContent()
+            const prices = await priceElements.allTextContents()
             prices.forEach(priceText => {
                 const price = parseInt(priceText.replace(/[^\d]/g, ''))
                 expect(price).toBeGreaterThanOrEqual(3000)

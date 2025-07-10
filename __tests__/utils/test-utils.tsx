@@ -140,7 +140,7 @@ export const createTestReservation = (overrides: Partial<Reservation> = {}): Res
 })
 
 // Mock API responses
-export const mockApiResponse = <T>(data: T, status = 200) => ({
+export const mockApiResponse = <T,>(data: T, status = 200) => ({
   data,
   status,
   message: 'Success',
@@ -152,7 +152,7 @@ export const mockApiError = (message = 'Error occurred', status = 500) => ({
 })
 
 // Mock fetch responses
-export const mockFetchSuccess = <T>(data: T) => {
+export const mockFetchSuccess = <T,>(data: T) => {
   global.fetch.mockResolvedValueOnce({
     ok: true,
     status: 200,
