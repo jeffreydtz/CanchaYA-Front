@@ -7,7 +7,20 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend-cancha-ya-production.up.railway.app/api'
+// Utilidad para construir la URL base sin duplicar /api
+function getBackendUrl(path: string) {
+  const base = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend-cancha-ya-production.up.railway.app/api';
+  if (base.endsWith('/api') && path.startsWith('/api')) {
+    return base + path.replace(/^\/api/, '');
+  }
+  if (!base.endsWith('/') && !path.startsWith('/')) {
+    return base + '/' + path;
+  }
+  if (base.endsWith('/') && path.startsWith('/')) {
+    return base + path.slice(1);
+  }
+  return base + path;
+}
 
 export interface ServerUser {
   id: string
@@ -29,7 +42,7 @@ export async function getServerUser(): Promise<ServerUser | null> {
 
   try {
     // Validate token with backend
-    const response = await fetch(`${BACKEND_URL}/auth/me`, {
+    const response = await fetch(getBackendUrl('/auth/me'), {
       headers: {
         'Authorization': `Bearer ${token.value}`,
         'Content-Type': 'application/json',
