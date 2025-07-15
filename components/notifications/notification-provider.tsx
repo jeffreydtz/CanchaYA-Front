@@ -7,7 +7,8 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
-import apiClient from '@/lib/api-client'
+import { getNotifications } from '@/lib/notifications'
+import { getCookie } from '@/lib/auth'
 
 interface Notification {
   id: string
@@ -91,10 +92,17 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
 
   const loadNotifications = useCallback(async () => {
     try {
-      const response = await apiClient.getNotifications()
-      if (response.data) {
-        setNotifications(response.data as unknown as Notification[])
+      const token = getCookie('token')
+      if (!token) {
+        console.warn('Token not found, cannot load notifications.')
+        return
       }
+      const response = await getNotifications(token)
+      const notifications = response.map((n: any) => ({
+        ...n,
+        createdAt: n.createdAt || n.fechaCreacion || n.created_at || '', // fallback for missing field
+      }))
+      setNotifications(notifications)
     } catch (error) {
       console.error('Error loading notifications:', error)
     }

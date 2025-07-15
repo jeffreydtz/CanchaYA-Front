@@ -1,4 +1,5 @@
 /**
+ * SERVER-ONLY: Do not import this file in client components.
  * Server Actions for CanchaYA
  * Handles form submissions and server-side operations
  * Now integrated with real backend authentication

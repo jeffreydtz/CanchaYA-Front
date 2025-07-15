@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { AdminSidebar } from '@/components/admin/admin-sidebar'
+import AdminSidebar from '@/components/admin/admin-sidebar'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import Navbar from '@/components/navbar/navbar'
 

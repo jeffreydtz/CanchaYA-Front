@@ -8,10 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { MapPin, Clock, DollarSign, Star, Users } from 'lucide-react'
+import { MapPin, DollarSign, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import apiClient, { Cancha, Horario } from '@/lib/api-client'
-import Image from 'next/image'
 
 export default function CourtDetail() {
   const params = useParams()
