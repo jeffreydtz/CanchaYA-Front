@@ -9,6 +9,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { toast } from 'sonner'
 import { getNotifications } from '@/lib/notifications'
 import { getCookie } from '@/lib/auth'
+import { useAuth } from '@/components/auth/auth-context'
 
 interface Notification {
   id: string
@@ -48,6 +49,7 @@ interface NotificationProviderProps {
 }
 
 export function NotificationProvider({ children }: NotificationProviderProps) {
+  const { isAuthenticated, loading } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [notificationManager, setNotificationManager] = useState<unknown>(null)
 
@@ -119,6 +121,7 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
 
   // Initialize notifications and request permission
   useEffect(() => {
+    if (!isAuthenticated || loading) return;
     const initializeNotifications = async () => {
       try {
         // Request notification permission
@@ -160,7 +163,8 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     }
 
     initializeNotifications()
-  }, [loadNotifications, addNotification])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, loading, loadNotifications, addNotification])
 
   // Cleanup on unmount
   useEffect(() => {
