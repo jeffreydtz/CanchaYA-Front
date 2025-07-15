@@ -2,6 +2,8 @@
  * Authentication Context for CanchaYA
  * Manages client-side authentication state and real-time updates
  * Now integrated with real backend authentication
+ *
+ * IMPORTANT: AuthProvider must wrap the entire app in app/layout.tsx for session persistence.
  */
 
 'use client'
@@ -27,8 +29,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // Initialize authentication state
+  // Initialize authentication state (client-only)
   useEffect(() => {
+    if (typeof window === 'undefined') return // Only run on client
     const initializeAuth = async () => {
       const token = getCookie('token')
       if (token) {
@@ -54,6 +57,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           deleteCookie('token')
           setUser(null)
         }
+      } else {
+        setUser(null)
       }
       setLoading(false)
     }
@@ -74,9 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.data?.token) {
         // Set the token cookie immediately (client-side)
         document.cookie = `token=${response.data.token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Strict`;
-        // Optionally, also call setCookie for consistency
         setCookie('token', response.data.token, 7)
-        // Now refresh the user from the backend using the new token
         await refreshUser();
         toast.success('¡Bienvenido!')
         return true
@@ -105,6 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const refreshUser = async () => {
+    if (typeof window === 'undefined') return
     const token = getCookie('token')
     if (!token) {
       setUser(null)
@@ -145,6 +149,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAdmin,
     loading,
     refreshUser,
+  }
+
+  // Show loader while loading to prevent flicker
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+      </div>
+    )
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
