@@ -12,7 +12,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { getCookie, setCookie, deleteCookie } from '@/lib/auth'
 import apiClient, { User } from '@/lib/api-client'
 import { toast } from 'sonner'
-import jwtDecode from 'jwt-decode'
+import { jwtDecode } from 'jwt-decode'
 
 interface AuthContextType {
   user: User | null

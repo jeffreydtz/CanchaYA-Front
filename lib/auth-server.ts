@@ -6,7 +6,7 @@
 
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import jwtDecode from 'jwt-decode'
+import { jwtDecode } from 'jwt-decode'
 
 // Utilidad para construir la URL base sin duplicar /api
 function getBackendUrl(path: string) {
