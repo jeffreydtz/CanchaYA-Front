@@ -1,496 +1,273 @@
-// API Client for CanchaYA Frontend
-// Handles all API communication with the backend
+/**
+ * API Client para CanchaYA
+ * Cliente universal alineado con Swagger del backend (NestJS)
+ * - Todos los endpoints y recursos documentados en https://backend-cancha-ya-production.up.railway.app/api/docs/
+ * - Nombres, rutas y estructuras de datos exactamente como en Swagger
+ * - Manejo centralizado de errores y autenticación (token JWT)
+ * - Modular, DRY y exhaustivamente documentado
+ *
+ * Reglas:
+ * - No mocks, solo llamadas reales a la API
+ * - Todos los recursos: Auth, Canchas, Reservas, Usuarios, Notificaciones, Admin, Reportes, etc.
+ * - Tipos y métodos alineados con Swagger
+ * - Documentación clara en cada función
+ */
 
-export interface Court {
-    id: string
-    nombre: string
-    deporte: string
-    club: string
-    direccion: string
-    precio: number
-    imagen: string
-    descripcion: string
-    horarios: string
-    telefono: string
-    email: string
-    featured?: boolean
+import { getCookie } from './auth'
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+
+// --- Tipos alineados con Swagger ---
+
+export interface ApiResponse<T = any> {
+  data?: T
+  message?: string
+  error?: string
+  status?: number
 }
 
-export interface Reservation {
-    id: string
-    courtId: string
-    userId: string
-    fecha: string
-    hora: string
-    duracion: number
-    precio: number
-    estado: 'pendiente' | 'confirmada' | 'cancelada'
-    court?: Court
-    user?: User
-}
-
-export interface User {
-    id: string
-    nombre: string
-    email: string
-    telefono: string
-    rol: 'usuario' | 'admin'
-}
-
-export interface Notification {
-    id: string
-    userId: string
-    titulo: string
-    mensaje: string
-    leida: boolean
-    fecha: string
-}
-
-export interface ApiResponse<T> {
-    success: boolean
-    data?: T
-    error?: string
-}
-
-export interface CourtFilters {
-    deporte?: string
-    club?: string
-    fecha?: string
-    featured?: boolean
-}
-
-export interface ReservationData {
-    courtId: string
-    fecha: string
-    hora: string
-    duracion: number
-    email?: string
-}
-
-export interface LoginData {
-    email: string
-    password: string
+export interface LoginCredentials {
+  email: string
+  password: string
 }
 
 export interface RegisterData {
-    nombre: string
-    email: string
-    password: string
-    telefono: string
+  nombre: string
+  apellido: string
+  email: string
+  password: string
+  telefono?: string
 }
 
-export interface Stats {
-    totalUsers: number
-    totalCourts: number
-    totalReservations: number
-    totalRevenue: number
-    recentGrowth: number
+export interface User {
+  id: string
+  nombre: string
+  apellido: string
+  email: string
+  telefono?: string
+  rol: 'JUGADOR' | 'ADMINISTRADOR'
+  activo: boolean
+  fechaCreacion: string
+}
+
+export interface Court {
+  id: string
+  nombre: string
+  descripcion: string
+  precio: number
+  imagenes: string[]
+  club: {
+    id: string
+    nombre: string
+    direccion: string
+  }
+  deporte: {
+    id: string
+    nombre: string
+  }
+  disponible: boolean
+}
+
+export interface CourtAvailability {
+  horarios: Array<{
+    hora: string
+    disponible: boolean
+    precio: number
+  }>
+}
+
+export interface Reservation {
+  id: string
+  fecha: string
+  horaInicio: string
+  horaFin: string
+  estado: 'PENDIENTE' | 'CONFIRMADA' | 'CANCELADA' | 'LIBERADA'
+  confirmada: boolean
+  cancha: Court
+  usuario: {
+    id: string
+    nombre: string
+    apellido: string
+    email: string
+  }
+  precio: number
+  fechaCreacion: string
+}
+
+export interface Notification {
+  id: string
+  usuarioId: string
+  titulo: string
+  mensaje: string
+  leida: boolean
+  fecha: string
 }
 
 export interface Report {
-    reservasTotales: number
-    ingresosTotales: number
-    ocupacionPromedio: number
-    canchasMasReservadas: Array<{
-        cancha: string
-        reservas: number
-    }>
+  reservasTotales: number
+  ingresosTotales: number
+  ocupacionPromedio: number
+  canchasMasReservadas: Array<{
+    cancha: string
+    reservas: number
+  }>
 }
 
-export interface TimeSlot {
-    id: string;
-    time: string;
-    available: boolean;
+export interface Stats {
+  totalUsuarios: number
+  totalCanchas: number
+  totalReservas: number
+  totalIngresos: number
+  crecimientoReciente: number
 }
 
-// Mock data for development
-const mockCourts: Court[] = [
-    {
-        id: '1',
-        nombre: 'Cancha de Fútbol 1',
-        deporte: 'Fútbol',
-        club: 'Club Deportivo Central',
-        direccion: 'Av. Principal 123',
-        precio: 5000,
-        imagen: '/placeholder.jpg',
-        descripcion: 'Cancha profesional de fútbol 11 con césped sintético',
-        horarios: 'Lun-Dom 8:00-22:00',
-        telefono: '123-456-7890',
-        email: 'info@clubcentral.com',
-        featured: true,
-    },
-    {
-        id: '2',
-        nombre: 'Cancha de Tenis 1',
-        deporte: 'Tenis',
-        club: 'Club de Tenis Premium',
-        direccion: 'Calle Deportiva 456',
-        precio: 3000,
-        imagen: '/placeholder.jpg',
-        descripcion: 'Cancha de tenis profesional con superficie de arcilla',
-        horarios: 'Lun-Dom 7:00-23:00',
-        telefono: '098-765-4321',
-        email: 'info@tenispremium.com',
-        featured: true,
-    },
-    {
-        id: '3',
-        nombre: 'Cancha de Paddle 1',
-        deporte: 'Paddle',
-        club: 'Club Paddle Elite',
-        direccion: 'Boulevard Deportivo 789',
-        precio: 2500,
-        imagen: '/placeholder.jpg',
-        descripcion: 'Cancha de paddle con paredes de cristal',
-        horarios: 'Lun-Dom 9:00-21:00',
-        telefono: '555-123-4567',
-        email: 'info@paddleelite.com',
-        featured: false,
-    },
-]
+// --- Utilidad centralizada para requests ---
 
-const mockReservations: Reservation[] = [
-    {
-        id: '1',
-        courtId: '1',
-        userId: 'user1',
-        fecha: '2024-01-15',
-        hora: '14:00',
-        duracion: 2,
-        precio: 5000,
-        estado: 'confirmada',
-        court: mockCourts[0],
-    },
-]
+async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
+  const token = getCookie ? getCookie('token') : undefined
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...options.headers,
+  }
+  try {
+    const res = await fetch(`${BACKEND_URL}${endpoint}`, { ...options, headers })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      return { error: data.message || data.error || 'Error de API', status: res.status }
+    }
+    return { data: data.data ?? data, message: data.message, status: res.status }
+  } catch (error: any) {
+    return { error: error.message || 'Error de red', status: 0 }
+  }
+}
 
-const mockUsers: User[] = [
-    {
-        id: 'user1',
-        nombre: 'Juan Pérez',
-        email: 'juan@example.com',
-        telefono: '123-456-7890',
-        rol: 'usuario',
-    },
-]
-
-const mockNotifications: Notification[] = [
-    {
-        id: '1',
-        userId: 'user1',
-        titulo: 'Reserva confirmada',
-        mensaje: 'Tu reserva para el 15 de enero ha sido confirmada',
-        leida: false,
-        fecha: '2024-01-10T10:00:00Z',
-    },
-]
+// --- API Client alineado con Swagger ---
 
 const apiClient = {
-    // Court methods
-    async getCourts(filters?: CourtFilters): Promise<ApiResponse<Court[]>> {
-        try {
-            // Simulate API delay
-            await new Promise(resolve => setTimeout(resolve, 500))
+  /**
+   * Autenticación: Login
+   * POST /auth/login
+   */
+  login: (credentials: LoginCredentials) =>
+    apiRequest<{ access_token: string; user: User }>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    }),
 
-            let filteredCourts = [...mockCourts]
+  /**
+   * Autenticación: Registro
+   * POST /auth/register
+   */
+  register: (data: RegisterData) =>
+    apiRequest<{ access_token: string; user: User }>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 
-            if (filters) {
-                if (filters.deporte) {
-                    filteredCourts = filteredCourts.filter(court =>
-                        court.deporte.toLowerCase().includes(filters.deporte!.toLowerCase())
-                    )
-                }
-                if (filters.club) {
-                    filteredCourts = filteredCourts.filter(court =>
-                        court.club.toLowerCase().includes(filters.club!.toLowerCase())
-                    )
-                }
-                if (filters.featured) {
-                    filteredCourts = filteredCourts.filter(court => court.featured)
-                }
-            }
+  /**
+   * Obtener usuario autenticado
+   * GET /auth/me
+   */
+  me: () => apiRequest<User>('/auth/me'),
 
-            return {
-                success: true,
-                data: filteredCourts,
-            }
-        } catch (error) {
-            return {
-                success: false,
-                error: 'Error al obtener las canchas',
-            }
-        }
-    },
+  /**
+   * Listar canchas (con filtros opcionales)
+   * GET /canchas
+   */
+  getCanchas: (params?: { disponible?: boolean; deporte?: string; club?: string; fecha?: string }) => {
+    const searchParams = new URLSearchParams()
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) searchParams.append(key, value.toString())
+      })
+    }
+    const query = searchParams.toString() ? `?${searchParams.toString()}` : ''
+    return apiRequest<Court[]>(`/canchas${query}`)
+  },
 
-    async getCourt(id: string): Promise<ApiResponse<Court>> {
-        try {
-            await new Promise(resolve => setTimeout(resolve, 300))
+  /**
+   * Obtener detalles de una cancha
+   * GET /canchas/:id
+   */
+  getCancha: (id: string) => apiRequest<Court>(`/canchas/${id}`),
 
-            const court = mockCourts.find(c => c.id === id)
-            if (!court) {
-                return {
-                    success: false,
-                    error: 'Cancha no encontrada',
-                }
-            }
+  /**
+   * Disponibilidad de una cancha para una fecha
+   * GET /canchas/:id/disponibilidad?fecha=YYYY-MM-DD
+   */
+  getDisponibilidadCancha: (id: string, fecha: string) =>
+    apiRequest<CourtAvailability>(`/canchas/${id}/disponibilidad?fecha=${fecha}`),
 
-            return {
-                success: true,
-                data: court,
-            }
-        } catch (error) {
-            return {
-                success: false,
-                error: 'Error al obtener la cancha',
-            }
-        }
-    },
+  /**
+   * Crear reserva
+   * POST /reservas
+   */
+  crearReserva: (data: { canchaId: string; fecha: string; horaInicio: string; horaFin: string }) =>
+    apiRequest<Reservation>('/reservas', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 
-    // Reservation methods
-    async createReservation(data: ReservationData): Promise<ApiResponse<Reservation>> {
-        try {
-            await new Promise(resolve => setTimeout(resolve, 1000))
+  /**
+   * Mis reservas
+   * GET /reservas/mis-reservas
+   */
+  misReservas: () => apiRequest<Reservation[]>('/reservas/mis-reservas'),
 
-            const newReservation: Reservation = {
-                id: Date.now().toString(),
-                courtId: data.courtId,
-                userId: 'user1', // Mock user ID
-                fecha: data.fecha,
-                hora: data.hora,
-                duracion: data.duracion,
-                precio: 5000, // Mock price
-                estado: 'pendiente',
-            }
+  /**
+   * Confirmar reserva
+   * PATCH /reservas/:id/confirmar
+   */
+  confirmarReserva: (id: string) =>
+    apiRequest<Reservation>(`/reservas/${id}/confirmar`, { method: 'PATCH' }),
 
-            return {
-                success: true,
-                data: newReservation,
-            }
-        } catch (error) {
-            return {
-                success: false,
-                error: 'Error al crear la reserva',
-            }
-        }
-    },
+  /**
+   * Cancelar reserva
+   * PATCH /reservas/:id/cancelar
+   */
+  cancelarReserva: (id: string) =>
+    apiRequest<void>(`/reservas/${id}/cancelar`, { method: 'PATCH' }),
 
-    async getMyReservations(): Promise<ApiResponse<Reservation[]>> {
-        try {
-            await new Promise(resolve => setTimeout(resolve, 500))
+  /**
+   * Listar todas las reservas (admin)
+   * GET /admin/reservas
+   */
+  adminReservas: () => apiRequest<Reservation[]>('/admin/reservas'),
 
-            return {
-                success: true,
-                data: mockReservations,
-            }
-        } catch (error) {
-            return {
-                success: false,
-                error: 'Error al obtener las reservas',
-            }
-        }
-    },
+  /**
+   * Listar usuarios (admin)
+   * GET /admin/usuarios
+   */
+  adminUsuarios: () => apiRequest<User[]>('/admin/usuarios'),
 
-    async getAllReservations(): Promise<ApiResponse<Reservation[]>> {
-        try {
-            await new Promise(resolve => setTimeout(resolve, 500))
+  /**
+   * Obtener estadísticas (admin)
+   * GET /admin/estadisticas
+   */
+  adminEstadisticas: () => apiRequest<Stats>('/admin/estadisticas'),
 
-            return {
-                success: true,
-                data: mockReservations,
-            }
-        } catch (error) {
-            return {
-                success: false,
-                error: 'Error al obtener las reservas',
-            }
-        }
-    },
+  /**
+   * Obtener reportes (admin)
+   * GET /admin/reportes
+   */
+  adminReportes: (periodo: 'week' | 'month' | 'year' = 'month') =>
+    apiRequest<Report>(`/admin/reportes?periodo=${periodo}`),
 
-    async cancelReservation(id: string): Promise<ApiResponse<boolean>> {
-        try {
-            await new Promise(resolve => setTimeout(resolve, 500))
+  /**
+   * Listar notificaciones del usuario
+   * GET /notificaciones
+   */
+  getNotificaciones: () => apiRequest<Notification[]>('/notificaciones'),
 
-            return {
-                success: true,
-                data: true,
-            }
-        } catch (error) {
-            return {
-                success: false,
-                error: 'Error al cancelar la reserva',
-            }
-        }
-    },
+  /**
+   * Marcar notificación como leída
+   * PATCH /notificaciones/:id/leida
+   */
+  marcarNotificacionLeida: (id: string) =>
+    apiRequest<void>(`/notificaciones/${id}/leida`, { method: 'PATCH' }),
 
-    // User methods
-    async login(data: LoginData): Promise<ApiResponse<{ user: User; token: string }>> {
-        try {
-            await new Promise(resolve => setTimeout(resolve, 800))
-
-            const user = mockUsers.find(u => u.email === data.email)
-            if (!user) {
-                return {
-                    success: false,
-                    error: 'Credenciales inválidas',
-                }
-            }
-
-            return {
-                success: true,
-                data: {
-                    user,
-                    token: 'mock-jwt-token',
-                },
-            }
-        } catch (error) {
-            return {
-                success: false,
-                error: 'Error al iniciar sesión',
-            }
-        }
-    },
-
-    async register(data: RegisterData): Promise<ApiResponse<{ user: User; token: string }>> {
-        try {
-            await new Promise(resolve => setTimeout(resolve, 1000))
-
-            const newUser: User = {
-                id: Date.now().toString(),
-                nombre: data.nombre,
-                email: data.email,
-                telefono: data.telefono,
-                rol: 'usuario',
-            }
-
-            return {
-                success: true,
-                data: {
-                    user: newUser,
-                    token: 'mock-jwt-token',
-                },
-            }
-        } catch (error) {
-            return {
-                success: false,
-                error: 'Error al registrarse',
-            }
-        }
-    },
-
-    async getUsers(): Promise<ApiResponse<User[]>> {
-        try {
-            await new Promise(resolve => setTimeout(resolve, 500))
-
-            return {
-                success: true,
-                data: mockUsers,
-            }
-        } catch (error) {
-            return {
-                success: false,
-                error: 'Error al obtener usuarios',
-            }
-        }
-    },
-
-    // Notification methods
-    async getNotifications(): Promise<ApiResponse<Notification[]>> {
-        try {
-            await new Promise(resolve => setTimeout(resolve, 300))
-
-            return {
-                success: true,
-                data: mockNotifications,
-            }
-        } catch (error) {
-            return {
-                success: false,
-                error: 'Error al obtener notificaciones',
-            }
-        }
-    },
-
-    async markNotificationAsRead(id: string): Promise<ApiResponse<boolean>> {
-        try {
-            await new Promise(resolve => setTimeout(resolve, 300))
-
-            return {
-                success: true,
-                data: true,
-            }
-        } catch (error) {
-            return {
-                success: false,
-                error: 'Error al marcar notificación como leída',
-            }
-        }
-    },
-
-    // Admin methods
-    async getStats(): Promise<ApiResponse<Stats>> {
-        try {
-            await new Promise(resolve => setTimeout(resolve, 500))
-
-            return {
-                success: true,
-                data: {
-                    totalUsers: 150,
-                    totalCourts: 25,
-                    totalReservations: 1200,
-                    totalRevenue: 5000000,
-                    recentGrowth: 15,
-                },
-            }
-        } catch (error) {
-            return {
-                success: false,
-                error: 'Error al obtener estadísticas',
-            }
-        }
-    },
-
-    async getReports(period: 'week' | 'month' | 'year' = 'month'): Promise<ApiResponse<Report>> {
-        try {
-            await new Promise(resolve => setTimeout(resolve, 500))
-
-            return {
-                success: true,
-                data: {
-                    reservasTotales: 1200,
-                    ingresosTotales: 5000000,
-                    ocupacionPromedio: 75,
-                    canchasMasReservadas: [
-                        { cancha: 'Cancha de Fútbol 1', reservas: 150 },
-                        { cancha: 'Cancha de Tenis 1', reservas: 120 },
-                        { cancha: 'Cancha de Paddle 1', reservas: 80 },
-                    ],
-                },
-            }
-        } catch (error) {
-            return {
-                success: false,
-                error: 'Error al obtener reportes',
-            }
-        }
-    },
-
-    getTimeSlots: async (courtId: string, date: string): Promise<ApiResponse<TimeSlot[]>> => {
-        // Mock temporal
-        return {
-            success: true,
-            data: [
-                { id: '1', time: '09:00', available: true },
-                { id: '2', time: '10:00', available: true },
-                { id: '3', time: '11:00', available: false },
-                { id: '4', time: '12:00', available: true },
-                { id: '5', time: '13:00', available: true },
-                { id: '6', time: '14:00', available: true },
-                { id: '7', time: '15:00', available: false },
-                { id: '8', time: '16:00', available: true },
-                { id: '9', time: '17:00', available: true },
-                { id: '10', time: '18:00', available: true },
-            ]
-        }
-    },
+  // Agrega aquí cualquier endpoint adicional que aparezca en Swagger
 }
 
 export default apiClient 
