@@ -87,7 +87,7 @@ export default function FeaturedCourts() {
             <Card key={court.id} className="overflow-hidden hover:shadow-lg transition-shadow">
               <div className="relative h-48">
                 <Image
-                  src={court.image}
+                  src={'/cancha.jpeg'}
                   alt={court.name}
                   fill
                   className="object-cover"

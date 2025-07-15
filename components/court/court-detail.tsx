@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { MapPin, DollarSign, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import apiClient, { Cancha, Horario } from '@/lib/api-client'
+import Image from 'next/image'
 
 export default function CourtDetail() {
   const params = useParams()
@@ -170,9 +171,13 @@ export default function CourtDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Court Image */}
         <div className="relative h-64 lg:h-96 rounded-lg overflow-hidden bg-gray-200">
-          <div className="flex items-center justify-center h-full">
-            <span className="text-gray-500">Imagen no disponible</span>
-          </div>
+          <Image
+            src={'/cancha.jpeg'}
+            alt={court.nombre}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
         </div>
 
         {/* Court Information */}
