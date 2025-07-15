@@ -1,6 +1,6 @@
 /**
  * Register Form Component for CanchaYA
- * Implements user registration with validation and server actions
+ * Implements user registration with validation and real backend integration
  */
 
 'use client'
@@ -14,9 +14,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { useAuth } from './auth-context'
 import { toast } from 'sonner'
 import apiClient from '@/lib/api-client'
+import Link from 'next/link'
 
 const registerSchema = z.object({
   nombre: z.string().min(1, 'El nombre es requerido'),
@@ -31,7 +31,6 @@ const registerSchema = z.object({
 type RegisterFormData = z.infer<typeof registerSchema>
 
 export function RegisterForm() {
-  const { login } = useAuth()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
 
@@ -50,17 +49,22 @@ export function RegisterForm() {
         nombre: data.nombre,
         email: data.email,
         password: data.password,
-        telefono: '',
       })
       
-      if (response.data?.token) {
-        login(data.email, data.password)
-        toast.success('¡Registro exitoso!')
-        router.push('/')
+      if (response.error) {
+        toast.error(response.error)
+        return
+      }
+
+      if (response.data) {
+        toast.success('¡Registro exitoso! Por favor inicia sesión.')
+        router.push('/login')
+      } else {
+        toast.error('Error en el registro')
       }
     } catch (error) {
       console.error('Registration error:', error)
-      toast.error('Error en el registro')
+      toast.error('Error del servidor. Intenta nuevamente.')
     } finally {
       setIsLoading(false)
     }
@@ -83,6 +87,7 @@ export function RegisterForm() {
               type="text"
               placeholder="Tu nombre completo"
               {...register('nombre')}
+              disabled={isLoading}
             />
             {errors.nombre && (
               <p className="text-sm text-red-600">{errors.nombre.message}</p>
@@ -96,6 +101,7 @@ export function RegisterForm() {
               type="email"
               placeholder="tu@email.com"
               {...register('email')}
+              disabled={isLoading}
             />
             {errors.email && (
               <p className="text-sm text-red-600">{errors.email.message}</p>
@@ -109,6 +115,7 @@ export function RegisterForm() {
               type="password"
               placeholder="••••••••"
               {...register('password')}
+              disabled={isLoading}
             />
             {errors.password && (
               <p className="text-sm text-red-600">{errors.password.message}</p>
@@ -122,6 +129,7 @@ export function RegisterForm() {
               type="password"
               placeholder="••••••••"
               {...register('confirmPassword')}
+              disabled={isLoading}
             />
             {errors.confirmPassword && (
               <p className="text-sm text-red-600">{errors.confirmPassword.message}</p>
@@ -131,6 +139,15 @@ export function RegisterForm() {
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? 'Registrando...' : 'Registrarse'}
           </Button>
+
+          <div className="text-center">
+            <p className="text-sm text-gray-600">
+              ¿Ya tienes una cuenta?{' '}
+              <Link href="/login" className="text-blue-600 hover:underline">
+                Inicia sesión aquí
+              </Link>
+            </p>
+          </div>
         </form>
       </CardContent>
     </Card>

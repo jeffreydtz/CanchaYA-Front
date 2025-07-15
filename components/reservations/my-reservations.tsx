@@ -5,36 +5,35 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Calendar, Clock, MapPin, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { Calendar, Clock, MapPin, CheckCircle, XCircle, AlertCircle, DollarSign } from 'lucide-react'
 import { useAuth } from '@/components/auth/auth-context'
 import { toast } from 'sonner'
-import apiClient from '@/lib/api-client'
+import apiClient, { Reserva } from '@/lib/api-client'
 import Link from 'next/link'
 
-interface Reservation {
-  id: string
-  courtName: string
-  courtId: string
-  date: string
-  time: string
-  status: 'confirmed' | 'pending' | 'cancelled' | 'completed'
-  price: number
-  createdAt: string
-}
-
 export default function MyReservations() {
-  const { user } = useAuth()
-  const [reservations, setReservations] = useState<Reservation[]>([])
+  const { user, isAuthenticated } = useAuth()
+  const [reservations, setReservations] = useState<Reserva[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const loadReservations = async () => {
-      if (!user?.id) return
+      if (!isAuthenticated || !user?.id) {
+        setIsLoading(false)
+        return
+      }
 
       try {
-        const response = await apiClient.getMyReservations()
+        const response = await apiClient.getReservas()
+        if (response.error) {
+          toast.error(response.error)
+          return
+        }
+
         if (response.data) {
-          setReservations(response.data as unknown as Reservation[])
+          // Filter reservations for current user
+          const userReservations = response.data.filter(r => r.usuarioId === user.id)
+          setReservations(userReservations)
         }
       } catch (error) {
         console.error('Error loading reservations:', error)
@@ -45,17 +44,22 @@ export default function MyReservations() {
     }
 
     loadReservations()
-  }, [user?.id])
+  }, [user?.id, isAuthenticated])
 
   const handleConfirmReservation = async (reservationId: string) => {
     try {
-      // const response = await apiClient.confirmReservation(reservationId)
-      // if (response.data) {
+      const response = await apiClient.confirmarReserva(reservationId)
+      if (response.error) {
+        toast.error(response.error)
+        return
+      }
+
+      if (response.data) {
         setReservations(prev => 
-          prev.map(r => r.id === reservationId ? { ...r, status: 'confirmed' as const } : r)
+          prev.map(r => r.id === reservationId ? { ...r, estado: 'CONFIRMADA' as const } : r)
         )
         toast.success('Tu reserva ha sido confirmada exitosamente')
-      // }
+      }
     } catch (error) {
       console.error('Error confirming reservation:', error)
       toast.error('No se pudo confirmar la reserva')
@@ -64,72 +68,97 @@ export default function MyReservations() {
 
   const handleCancelReservation = async (reservationId: string) => {
     try {
-      // const response = await apiClient.cancelReservation(reservationId)
-      // if (response.data) {
-        setReservations(prev => 
-          prev.map(r => r.id === reservationId ? { ...r, status: 'cancelled' as const } : r)
-        )
-        toast.success('Tu reserva ha sido cancelada')
-      // }
+      const response = await apiClient.cancelReserva(reservationId)
+      if (response.error) {
+        toast.error(response.error)
+        return
+      }
+
+      // Remove the reservation from the list since it's deleted
+      setReservations(prev => prev.filter(r => r.id !== reservationId))
+      toast.success('Tu reserva ha sido cancelada')
     } catch (error) {
       console.error('Error cancelling reservation:', error)
       toast.error('No se pudo cancelar la reserva')
     }
   }
 
-  const getStatusBadge = (status: Reservation['status']) => {
+  const getStatusBadge = (status: Reserva['estado']) => {
     switch (status) {
-      case 'confirmed':
+      case 'CONFIRMADA':
         return (
           <Badge variant="default" className="bg-green-100 text-green-800">
             <CheckCircle className="w-3 h-3 mr-1" />
             Confirmada
           </Badge>
         )
-      case 'pending':
+      case 'PENDIENTE':
         return (
           <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
             <AlertCircle className="w-3 h-3 mr-1" />
             Pendiente
           </Badge>
         )
-      case 'cancelled':
+      case 'CANCELADA':
         return (
           <Badge variant="destructive" className="bg-red-100 text-red-800">
             <XCircle className="w-3 h-3 mr-1" />
             Cancelada
           </Badge>
         )
-      case 'completed':
+      default:
         return (
-          <Badge variant="outline" className="bg-gray-100 text-gray-800">
-            Completada
+          <Badge variant="outline">
+            {status}
           </Badge>
         )
-      default:
-        return <Badge variant="outline">Desconocido</Badge>
     }
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('es-ES', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
-      day: 'numeric',
+      day: 'numeric'
     })
   }
 
   const formatTime = (timeString: string) => {
-    return timeString
+    return timeString.substring(0, 5) // Extract HH:MM from HH:MM:SS
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Card className="max-w-md mx-auto">
+          <CardHeader className="text-center">
+            <CardTitle>Acceso Requerido</CardTitle>
+            <CardDescription>
+              Debes iniciar sesión para ver tus reservas
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/login">
+              <Button className="w-full">Iniciar Sesión</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded mb-4"></div>
-          <div className="h-64 bg-gray-200 rounded"></div>
+        <div className="space-y-4">
+          <div className="h-8 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-20 bg-gray-200 rounded animate-pulse"></div>
+            ))}
+          </div>
         </div>
       </div>
     )
@@ -137,105 +166,179 @@ export default function MyReservations() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Mis Reservas</h1>
-        <p className="text-muted-foreground">
-          Gestiona todas tus reservas de canchas deportivas
-        </p>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Mis Reservas</h1>
+        <Link href="/">
+          <Button variant="outline">Hacer nueva reserva</Button>
+        </Link>
       </div>
 
       {reservations.length === 0 ? (
         <Card>
-          <CardContent className="p-8 text-center">
-            <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No tienes reservas</h3>
-            <p className="text-muted-foreground mb-4">
-              Aún no has realizado ninguna reserva. ¡Explora nuestras canchas y reserva tu espacio!
-            </p>
-            <Button asChild>
-              <Link href="/">Ver Canchas</Link>
-            </Button>
+          <CardContent className="text-center py-12">
+            <Calendar className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No tienes reservas</h3>
+            <p className="text-gray-600 mb-4">¡Comienza a reservar canchas para jugar!</p>
+            <Link href="/">
+              <Button>Explorar Canchas</Button>
+            </Link>
           </CardContent>
         </Card>
       ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Reservas Activas</CardTitle>
-            <CardDescription>
-              Lista de todas tus reservas de canchas deportivas
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Cancha</TableHead>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Hora</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Precio</TableHead>
-                  <TableHead>Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {reservations.map((reservation) => (
-                  <TableRow key={reservation.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center">
-                        <MapPin className="h-4 w-4 text-muted-foreground mr-2" />
-                        {reservation.courtName}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 text-muted-foreground mr-2" />
-                        {formatDate(reservation.date)}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <Clock className="h-4 w-4 text-muted-foreground mr-2" />
-                        {formatTime(reservation.time)}
-                      </div>
-                    </TableCell>
-                    <TableCell>{getStatusBadge(reservation.status)}</TableCell>
-                    <TableCell>${(reservation.price || 0).toLocaleString()}</TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        {reservation.status === 'pending' && (
-                          <>
+        <div className="space-y-6">
+          {/* Desktop Table View */}
+          <div className="hidden md:block">
+            <Card>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Cancha</TableHead>
+                    <TableHead>Fecha</TableHead>
+                    <TableHead>Hora</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead>Precio</TableHead>
+                    <TableHead>Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {reservations.map((reservation) => (
+                    <TableRow key={reservation.id}>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{reservation.cancha?.nombre || 'Cancha no especificada'}</p>
+                          <p className="text-sm text-gray-600 flex items-center">
+                            <MapPin className="w-3 h-3 mr-1" />
+                            {reservation.cancha?.ubicacion || 'Ubicación no especificada'}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <Calendar className="w-4 h-4 mr-2 text-gray-400" />
+                          {formatDate(reservation.fecha)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <Clock className="w-4 h-4 mr-2 text-gray-400" />
+                          {formatTime(reservation.hora)}
+                        </div>
+                      </TableCell>
+                      <TableCell>{getStatusBadge(reservation.estado)}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center">
+                          <DollarSign className="w-4 h-4 mr-1 text-green-600" />
+                          {reservation.monto ? `$${reservation.monto}` : 'No especificado'}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          {reservation.estado === 'PENDIENTE' && (
+                            <>
+                              <Button
+                                size="sm"
+                                onClick={() => handleConfirmReservation(reservation.id)}
+                                className="text-xs"
+                              >
+                                Confirmar
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleCancelReservation(reservation.id)}
+                                className="text-xs"
+                              >
+                                Cancelar
+                              </Button>
+                            </>
+                          )}
+                          {reservation.estado === 'CONFIRMADA' && (
                             <Button
                               size="sm"
-                              onClick={() => handleConfirmReservation(reservation.id)}
-                            >
-                              Confirmar
-                            </Button>
-                            <Button
                               variant="outline"
-                              size="sm"
                               onClick={() => handleCancelReservation(reservation.id)}
+                              className="text-xs"
                             >
                               Cancelar
                             </Button>
-                          </>
-                        )}
-                        {reservation.status === 'confirmed' && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleCancelReservation(reservation.id)}
-                          >
-                            Cancelar
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-4">
+            {reservations.map((reservation) => (
+              <Card key={reservation.id}>
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle className="text-lg">{reservation.cancha?.nombre || 'Cancha no especificada'}</CardTitle>
+                      <CardDescription className="flex items-center mt-1">
+                        <MapPin className="w-3 h-3 mr-1" />
+                        {reservation.cancha?.ubicacion || 'Ubicación no especificada'}
+                      </CardDescription>
+                    </div>
+                    {getStatusBadge(reservation.estado)}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="flex items-center">
+                      <Calendar className="w-4 h-4 mr-2 text-gray-400" />
+                      <span className="text-sm">{formatDate(reservation.fecha)}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Clock className="w-4 h-4 mr-2 text-gray-400" />
+                      <span className="text-sm">{formatTime(reservation.hora)}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <DollarSign className="w-4 h-4 mr-2 text-green-600" />
+                      <span className="text-sm">{reservation.monto ? `$${reservation.monto}` : 'No especificado'}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex space-x-2">
+                    {reservation.estado === 'PENDIENTE' && (
+                      <>
+                        <Button
+                          size="sm"
+                          onClick={() => handleConfirmReservation(reservation.id)}
+                          className="flex-1"
+                        >
+                          Confirmar
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleCancelReservation(reservation.id)}
+                          className="flex-1"
+                        >
+                          Cancelar
+                        </Button>
+                      </>
+                    )}
+                    {reservation.estado === 'CONFIRMADA' && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleCancelReservation(reservation.id)}
+                        className="w-full"
+                      >
+                        Cancelar
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   )

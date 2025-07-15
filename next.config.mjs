@@ -28,7 +28,7 @@ const nextConfig = {
     ],
   },
   env: {
-    BACKEND_URL: process.env.BACKEND_URL || 'http://localhost:3001',
+    BACKEND_URL: process.env.BACKEND_URL || 'http://localhost:3000',
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET || 'your-secret-key',
     JWT_SECRET: process.env.JWT_SECRET || 'cancha-ya-jwt-secret'
   }

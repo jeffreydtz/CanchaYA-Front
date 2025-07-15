@@ -294,7 +294,8 @@ jest.mock('@/lib/actions', () => ({
 
 // Environment variables for testing
 process.env.NODE_ENV = 'test'
-process.env.NEXT_PUBLIC_API_URL = 'http://localhost:3001'
+process.env.NEXT_PUBLIC_BACKEND_URL = 'http://localhost:3000/api'
+process.env.NEXT_PUBLIC_API_URL = 'http://localhost:3000/api'
 process.env.NEXT_PUBLIC_APP_URL = 'http://localhost:3000'
 
 // Add TextEncoder/TextDecoder polyfills for Node.js

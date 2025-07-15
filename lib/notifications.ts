@@ -58,7 +58,7 @@ export class NotificationManager {
     connect(): Promise<boolean> {
         return new Promise((resolve) => {
             try {
-                const url = new URL('/api/notifications/stream', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001')
+                const url = new URL('/notifications/stream', process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000/api')
                 url.searchParams.set('userId', this.userId)
 
                 this.eventSource = new EventSource(url.toString(), {
@@ -170,7 +170,7 @@ export class NotificationManager {
 // Notification API functions
 export async function getNotifications(token: string): Promise<NotificationData[]> {
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/notifications`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/notificaciones`, {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',

@@ -1,29 +1,22 @@
 /**
  * API Client para CanchaYA
- * Cliente universal alineado con Swagger del backend (NestJS)
- * - Todos los endpoints y recursos documentados en https://backend-cancha-ya-production.up.railway.app/api/docs/
- * - Nombres, rutas y estructuras de datos exactamente como en Swagger
- * - Manejo centralizado de errores y autenticación (token JWT)
- * - Modular, DRY y exhaustivamente documentado
- *
- * Reglas:
- * - No mocks, solo llamadas reales a la API
- * - Todos los recursos: Auth, Canchas, Reservas, Usuarios, Notificaciones, Admin, Reportes, etc.
- * - Tipos y métodos alineados con Swagger
- * - Documentación clara en cada función
+ * Cliente universal alineado con el backend NestJS
+ * Base URL: https://backend-cancha-ya-production.up.railway.app/api
+ * Autenticación: Bearer JWT token
+ * Todos los IDs son UUIDs, fechas en formato YYYY-MM-DD, horas en HH:MM
  */
 
 import { getCookie } from './auth'
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3001'
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend-cancha-ya-production.up.railway.app/api'
 
-// --- Tipos alineados con Swagger ---
+// --- Tipos alineados con el backend API ---
 
 export interface ApiResponse<T = any> {
   data?: T
   message?: string
   error?: string
-  status?: number
+  status: number
 }
 
 export interface LoginCredentials {
@@ -33,16 +26,13 @@ export interface LoginCredentials {
 
 export interface RegisterData {
   nombre: string
-  apellido: string
   email: string
   password: string
-  telefono?: string
 }
 
 export interface User {
-  id: string
+  id: string // UUID
   nombre: string
-  apellido: string
   email: string
   telefono?: string
   rol: 'JUGADOR' | 'ADMINISTRADOR'
@@ -50,224 +40,686 @@ export interface User {
   fechaCreacion: string
 }
 
-export interface Court {
-  id: string
+export interface Club {
+  id: string // UUID
   nombre: string
-  descripcion: string
-  precio: number
-  imagenes: string[]
-  club: {
-    id: string
-    nombre: string
-    direccion: string
-  }
-  deporte: {
-    id: string
-    nombre: string
-  }
-  disponible: boolean
-}
-
-export interface CourtAvailability {
-  horarios: Array<{
-    hora: string
-    disponible: boolean
-    precio: number
-  }>
-}
-
-export interface Reservation {
-  id: string
-  fecha: string
-  horaInicio: string
-  horaFin: string
-  estado: 'PENDIENTE' | 'CONFIRMADA' | 'CANCELADA' | 'LIBERADA'
-  confirmada: boolean
-  cancha: Court
-  usuario: {
-    id: string
-    nombre: string
-    apellido: string
-    email: string
-  }
-  precio: number
+  direccion: string
+  telefono?: string
+  email?: string
   fechaCreacion: string
 }
 
-export interface Notification {
-  id: string
-  usuarioId: string
-  titulo: string
-  mensaje: string
-  leida: boolean
+export interface Deporte {
+  id: string // UUID
+  nombre: string
+  fechaCreacion: string
+}
+
+export interface Cancha {
+  id: string // UUID
+  nombre: string
+  ubicacion: string
+  tipoSuperficie: string
+  precioPorHora: number
+  disponible: boolean
+  deporteId: string // UUID
+  clubId: string // UUID
+  deporte?: Deporte
+  club?: Club
+  fechaCreacion: string
+}
+
+export interface Reserva {
+  id: string // UUID
+  usuarioId: string // UUID
+  canchaId: string // UUID
+  fecha: string // YYYY-MM-DD
+  hora: string // HH:MM
+  estado: 'PENDIENTE' | 'CONFIRMADA' | 'CANCELADA'
+  monto?: number
+  usuario?: User
+  cancha?: Cancha
+  fechaCreacion: string
+}
+
+export interface Equipo {
+  id: string // UUID
+  nombre: string
+  deporteId: string // UUID
+  capitan?: string // UUID
+  jugadores?: User[]
+  deporte?: Deporte
+  fechaCreacion: string
+}
+
+export interface Desafio {
+  id: string // UUID
+  equipoRetadorId: string // UUID
+  equipoRivalId?: string // UUID
+  deporteId: string // UUID
+  fecha: string // YYYY-MM-DD
+  hora: string // HH:MM
+  estado: 'PENDIENTE' | 'ACEPTADO' | 'RECHAZADO' | 'FINALIZADO'
+  resultado?: string
+  equipoRetador?: Equipo
+  equipoRival?: Equipo
+  deporte?: Deporte
+  fechaCreacion: string
+}
+
+export interface Deuda {
+  id: string // UUID
+  usuarioId: string // UUID
+  monto: number
+  fechaVencimiento: string // YYYY-MM-DD
+  estado: 'PENDIENTE' | 'PAGADA' | 'VENCIDA'
+  descripcion?: string
+  usuario?: User
+  fechaCreacion: string
+}
+
+export interface DisponibilidadJugador {
+  id: string // UUID
+  usuarioId: string // UUID
+  fechaDesde: string // YYYY-MM-DD
+  fechaHasta: string // YYYY-MM-DD
+  horaDesde: string // HH:MM
+  horaHasta: string // HH:MM
+  clubesIds: string[] // UUIDs
+  usuario?: User
+  fechaCreacion: string
+}
+
+export interface Horario {
+  id: string // UUID
+  canchaId: string // UUID
+  dia: string
+  horaInicio: string // HH:MM
+  horaFin: string // HH:MM
+  cancha?: Cancha
+  fechaCreacion: string
+}
+
+export interface Valoracion {
+  id: string // UUID
+  usuarioId: string // UUID
+  canchaId: string // UUID
+  puntaje: number // 1-5
+  comentario?: string
+  usuario?: User
+  cancha?: Cancha
+  fechaCreacion: string
+}
+
+export interface RankingJugador {
+  usuarioId: string // UUID
+  nombre: string
+  victorias: number
+  derrotas: number
+  puntos: number
+  posicion: number
+}
+
+export interface RankingEquipo {
+  equipoId: string // UUID
+  nombre: string
+  victorias: number
+  derrotas: number
+  puntos: number
+  posicion: number
+}
+
+export interface ReporteReservas {
   fecha: string
+  cantidad: number
+  ingresos: number
 }
 
-export interface Report {
-  reservasTotales: number
-  ingresosTotales: number
-  ocupacionPromedio: number
-  canchasMasReservadas: Array<{
-    cancha: string
-    reservas: number
-  }>
+export interface ReporteIngresos {
+  clubId: string
+  clubNombre: string
+  ingresoTotal: number
 }
 
-export interface Stats {
-  totalUsuarios: number
-  totalCanchas: number
-  totalReservas: number
-  totalIngresos: number
-  crecimientoReciente: number
+export interface ReporteCanchaTop {
+  canchaId: string
+  canchaNombre: string
+  cantidadReservas: number
+}
+
+export interface ReporteUsuarioTop {
+  usuarioId: string
+  usuarioNombre: string
+  cantidadReservas: number
+}
+
+export interface ReporteOcupacionHorario {
+  hora: string
+  ocupacion: number
 }
 
 // --- Utilidad centralizada para requests ---
 
 async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
   const token = getCookie ? getCookie('token') : undefined
+  
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   }
+
   try {
-    const res = await fetch(`${BACKEND_URL}${endpoint}`, { ...options, headers })
-    const data = await res.json().catch(() => ({}))
-    if (!res.ok) {
-      return { error: data.message || data.error || 'Error de API', status: res.status }
+    const response = await fetch(`${BACKEND_URL}${endpoint}`, { 
+      ...options, 
+      headers 
+    })
+    
+    let data
+    try {
+      data = await response.json()
+    } catch (parseError) {
+      data = {}
     }
-    return { data: data.data ?? data, message: data.message, status: res.status }
+
+    if (!response.ok) {
+      return { 
+        error: data.message || data.error || 'Error de API', 
+        status: response.status 
+      }
+    }
+
+    return { 
+      data: data, 
+      message: data.message, 
+      status: response.status 
+    }
   } catch (error: any) {
-    return { error: error.message || 'Error de red', status: 0 }
+    return { 
+      error: error.message || 'Error de red', 
+      status: 0 
+    }
   }
 }
 
-// --- API Client alineado con Swagger ---
+// --- API Client alineado con el backend ---
 
 const apiClient = {
+  // ===== AUTENTICACIÓN =====
+  
   /**
-   * Autenticación: Login
-   * POST /auth/login
+   * Login - POST /auth/login
    */
   login: (credentials: LoginCredentials) =>
-    apiRequest<{ access_token: string; user: User }>('/auth/login', {
+    apiRequest<{ token: string; user: User }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
     }),
 
   /**
-   * Autenticación: Registro
-   * POST /auth/register
+   * Registro - POST /usuarios/registro  
    */
   register: (data: RegisterData) =>
-    apiRequest<{ access_token: string; user: User }>('/auth/register', {
+    apiRequest<User>('/usuarios/registro', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  // ===== USUARIOS =====
+  
+  /**
+   * Listar usuarios - GET /usuarios
+   */
+  getUsuarios: () => apiRequest<User[]>('/usuarios'),
+
+  /**
+   * Actualizar usuario - PATCH /usuarios/{id}
+   */
+  updateUsuario: (id: string, data: Partial<User>) =>
+    apiRequest<User>(`/usuarios/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  // ===== CANCHAS =====
+  
+  /**
+   * Listar canchas - GET /canchas
+   */
+  getCanchas: () => apiRequest<Cancha[]>('/canchas'),
+
+  /**
+   * Crear cancha - POST /canchas
+   */
+  createCancha: (data: {
+    nombre: string;
+    ubicacion: string;
+    tipoSuperficie: string;
+    precioPorHora: number;
+    deporteId: string;
+    clubId: string;
+  }) =>
+    apiRequest<Cancha>('/canchas', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
   /**
-   * Obtener usuario autenticado
-   * GET /auth/me
+   * Obtener cancha por ID - GET /canchas/{id}
    */
-  me: () => apiRequest<User>('/auth/me'),
+  getCancha: (id: string) => apiRequest<Cancha>(`/canchas/${id}`),
 
   /**
-   * Listar canchas (con filtros opcionales)
-   * GET /canchas
+   * Actualizar cancha - PATCH /canchas/{id}
    */
-  getCanchas: (params?: { disponible?: boolean; deporte?: string; club?: string; fecha?: string }) => {
+  updateCancha: (id: string, data: Partial<Cancha>) =>
+    apiRequest<Cancha>(`/canchas/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  /**
+   * Eliminar cancha - DELETE /canchas/{id}
+   */
+  deleteCancha: (id: string) =>
+    apiRequest<void>(`/canchas/${id}`, { method: 'DELETE' }),
+
+  // ===== CLUBES =====
+  
+  /**
+   * Listar clubes - GET /clubes
+   */
+  getClubes: () => apiRequest<Club[]>('/clubes'),
+
+  /**
+   * Crear club - POST /clubes
+   */
+  createClub: (data: {
+    nombre: string;
+    direccion: string;
+    telefono?: string;
+    email?: string;
+  }) =>
+    apiRequest<Club>('/clubes', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  /**
+   * Obtener club por ID - GET /clubes/{id}
+   */
+  getClub: (id: string) => apiRequest<Club>(`/clubes/${id}`),
+
+  /**
+   * Actualizar club - PATCH /clubes/{id}
+   */
+  updateClub: (id: string, data: Partial<Club>) =>
+    apiRequest<Club>(`/clubes/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  /**
+   * Eliminar club - DELETE /clubes/{id}
+   */
+  deleteClub: (id: string) =>
+    apiRequest<void>(`/clubes/${id}`, { method: 'DELETE' }),
+
+  // ===== DEPORTES =====
+  
+  /**
+   * Listar deportes - GET /deportes
+   */
+  getDeportes: () => apiRequest<Deporte[]>('/deportes'),
+
+  /**
+   * Crear deporte - POST /deportes
+   */
+  createDeporte: (data: { nombre: string }) =>
+    apiRequest<Deporte>('/deportes', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  /**
+   * Obtener deporte por ID - GET /deportes/{id}
+   */
+  getDeporte: (id: string) => apiRequest<Deporte>(`/deportes/${id}`),
+
+  /**
+   * Actualizar deporte - PATCH /deportes/{id}
+   */
+  updateDeporte: (id: string, data: Partial<Deporte>) =>
+    apiRequest<Deporte>(`/deportes/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  /**
+   * Eliminar deporte - DELETE /deportes/{id}
+   */
+  deleteDeporte: (id: string) =>
+    apiRequest<void>(`/deportes/${id}`, { method: 'DELETE' }),
+
+  // ===== RESERVAS =====
+  
+  /**
+   * Listar reservas - GET /reservas
+   */
+  getReservas: () => apiRequest<Reserva[]>('/reservas'),
+
+  /**
+   * Crear reserva - POST /reservas
+   */
+  createReserva: (data: {
+    usuarioId: string;
+    canchaId: string;
+    fecha: string; // YYYY-MM-DD
+    hora: string;  // HH:MM
+  }) =>
+    apiRequest<Reserva>('/reservas', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  /**
+   * Obtener reserva por ID - GET /reservas/{id}
+   */
+  getReserva: (id: string) => apiRequest<Reserva>(`/reservas/${id}`),
+
+  /**
+   * Cancelar reserva - DELETE /reservas/{id}
+   */
+  cancelReserva: (id: string) =>
+    apiRequest<void>(`/reservas/${id}`, { method: 'DELETE' }),
+
+  /**
+   * Confirmar reserva - PATCH /reservas/{id}/confirmar
+   */
+  confirmarReserva: (id: string) =>
+    apiRequest<Reserva>(`/reservas/${id}/confirmar`, { method: 'PATCH' }),
+
+  // ===== EQUIPOS =====
+  
+  /**
+   * Listar equipos - GET /equipos
+   */
+  getEquipos: () => apiRequest<Equipo[]>('/equipos'),
+
+  /**
+   * Crear equipo - POST /equipos
+   */
+  createEquipo: (data: {
+    nombre: string;
+    deporteId: string;
+    jugadoresIds: string[];
+  }) =>
+    apiRequest<Equipo>('/equipos', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  /**
+   * Obtener equipo por ID - GET /equipos/{id}
+   */
+  getEquipo: (id: string) => apiRequest<Equipo>(`/equipos/${id}`),
+
+  /**
+   * Actualizar equipo - PUT /equipos/{id}
+   */
+  updateEquipo: (id: string, data: Partial<Equipo>) =>
+    apiRequest<Equipo>(`/equipos/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  /**
+   * Eliminar equipo - DELETE /equipos/{id}
+   */
+  deleteEquipo: (id: string) =>
+    apiRequest<void>(`/equipos/${id}`, { method: 'DELETE' }),
+
+  // ===== DESAFÍOS =====
+  
+  /**
+   * Listar desafíos - GET /desafios
+   */
+  getDesafios: (params?: {
+    estado?: string;
+    deporteId?: string;
+    equipoId?: string;
+    jugadorId?: string;
+    fecha?: string;
+  }) => {
     const searchParams = new URLSearchParams()
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) searchParams.append(key, value.toString())
+        if (value !== undefined) searchParams.append(key, value)
       })
     }
     const query = searchParams.toString() ? `?${searchParams.toString()}` : ''
-    return apiRequest<Court[]>(`/canchas${query}`)
+    return apiRequest<Desafio[]>(`/desafios${query}`)
   },
 
   /**
-   * Obtener detalles de una cancha
-   * GET /canchas/:id
+   * Crear desafío - POST /desafios
    */
-  getCancha: (id: string) => apiRequest<Court>(`/canchas/${id}`),
-
-  /**
-   * Disponibilidad de una cancha para una fecha
-   * GET /canchas/:id/disponibilidad?fecha=YYYY-MM-DD
-   */
-  getDisponibilidadCancha: (id: string, fecha: string) =>
-    apiRequest<CourtAvailability>(`/canchas/${id}/disponibilidad?fecha=${fecha}`),
-
-  /**
-   * Crear reserva
-   * POST /reservas
-   */
-  crearReserva: (data: { canchaId: string; fecha: string; horaInicio: string; horaFin: string }) =>
-    apiRequest<Reservation>('/reservas', {
+  createDesafio: (data: {
+    equipoRetadorId: string;
+    deporteId: string;
+    fecha: string; // YYYY-MM-DD
+    hora: string;  // HH:MM
+  }) =>
+    apiRequest<Desafio>('/desafios', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
   /**
-   * Mis reservas
-   * GET /reservas/mis-reservas
+   * Aceptar desafío - PATCH /desafios/{id}/aceptar
    */
-  misReservas: () => apiRequest<Reservation[]>('/reservas/mis-reservas'),
+  aceptarDesafio: (id: string, equipoRivalId: string) =>
+    apiRequest<Desafio>(`/desafios/${id}/aceptar`, {
+      method: 'PATCH',
+      body: JSON.stringify({ equipoRivalId }),
+    }),
 
   /**
-   * Confirmar reserva
-   * PATCH /reservas/:id/confirmar
+   * Finalizar desafío - PATCH /desafios/{id}/finalizar
    */
-  confirmarReserva: (id: string) =>
-    apiRequest<Reservation>(`/reservas/${id}/confirmar`, { method: 'PATCH' }),
+  finalizarDesafio: (id: string, resultado: string) =>
+    apiRequest<Desafio>(`/desafios/${id}/finalizar`, {
+      method: 'PATCH',
+      body: JSON.stringify({ resultado }),
+    }),
+
+  // ===== DEUDAS =====
+  
+  /**
+   * Listar deudas - GET /deudas
+   */
+  getDeudas: () => apiRequest<Deuda[]>('/deudas'),
 
   /**
-   * Cancelar reserva
-   * PATCH /reservas/:id/cancelar
+   * Crear deuda - POST /deudas
    */
-  cancelarReserva: (id: string) =>
-    apiRequest<void>(`/reservas/${id}/cancelar`, { method: 'PATCH' }),
+  createDeuda: (data: {
+    usuarioId: string;
+    monto: number;
+    fechaVencimiento: string; // YYYY-MM-DD
+    descripcion?: string;
+  }) =>
+    apiRequest<Deuda>('/deudas', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 
   /**
-   * Listar todas las reservas (admin)
-   * GET /admin/reservas
+   * Obtener deuda por ID - GET /deudas/{id}
    */
-  adminReservas: () => apiRequest<Reservation[]>('/admin/reservas'),
+  getDeuda: (id: string) => apiRequest<Deuda>(`/deudas/${id}`),
 
   /**
-   * Listar usuarios (admin)
-   * GET /admin/usuarios
+   * Actualizar deuda - PATCH /deudas/{id}
    */
-  adminUsuarios: () => apiRequest<User[]>('/admin/usuarios'),
+  updateDeuda: (id: string, data: Partial<Deuda>) =>
+    apiRequest<Deuda>(`/deudas/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
 
   /**
-   * Obtener estadísticas (admin)
-   * GET /admin/estadisticas
+   * Eliminar deuda - DELETE /deudas/{id}
    */
-  adminEstadisticas: () => apiRequest<Stats>('/admin/estadisticas'),
+  deleteDeuda: (id: string) =>
+    apiRequest<void>(`/deudas/${id}`, { method: 'DELETE' }),
+
+  // ===== DISPONIBILIDAD DE JUGADORES =====
+  
+  /**
+   * Listar disponibilidades - GET /disponibilidades
+   */
+  getDisponibilidades: () => apiRequest<DisponibilidadJugador[]>('/disponibilidades'),
 
   /**
-   * Obtener reportes (admin)
-   * GET /admin/reportes
+   * Crear disponibilidad - POST /disponibilidades
    */
-  adminReportes: (periodo: 'week' | 'month' | 'year' = 'month') =>
-    apiRequest<Report>(`/admin/reportes?periodo=${periodo}`),
+  createDisponibilidad: (data: {
+    fechaDesde: string; // YYYY-MM-DD
+    fechaHasta: string; // YYYY-MM-DD
+    horaDesde: string;  // HH:MM
+    horaHasta: string;  // HH:MM
+    clubesIds: string[]; // UUIDs
+  }) =>
+    apiRequest<DisponibilidadJugador>('/disponibilidades', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 
   /**
-   * Listar notificaciones del usuario
-   * GET /notificaciones
+   * Eliminar disponibilidad - DELETE /disponibilidades/{id}
    */
-  getNotificaciones: () => apiRequest<Notification[]>('/notificaciones'),
+  deleteDisponibilidad: (id: string) =>
+    apiRequest<void>(`/disponibilidades/${id}`, { method: 'DELETE' }),
+
+  // ===== HORARIOS =====
+  
+  /**
+   * Listar horarios - GET /horarios
+   */
+  getHorarios: () => apiRequest<Horario[]>('/horarios'),
 
   /**
-   * Marcar notificación como leída
-   * PATCH /notificaciones/:id/leida
+   * Crear horario - POST /horarios
    */
-  marcarNotificacionLeida: (id: string) =>
-    apiRequest<void>(`/notificaciones/${id}/leida`, { method: 'PATCH' }),
+  createHorario: (data: {
+    canchaId: string;
+    dia: string;
+    horaInicio: string; // HH:MM
+    horaFin: string;    // HH:MM
+  }) =>
+    apiRequest<Horario>('/horarios', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 
-  // Agrega aquí cualquier endpoint adicional que aparezca en Swagger
+  /**
+   * Obtener horario por ID - GET /horarios/{id}
+   */
+  getHorario: (id: string) => apiRequest<Horario>(`/horarios/${id}`),
+
+  /**
+   * Actualizar horario - PATCH /horarios/{id}
+   */
+  updateHorario: (id: string, data: Partial<Horario>) =>
+    apiRequest<Horario>(`/horarios/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  /**
+   * Eliminar horario - DELETE /horarios/{id}
+   */
+  deleteHorario: (id: string) =>
+    apiRequest<void>(`/horarios/${id}`, { method: 'DELETE' }),
+
+  // ===== VALORACIONES =====
+  
+  /**
+   * Listar valoraciones - GET /valoraciones
+   */
+  getValoraciones: () => apiRequest<Valoracion[]>('/valoraciones'),
+
+  /**
+   * Crear valoración - POST /valoraciones
+   */
+  createValoracion: (data: {
+    usuarioId: string;
+    canchaId: string;
+    puntaje: number; // 1-5
+    comentario?: string;
+  }) =>
+    apiRequest<Valoracion>('/valoraciones', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  /**
+   * Obtener valoración por ID - GET /valoraciones/{id}
+   */
+  getValoracion: (id: string) => apiRequest<Valoracion>(`/valoraciones/${id}`),
+
+  /**
+   * Eliminar valoración - DELETE /valoraciones/{id}
+   */
+  deleteValoracion: (id: string) =>
+    apiRequest<void>(`/valoraciones/${id}`, { method: 'DELETE' }),
+
+  // ===== REPORTES =====
+  
+  /**
+   * Reporte de reservas - GET /reportes/reservas
+   */
+  getReporteReservas: (desde: string, hasta: string) =>
+    apiRequest<ReporteReservas[]>(`/reportes/reservas?desde=${desde}&hasta=${hasta}`),
+
+  /**
+   * Reporte de ingresos - GET /reportes/ingresos
+   */
+  getReporteIngresos: (desde: string, hasta: string) =>
+    apiRequest<ReporteIngresos[]>(`/reportes/ingresos?desde=${desde}&hasta=${hasta}`),
+
+  /**
+   * Reporte canchas más reservadas - GET /reportes/canchas-top
+   */
+  getReporteCanchasTop: () =>
+    apiRequest<ReporteCanchaTop[]>('/reportes/canchas-top'),
+
+  /**
+   * Reporte usuarios con más reservas - GET /reportes/usuarios-top
+   */
+  getReporteUsuariosTop: () =>
+    apiRequest<ReporteUsuarioTop[]>('/reportes/usuarios-top'),
+
+  /**
+   * Reporte ocupación por horarios - GET /reportes/ocupacion-horarios
+   */
+  getReporteOcupacionHorarios: () =>
+    apiRequest<ReporteOcupacionHorario[]>('/reportes/ocupacion-horarios'),
+
+  // ===== RANKING =====
+  
+  /**
+   * Ranking de jugadores - GET /competicion/jugadores-ranking
+   */
+  getRankingJugadores: (deporteId: string) =>
+    apiRequest<RankingJugador[]>(`/competicion/jugadores-ranking?deporteId=${deporteId}`),
+
+  /**
+   * Ranking de equipos - GET /competicion/equipos-ranking
+   */
+  getRankingEquipos: (deporteId: string) =>
+    apiRequest<RankingEquipo[]>(`/competicion/equipos-ranking?deporteId=${deporteId}`),
 }
 
 export default apiClient 

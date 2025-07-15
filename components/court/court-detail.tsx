@@ -1,114 +1,139 @@
 "use client"
 
 import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
 import { useAuth } from '@/components/auth/auth-context'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { MapPin, Clock, DollarSign, Star } from 'lucide-react'
+import { MapPin, Clock, DollarSign, Star, Users } from 'lucide-react'
 import { toast } from 'sonner'
-import apiClient from '@/lib/api-client'
+import apiClient, { Cancha, Horario } from '@/lib/api-client'
 import Image from 'next/image'
 
-interface Court {
-  id: string
-  name: string
-  sport: string
-  location: string
-  price: number
-  rating: number
-  description: string
-  image: string
-  amenities: string[]
-  availability: {
-    [key: string]: string[]
-  }
-}
-
-interface TimeSlot {
-  id: string
-  time: string
-  available: boolean
-  price?: number
-}
-
 export default function CourtDetail() {
-  const { isAuthenticated } = useAuth()
-  const [court, setCourt] = useState<Court | null>(null)
+  const params = useParams()
+  const { user, isAuthenticated } = useAuth()
+  const [court, setCourt] = useState<Cancha | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
   const [selectedTime, setSelectedTime] = useState<string>('')
-  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([])
+  const [horarios, setHorarios] = useState<Horario[]>([])
   const [loading, setLoading] = useState(true)
+  const [reserving, setReserving] = useState(false)
+
+  const courtId = params?.id as string
 
   useEffect(() => {
     const loadCourtDetails = async () => {
+      if (!courtId) return
+
       try {
-        const response = await apiClient.getCourt('1') // Mock court ID
+        const response = await apiClient.getCancha(courtId)
+        if (response.error) {
+          toast.error(response.error)
+          return
+        }
+
         if (response.data) {
-          setCourt(response.data as unknown as Court)
+          setCourt(response.data)
         }
       } catch (error) {
         console.error('Error loading court details:', error)
-        toast('Error: No se pudo cargar la información de la cancha')
+        toast.error('No se pudo cargar la información de la cancha')
       } finally {
         setLoading(false)
       }
     }
 
     loadCourtDetails()
-  }, [])
+  }, [courtId])
 
   useEffect(() => {
-    const loadTimeSlots = async () => {
-      if (!selectedDate) return
+    const loadHorarios = async () => {
+      if (!courtId) return
 
       try {
-        const dateString = selectedDate.toISOString().split('T')[0]
-        const response = await apiClient.getTimeSlots('1', dateString)
+        const response = await apiClient.getHorarios()
+        if (response.error) {
+          console.error('Error loading schedules:', response.error)
+          return
+        }
+
         if (response.data) {
-          setTimeSlots(response.data as unknown as TimeSlot[])
+          // Filter schedules for this court
+          const courtSchedules = response.data.filter(h => h.canchaId === courtId)
+          setHorarios(courtSchedules)
         }
       } catch (error) {
-        console.error('Error loading time slots:', error)
-        toast('Error: No se pudieron cargar los horarios disponibles')
+        console.error('Error loading schedules:', error)
       }
     }
 
-    loadTimeSlots()
-  }, [selectedDate])
+    loadHorarios()
+  }, [courtId])
+
+  const getAvailableHours = () => {
+    if (!selectedDate || horarios.length === 0) return []
+
+    const dayName = selectedDate.toLocaleDateString('es-ES', { weekday: 'long' }).toLowerCase()
+    const daySchedule = horarios.find(h => h.dia.toLowerCase() === dayName)
+    
+    if (!daySchedule) return []
+
+    const hours = []
+    const startTime = parseInt(daySchedule.horaInicio.split(':')[0])
+    const endTime = parseInt(daySchedule.horaFin.split(':')[0])
+
+    for (let hour = startTime; hour < endTime; hour++) {
+      hours.push(`${hour.toString().padStart(2, '0')}:00`)
+    }
+
+    return hours
+  }
 
   const handleReservation = async () => {
-    if (!isAuthenticated) {
-      toast('Acceso requerido: Debes iniciar sesión para hacer una reserva')
+    if (!isAuthenticated || !user) {
+      toast.error('Debes iniciar sesión para hacer una reserva')
       return
     }
 
     if (!selectedDate || !selectedTime) {
-      toast('Selección requerida: Debes seleccionar una fecha y hora')
+      toast.error('Debes seleccionar una fecha y hora')
       return
     }
 
+    if (!court) {
+      toast.error('Información de cancha no disponible')
+      return
+    }
+
+    setReserving(true)
     try {
       const dateString = selectedDate.toISOString().split('T')[0]
-      const response = await apiClient.createReservation({
-        courtId: '1',
+      const response = await apiClient.createReserva({
+        usuarioId: user.id,
+        canchaId: court.id,
         fecha: dateString,
         hora: selectedTime,
-        duracion: 60, // 1 hora por defecto
       })
 
-      if (response.success) {
-        toast('Reserva exitosa: Tu reserva ha sido creada correctamente')
+      if (response.error) {
+        toast.error(response.error)
+        return
+      }
+
+      if (response.data) {
+        toast.success('¡Reserva creada exitosamente!')
         setSelectedDate(undefined)
         setSelectedTime('')
-      } else {
-        toast('Error: No se pudo crear la reserva')
       }
     } catch (error) {
       console.error('Error creating reservation:', error)
-      toast('Error: No se pudo crear la reserva')
+      toast.error('No se pudo crear la reserva')
+    } finally {
+      setReserving(false)
     }
   }
 
@@ -139,121 +164,114 @@ export default function CourtDetail() {
     )
   }
 
+  const availableHours = getAvailableHours()
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Court Image */}
-        <div className="relative h-64 lg:h-96 rounded-lg overflow-hidden">
-          <Image
-            src={court.image}
-            alt={court.name}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 50vw"
-          />
+        <div className="relative h-64 lg:h-96 rounded-lg overflow-hidden bg-gray-200">
+          <div className="flex items-center justify-center h-full">
+            <span className="text-gray-500">Imagen no disponible</span>
+          </div>
         </div>
 
-        {/* Court Info */}
+        {/* Court Information */}
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{court.name}</h1>
-            <div className="flex items-center space-x-4 text-sm text-gray-600 mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <h1 className="text-3xl font-bold text-gray-900">{court.nombre}</h1>
+              <Badge variant={court.disponible ? "default" : "destructive"}>
+                {court.disponible ? "Disponible" : "No disponible"}
+              </Badge>
+            </div>
+            
+            <div className="flex items-center space-x-4 text-gray-600 mb-4">
               <div className="flex items-center">
-                <MapPin className="h-4 w-4 mr-1" />
-                {court.location}
+                <MapPin className="w-4 h-4 mr-1" />
+                <span>{court.ubicacion}</span>
               </div>
               <div className="flex items-center">
-                <Star className="h-4 w-4 mr-1 text-yellow-500" />
-                {court.rating}/5
+                <DollarSign className="w-4 h-4 mr-1" />
+                <span>${court.precioPorHora}/hora</span>
               </div>
             </div>
-            <p className="text-gray-700">{court.description}</p>
-          </div>
 
-          {/* Amenities */}
-          <div>
-            <h3 className="text-lg font-semibold mb-2">Amenities</h3>
-            <div className="flex flex-wrap gap-2">
-              {court.amenities.map((amenity, index) => (
-                <Badge key={index} variant="secondary">
-                  {amenity}
-                </Badge>
-              ))}
+            <div className="space-y-2">
+              <div className="flex items-center">
+                <Users className="w-4 h-4 mr-2" />
+                <span><strong>Deporte:</strong> {court.deporte?.nombre || 'No especificado'}</span>
+              </div>
+              <div className="flex items-center">
+                <span><strong>Superficie:</strong> {court.tipoSuperficie}</span>
+              </div>
+              <div className="flex items-center">
+                <span><strong>Club:</strong> {court.club?.nombre || 'No especificado'}</span>
+              </div>
+              <div className="flex items-center">
+                <span><strong>Dirección:</strong> {court.club?.direccion || 'No especificado'}</span>
+              </div>
             </div>
           </div>
 
-          {/* Price */}
-          <div className="flex items-center space-x-2">
-            <DollarSign className="h-5 w-5 text-green-600" />
-            <span className="text-2xl font-bold text-green-600">${court.price}</span>
-            <span className="text-gray-600">por hora</span>
-          </div>
+          {/* Reservation Section */}
+          {court.disponible && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Hacer Reserva</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Seleccionar fecha</label>
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={setSelectedDate}
+                    disabled={(date) => date < new Date()}
+                    className="rounded-md border"
+                  />
+                </div>
+
+                {selectedDate && (
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Seleccionar hora</label>
+                    <Select value={selectedTime} onValueChange={setSelectedTime}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Elige un horario" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableHours.length > 0 ? (
+                          availableHours.map((hour) => (
+                            <SelectItem key={hour} value={hour}>
+                              {hour}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="" disabled>
+                            No hay horarios disponibles para este día
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                <Button
+                  onClick={handleReservation}
+                  disabled={!isAuthenticated || !selectedDate || !selectedTime || reserving}
+                  className="w-full"
+                >
+                  {reserving 
+                    ? 'Creando reserva...' 
+                    : !isAuthenticated 
+                    ? 'Inicia sesión para reservar' 
+                    : 'Reservar cancha'
+                  }
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </div>
-      </div>
-
-      {/* Reservation Section */}
-      <div className="mt-12">
-        <Card>
-          <CardHeader>
-            <CardTitle>Reservar Cancha</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Date Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Seleccionar Fecha
-                </label>
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  className="rounded-md border"
-                  disabled={(date) => date < new Date()}
-                />
-              </div>
-
-              {/* Time Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Seleccionar Hora
-                </label>
-                <Select value={selectedTime} onValueChange={setSelectedTime}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona una hora" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {timeSlots.map((slot) => (
-                      <SelectItem
-                        key={slot.id}
-                        value={slot.time}
-                        disabled={!slot.available}
-                      >
-                        <div className="flex items-center justify-between w-full">
-                          <span>{slot.time}</span>
-                          {!slot.available && (
-                            <Badge variant="destructive" className="ml-2">
-                              Ocupado
-                            </Badge>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <Button
-              onClick={handleReservation}
-              className="w-full mt-6"
-              disabled={!selectedDate || !selectedTime}
-            >
-              <Clock className="h-4 w-4 mr-2" />
-              Reservar Cancha
-            </Button>
-          </CardContent>
-        </Card>
       </div>
     </div>
   )

@@ -1,40 +1,61 @@
 /**
  * Authentication Context for CanchaYA
  * Manages client-side authentication state and real-time updates
+ * Now integrated with real backend authentication
  */
 
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { getClientUser } from '@/lib/auth'
+import { getCookie, setCookie, deleteCookie } from '@/lib/auth'
+import apiClient, { User } from '@/lib/api-client'
+import { toast } from 'sonner'
 
 interface AuthContextType {
-  user: { id: string; nombre: string; email: string; rol: string } | null
+  user: User | null
   login: (email: string, password: string) => Promise<boolean>
   logout: () => void
   isAuthenticated: boolean
   isAdmin: boolean
   loading: boolean
+  refreshUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<{ id: string; nombre: string; email: string; rol: string } | null>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // Initialize authentication state
   useEffect(() => {
     const initializeAuth = async () => {
-      try {
-        const currentUser = getClientUser()
-        if (currentUser) {
-          setUser(currentUser)
+      const token = getCookie('token')
+      if (token) {
+        try {
+          // Validate token with backend and get user data
+          const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend-cancha-ya-production.up.railway.app/api'}/auth/me`, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          })
+
+          if (response.ok) {
+            const userData = await response.json()
+            setUser(userData)
+          } else {
+            // Invalid token, remove it
+            deleteCookie('token')
+            setUser(null)
+          }
+        } catch (error) {
+          console.error('Auth initialization error:', error)
+          deleteCookie('token')
+          setUser(null)
         }
-      } catch (error) {
-        console.error('Auth initialization error:', error)
-      } finally {
-        setLoading(false)
       }
+      setLoading(false)
     }
 
     initializeAuth()
@@ -42,27 +63,76 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      // Mock login for now
-      const mockUser = {
-        id: '1',
-        nombre: 'Usuario Demo',
-        email,
-        rol: 'usuario'
+      setLoading(true)
+      const response = await apiClient.login({ email, password })
+      
+      if (response.error) {
+        toast.error(response.error)
+        return false
       }
-      setUser(mockUser)
-      return true
+
+      if (response.data?.token && response.data?.user) {
+        // Store token in cookie
+        setCookie('token', response.data.token, 7) // 7 days
+        setUser(response.data.user)
+        toast.success('¡Bienvenido!')
+        return true
+      }
+
+      toast.error('Error en la autenticación')
+      return false
     } catch (error) {
       console.error('Login error:', error)
+      toast.error('Error del servidor. Intenta nuevamente.')
       return false
+    } finally {
+      setLoading(false)
     }
   }
 
   const logout = () => {
+    deleteCookie('token')
     setUser(null)
+    toast.success('Sesión cerrada correctamente')
+    
+    // Redirect to login page
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login'
+    }
+  }
+
+  const refreshUser = async () => {
+    const token = getCookie('token')
+    if (!token) {
+      setUser(null)
+      return
+    }
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend-cancha-ya-production.up.railway.app/api'}/auth/me`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (response.ok) {
+        const userData = await response.json()
+        setUser(userData)
+      } else {
+        // Invalid token, remove it
+        deleteCookie('token')
+        setUser(null)
+      }
+    } catch (error) {
+      console.error('Error refreshing user:', error)
+      deleteCookie('token')
+      setUser(null)
+    }
   }
 
   const isAuthenticated = !!user
-  const isAdmin = user?.rol === 'admin'
+  const isAdmin = user?.rol === 'ADMINISTRADOR'
 
   const value: AuthContextType = {
     user,
@@ -71,6 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthenticated,
     isAdmin,
     loading,
+    refreshUser,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

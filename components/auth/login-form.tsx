@@ -1,6 +1,6 @@
 /**
  * Login Form Component for CanchaYA
- * Implements secure authentication with server actions and form validation
+ * Implements user login with validation and real backend authentication
  */
 
 'use client'
@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from './auth-context'
 import { toast } from 'sonner'
-import apiClient from '@/lib/api-client'
+import Link from 'next/link'
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -41,9 +41,8 @@ export function LoginForm() {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
     try {
-      const response = await apiClient.login({ email: data.email, password: data.password })
-      if (response.data?.token) {
-        login(data.email, data.password)
+      const success = await login(data.email, data.password)
+      if (success) {
         router.push('/')
       }
     } catch (error) {
@@ -71,6 +70,7 @@ export function LoginForm() {
               type="email"
               placeholder="tu@email.com"
               {...register('email')}
+              disabled={isLoading}
             />
             {errors.email && (
               <p className="text-sm text-red-600">{errors.email.message}</p>
@@ -84,6 +84,7 @@ export function LoginForm() {
               type="password"
               placeholder="••••••••"
               {...register('password')}
+              disabled={isLoading}
             />
             {errors.password && (
               <p className="text-sm text-red-600">{errors.password.message}</p>
@@ -93,6 +94,15 @@ export function LoginForm() {
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
           </Button>
+
+          <div className="text-center">
+            <p className="text-sm text-gray-600">
+              ¿No tienes una cuenta?{' '}
+              <Link href="/register" className="text-blue-600 hover:underline">
+                Regístrate aquí
+              </Link>
+            </p>
+          </div>
         </form>
       </CardContent>
     </Card>

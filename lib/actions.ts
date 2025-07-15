@@ -1,27 +1,17 @@
 /**
  * Server Actions for CanchaYA
  * Handles form submissions and server-side operations
- * Implements authentication, reservations, and admin functions
+ * Now integrated with real backend authentication
  */
-
-'use server'
 
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
-import { revalidatePath } from 'next/cache'
-import apiClient, { type RegisterData } from './api-client'
+import apiClient, { LoginCredentials, RegisterData } from './api-client'
 
-// Interfaces
-interface LoginCredentials {
-  email: string
-  password: string
-}
-
-export type ActionState = {
-  success?: boolean
+interface ActionState {
   error?: string
+  success: boolean
   message?: string
-  data?: unknown
 }
 
 // Authentication Actions
@@ -51,7 +41,7 @@ export async function loginAction(
       }
     }
 
-    if (response.data?.token) {
+    if (response.data?.token && response.data?.user) {
       // Set HTTP-only cookie for security
       const cookieStore = await cookies()
       cookieStore.set('token', response.data.token, {
@@ -64,7 +54,7 @@ export async function loginAction(
 
       // Redirect based on user role
       const userRole = response.data.user.rol
-      if (userRole === 'admin') {
+      if (userRole === 'ADMINISTRADOR') {
         redirect('/admin')
       } else {
         redirect('/')
@@ -88,38 +78,38 @@ export async function registerAction(
   prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  const userData: RegisterData = {
+  const registerData: RegisterData = {
     nombre: formData.get('nombre') as string,
     email: formData.get('email') as string,
     password: formData.get('password') as string,
-    telefono: (formData.get('telefono') as string) || '',
-  }
-
-  // Validation
-  if (!userData.nombre || !userData.email || !userData.password) {
-    return {
-      error: 'Todos los campos obligatorios deben completarse',
-      success: false,
-    }
-  }
-
-  if (userData.password.length < 6) {
-    return {
-      error: 'La contraseña debe tener al menos 6 caracteres',
-      success: false,
-    }
   }
 
   const confirmPassword = formData.get('confirmPassword') as string
-  if (userData.password !== confirmPassword) {
+
+  // Validation
+  if (!registerData.nombre || !registerData.email || !registerData.password) {
+    return {
+      error: 'Todos los campos son requeridos',
+      success: false,
+    }
+  }
+
+  if (registerData.password !== confirmPassword) {
     return {
       error: 'Las contraseñas no coinciden',
       success: false,
     }
   }
 
+  if (registerData.password.length < 6) {
+    return {
+      error: 'La contraseña debe tener al menos 6 caracteres',
+      success: false,
+    }
+  }
+
   try {
-    const response = await apiClient.register(userData)
+    const response = await apiClient.register(registerData)
 
     if (response.error) {
       return {
@@ -128,18 +118,11 @@ export async function registerAction(
       }
     }
 
-    if (response.data?.token) {
-      // Set HTTP-only cookie
-      const cookieStore = await cookies()
-      cookieStore.set('token', response.data.token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60, // 7 days
-        path: '/',
-      })
-
-      redirect('/')
+    if (response.data) {
+      return {
+        success: true,
+        message: 'Usuario registrado exitosamente. Por favor inicia sesión.',
+      }
     }
 
     return {
@@ -147,7 +130,7 @@ export async function registerAction(
       success: false,
     }
   } catch (error) {
-    console.error('Register error:', error)
+    console.error('Registration error:', error)
     return {
       error: 'Error del servidor. Intenta nuevamente.',
       success: false,
@@ -167,13 +150,13 @@ export async function createReservationAction(
   formData: FormData
 ): Promise<ActionState> {
   const reservationData = {
-    courtId: formData.get('canchaId') as string,
+    usuarioId: formData.get('usuarioId') as string,
+    canchaId: formData.get('canchaId') as string,
     fecha: formData.get('fecha') as string,
-    hora: formData.get('horaInicio') as string,
-    duracion: 60, // 1 hora por defecto
+    hora: formData.get('hora') as string,
   }
 
-  if (!reservationData.courtId || !reservationData.fecha || !reservationData.hora) {
+  if (!reservationData.usuarioId || !reservationData.canchaId || !reservationData.fecha || !reservationData.hora) {
     return {
       error: 'Todos los campos son requeridos',
       success: false,
@@ -181,7 +164,7 @@ export async function createReservationAction(
   }
 
   try {
-    const response = await apiClient.createReservation(reservationData)
+    const response = await apiClient.createReserva(reservationData)
 
     if (response.error) {
       return {
@@ -190,95 +173,31 @@ export async function createReservationAction(
       }
     }
 
-    revalidatePath('/mis-reservas')
-    revalidatePath('/')
-
-    // Backend will trigger SSE notification for new reservation
-
-    return {
-      success: true,
-      message: 'Reserva creada exitosamente. Recuerda confirmar tu asistencia.',
+    if (response.data) {
+      return {
+        success: true,
+        message: 'Reserva creada exitosamente',
+      }
     }
-  } catch (error) {
-    console.error('Reservation error:', error)
+
     return {
-      error: 'Error al crear la reserva. Intenta nuevamente.',
+      error: 'Error al crear la reserva',
       success: false,
     }
-  }
-}
-
-export async function confirmReservationAction(
-  _reservationId: string
-): Promise<ActionState> {
-  try {
-    // const response = await apiClient.confirmReservation(reservationId)
-    // if (response.error) {
-    //   return {
-    //     error: response.error,
-    //     success: false,
-    //   }
-    // }
-
-    revalidatePath('/mis-reservas')
-
-    // Backend will trigger SSE notification for reservation confirmation
-
-    return {
-      success: true,
-      message: 'Reserva confirmada exitosamente.',
-    }
   } catch (error) {
-    console.error('Confirm reservation error:', error)
+    console.error('Reservation creation error:', error)
     return {
-      error: 'Error al confirmar la reserva.',
+      error: 'Error del servidor. Intenta nuevamente.',
       success: false,
     }
   }
 }
 
 export async function cancelReservationAction(
-  _reservationId: string
+  reservationId: string
 ): Promise<ActionState> {
   try {
-    // const response = await apiClient.cancelReservation(reservationId)
-    // if (response.error) {
-    //   return {
-    //     error: response.error,
-    //     success: false,
-    //   }
-    // }
-
-    revalidatePath('/mis-reservas')
-    revalidatePath('/admin')
-
-    // Backend will trigger SSE notification for cancellation and slot release
-
-    return {
-      success: true,
-      message: 'Reserva cancelada exitosamente.',
-    }
-  } catch (error) {
-    console.error('Cancel reservation error:', error)
-    return {
-      error: 'Error al cancelar la reserva.',
-      success: false,
-    }
-  }
-}
-
-// Legacy action aliases for backward compatibility
-export const reserveCourtAction = createReservationAction
-export const confirmAttendanceAction = confirmReservationAction
-
-// Court Search Action
-export async function searchCourtsAction(
-  _prevState: ActionState,
-  _formData: FormData
-): Promise<ActionState> {
-  try {
-    // Por ahora, usar getCourts sin filtros ya que no están implementados
-    const response = await apiClient.getCourts()
+    const response = await apiClient.cancelReserva(reservationId)
 
     if (response.error) {
       return {
@@ -289,12 +208,12 @@ export async function searchCourtsAction(
 
     return {
       success: true,
-      data: response.data,
+      message: 'Reserva cancelada exitosamente',
     }
   } catch (error) {
-    console.error('Search error:', error)
+    console.error('Reservation cancellation error:', error)
     return {
-      error: 'Error al buscar canchas. Intenta nuevamente.',
+      error: 'Error del servidor. Intenta nuevamente.',
       success: false,
     }
   }
