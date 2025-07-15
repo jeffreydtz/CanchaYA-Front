@@ -24,14 +24,6 @@ interface AuthContextType {
   refreshUser: () => Promise<void>
 }
 
-interface DecodedUser {
-  id: string
-  nombre: string
-  email: string
-  rol: string
-  [key: string]: any
-}
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 // Utilidad para construir la URL base sin duplicar /api
@@ -53,7 +45,7 @@ function getBackendUrl(path: string) {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<DecodedUser | null>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
   // Inicializa el estado de autenticación leyendo el token y decodificando el usuario
@@ -62,8 +54,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const token = getCookie('token')
     if (token) {
       try {
-        const decoded: DecodedUser = jwtDecode(token)
-        setUser(decoded)
+        const decoded: any = jwtDecode(token)
+        // Garantiza que los campos requeridos existan
+        setUser({
+          id: decoded.id,
+          nombre: decoded.nombre,
+          email: decoded.email,
+          rol: decoded.rol === 'ADMINISTRADOR' ? 'ADMINISTRADOR' : 'JUGADOR',
+          activo: decoded.activo ?? true,
+          fechaCreacion: decoded.fechaCreacion ?? '',
+        })
       } catch (e) {
         setUser(null)
         deleteCookie('token')
@@ -86,8 +86,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         document.cookie = `token=${response.data.token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Strict`;
         setCookie('token', response.data.token, 7)
         try {
-          const decoded: DecodedUser = jwtDecode(response.data.token)
-          setUser(decoded)
+          const decoded: any = jwtDecode(response.data.token)
+          setUser({
+            id: decoded.id,
+            nombre: decoded.nombre,
+            email: decoded.email,
+            rol: decoded.rol === 'ADMINISTRADOR' ? 'ADMINISTRADOR' : 'JUGADOR',
+            activo: decoded.activo ?? true,
+            fechaCreacion: decoded.fechaCreacion ?? '',
+          })
         } catch (e) {
           setUser(null)
           deleteCookie('token')
@@ -125,8 +132,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
     try {
-      const decoded: DecodedUser = jwtDecode(token)
-      setUser(decoded)
+      const decoded: any = jwtDecode(token)
+      setUser({
+        id: decoded.id,
+        nombre: decoded.nombre,
+        email: decoded.email,
+        rol: decoded.rol === 'ADMINISTRADOR' ? 'ADMINISTRADOR' : 'JUGADOR',
+        activo: decoded.activo ?? true,
+        fechaCreacion: decoded.fechaCreacion ?? '',
+      })
     } catch (e) {
       setUser(null)
       deleteCookie('token')
