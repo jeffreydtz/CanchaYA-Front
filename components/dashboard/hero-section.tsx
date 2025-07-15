@@ -30,7 +30,7 @@ export default function HeroSection() {
               </Button>
             </Link>
             <Link href="/mis-reservas">
-              <Button size="lg" variant="outline" className="text-lg px-8 py-3 border-white text-white hover:bg-white hover:text-blue-600">
+              <Button size="lg" variant="outline" className="text-lg px-8 py-3 border-white text-black hover:bg-white hover:text-blue-600">
                 <Calendar className="mr-2 h-5 w-5" />
                 Mis Reservas
               </Button>
