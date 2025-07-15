@@ -71,10 +71,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false
       }
 
-      if (response.data?.token && response.data?.user) {
-        // Store token in cookie
-        setCookie('token', response.data.token, 7) // 7 days
-        setUser(response.data.user)
+      if (response.data?.token) {
+        // Set the token cookie immediately (client-side)
+        document.cookie = `token=${response.data.token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Strict`;
+        // Optionally, also call setCookie for consistency
+        setCookie('token', response.data.token, 7)
+        // Now refresh the user from the backend using the new token
+        await refreshUser();
         toast.success('¡Bienvenido!')
         return true
       }
