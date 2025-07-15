@@ -6,6 +6,7 @@
 
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import jwtDecode from 'jwt-decode'
 
 // Utilidad para construir la URL base sin duplicar /api
 function getBackendUrl(path: string) {
@@ -41,25 +42,20 @@ export async function getServerUser(): Promise<ServerUser | null> {
   }
 
   try {
-    // Validate token with backend
-    const response = await fetch(getBackendUrl('/auth/me'), {
-      headers: {
-        'Authorization': `Bearer ${token.value}`,
-        'Content-Type': 'application/json',
-      },
-    })
-
-    if (!response.ok) {
-      // Token is invalid, remove it
-      cookieStore.delete('token')
-      return null
-    }
-
-    const userData = await response.json()
-    return userData as ServerUser
+    // Decodifica el token JWT localmente
+    const decoded: any = jwtDecode(token.value)
+    // Mapea los campos esperados
+    return {
+      id: decoded.id,
+      nombre: decoded.nombre,
+      email: decoded.email,
+      telefono: decoded.telefono,
+      rol: decoded.rol,
+      activo: decoded.activo,
+      fechaCreacion: decoded.fechaCreacion,
+    } as ServerUser
   } catch (error) {
-    console.error('Error validating token:', error)
-    // If there's an error, consider the token invalid
+    console.error('Error decoding token:', error)
     cookieStore.delete('token')
     return null
   }
