@@ -11,6 +11,9 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'CanchaYA - Reserva de Canchas Deportivas',
   description: 'Reserva canchas de fútbol, tenis, paddle y más deportes de forma fácil y rápida',
+  icons: {
+    icon: '/favicon.png',
+  },
 }
 
 export default function RootLayout({
