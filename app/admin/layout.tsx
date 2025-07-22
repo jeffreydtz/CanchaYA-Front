@@ -1,3 +1,5 @@
+'use client'
+
 import { Suspense } from 'react'
 import AdminSidebar from '@/components/admin/admin-sidebar'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
