@@ -11,21 +11,13 @@ interface DashboardData {
   users: number
 }
 
-const mockData: DashboardData[] = [
-  { period: 'Lun', reservations: 25, revenue: 1250000, users: 12 },
-  { period: 'Mar', reservations: 30, revenue: 1500000, users: 15 },
-  { period: 'Mié', reservations: 35, revenue: 1750000, users: 18 },
-  { period: 'Jue', reservations: 40, revenue: 2000000, users: 20 },
-  { period: 'Vie', reservations: 45, revenue: 2250000, users: 22 },
-  { period: 'Sáb', reservations: 50, revenue: 2500000, users: 25 },
-  { period: 'Dom', reservations: 55, revenue: 2750000, users: 28 }
-]
+// Elimina mockData y usa solo datos reales de la API
 
 export function AdminDashboard() {
-  const totalReservations = mockData.reduce((sum, item) => sum + item.reservations, 0)
-  const totalRevenue = mockData.reduce((sum, item) => sum + item.revenue, 0)
-  const totalUsers = mockData.reduce((sum, item) => sum + item.users, 0)
-  const averageReservations = Math.round(totalReservations / mockData.length)
+  // const totalReservations = mockData.reduce((sum, item) => sum + item.reservations, 0)
+  // const totalRevenue = mockData.reduce((sum, item) => sum + item.revenue, 0)
+  // const totalUsers = mockData.reduce((sum, item) => sum + item.users, 0)
+  // const averageReservations = Math.round(totalReservations / mockData.length)
 
   return (
     <div className="space-y-6">
@@ -42,9 +34,9 @@ export function AdminDashboard() {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalReservations}</div>
+            <div className="text-2xl font-bold">No hay datos</div>
             <p className="text-xs text-muted-foreground">
-              Promedio: {averageReservations} por día
+              Promedio: 0 por día
             </p>
           </CardContent>
         </Card>
@@ -55,9 +47,9 @@ export function AdminDashboard() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${(totalRevenue / 1000000).toFixed(1)}M</div>
+            <div className="text-2xl font-bold">No hay datos</div>
             <p className="text-xs text-muted-foreground">
-              Promedio: ${(totalRevenue / mockData.length / 1000000).toFixed(1)}M por día
+              Promedio: $0 por día
             </p>
           </CardContent>
         </Card>
@@ -68,9 +60,9 @@ export function AdminDashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalUsers}</div>
+            <div className="text-2xl font-bold">No hay datos</div>
             <p className="text-xs text-muted-foreground">
-              Promedio: {Math.round(totalUsers / mockData.length)} por día
+              Promedio: 0 por día
             </p>
           </CardContent>
         </Card>
@@ -98,7 +90,7 @@ export function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={mockData}>
+              <LineChart data={[]}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="period" />
                 <YAxis />
@@ -117,7 +109,7 @@ export function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={mockData}>
+              <BarChart data={[]}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="period" />
                 <YAxis />

@@ -12,14 +12,7 @@ interface ReportData {
   users: number
 }
 
-const mockData: ReportData[] = [
-  { period: 'Ene', reservations: 120, revenue: 6000000, users: 45 },
-  { period: 'Feb', reservations: 150, revenue: 7500000, users: 52 },
-  { period: 'Mar', reservations: 180, revenue: 9000000, users: 68 },
-  { period: 'Abr', reservations: 200, revenue: 10000000, users: 75 },
-  { period: 'May', reservations: 220, revenue: 11000000, users: 82 },
-  { period: 'Jun', reservations: 250, revenue: 12500000, users: 90 }
-]
+// Elimina mockData y usa solo datos reales de la API
 
 const sportData = [
   { name: 'Fútbol', value: 45, color: '#8884d8' },
@@ -31,10 +24,11 @@ const sportData = [
 export default function AdminReportsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState('month')
 
-  const totalReservations = mockData.reduce((sum, item) => sum + item.reservations, 0)
-  const totalRevenue = mockData.reduce((sum, item) => sum + item.revenue, 0)
-  const totalUsers = mockData.reduce((sum, item) => sum + item.users, 0)
-  const averageReservations = Math.round(totalReservations / mockData.length)
+  // Elimina mockData y usa solo datos reales de la API
+  const totalReservations = 0 // Placeholder, replace with actual data
+  const totalRevenue = 0 // Placeholder, replace with actual data
+  const totalUsers = 0 // Placeholder, replace with actual data
+  const averageReservations = 0 // Placeholder, replace with actual data
 
   return (
     <div className="space-y-6">
@@ -79,7 +73,7 @@ export default function AdminReportsPage() {
           <CardContent>
             <div className="text-2xl font-bold">${(totalRevenue / 1000000).toFixed(1)}M</div>
             <p className="text-xs text-muted-foreground">
-              Promedio: ${(totalRevenue / mockData.length / 1000000).toFixed(1)}M por período
+              Promedio: ${(totalRevenue / 0 / 1000000).toFixed(1)}M por período
             </p>
           </CardContent>
         </Card>
@@ -92,7 +86,7 @@ export default function AdminReportsPage() {
           <CardContent>
             <div className="text-2xl font-bold">{totalUsers}</div>
             <p className="text-xs text-muted-foreground">
-              Promedio: {Math.round(totalUsers / mockData.length)} por período
+              Promedio: {Math.round(totalUsers / 0)} por período
             </p>
           </CardContent>
         </Card>
@@ -120,7 +114,7 @@ export default function AdminReportsPage() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={mockData}>
+              <LineChart data={[]}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="period" />
                 <YAxis />
@@ -168,7 +162,7 @@ export default function AdminReportsPage() {
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={mockData}>
+            <BarChart data={[]}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="period" />
               <YAxis />

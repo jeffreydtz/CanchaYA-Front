@@ -1,62 +1,38 @@
 "use client"
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Search } from 'lucide-react'
-
-interface Reservation {
-  id: string
-  courtName: string
-  userName: string
-  date: string
-  time: string
-  status: 'confirmed' | 'pending' | 'cancelled'
-  price: number
-}
-
-const mockReservations: Reservation[] = [
-  {
-    id: '1',
-    courtName: 'Cancha de Fútbol 1',
-    userName: 'Juan Pérez',
-    date: '2024-01-15',
-    time: '14:00 - 16:00',
-    status: 'confirmed',
-    price: 50000
-  },
-  {
-    id: '2',
-    courtName: 'Cancha de Baloncesto 1',
-    userName: 'María García',
-    date: '2024-01-16',
-    time: '18:00 - 20:00',
-    status: 'pending',
-    price: 30000
-  },
-  {
-    id: '3',
-    courtName: 'Cancha de Tenis 1',
-    userName: 'Carlos López',
-    date: '2024-01-17',
-    time: '10:00 - 12:00',
-    status: 'cancelled',
-    price: 40000
-  }
-]
+import apiClient, { Reserva } from '@/lib/api-client'
 
 export default function AdminReservationsPage() {
-  const [reservations] = useState<Reservation[]>(mockReservations)
+  const [reservations, setReservations] = useState<Reserva[]>([])
   const [searchTerm, setSearchTerm] = useState('')
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const loadReservations = async () => {
+      setLoading(true)
+      const response = await apiClient.getReservas()
+      if (response.data) {
+        setReservations(response.data)
+      } else {
+        setReservations([])
+      }
+      setLoading(false)
+    }
+    loadReservations()
+  }, [])
 
   const filteredReservations = reservations.filter(reservation =>
-    reservation.courtName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    reservation.userName.toLowerCase().includes(searchTerm.toLowerCase())
+    (reservation.cancha?.nombre?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (reservation.usuario?.nombre?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   )
 
-  const getStatusBadge = (status: Reservation['status']) => {
+  const getStatusBadge = (status: Reserva['status']) => {
     switch (status) {
       case 'confirmed':
         return <Badge variant="default" className="bg-green-100 text-green-800">Confirmada</Badge>
@@ -67,6 +43,18 @@ export default function AdminReservationsPage() {
       default:
         return <Badge variant="outline">Desconocido</Badge>
     }
+  }
+
+  if (loading) {
+    return <div className="text-center py-8">Cargando reservas...</div>
+  }
+
+  if (reservations.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <p>No hay reservas registradas en el sistema.</p>
+      </div>
+    )
   }
 
   return (
@@ -108,12 +96,12 @@ export default function AdminReservationsPage() {
             <TableBody>
               {filteredReservations.map((reservation) => (
                 <TableRow key={reservation.id}>
-                  <TableCell className="font-medium">{reservation.courtName}</TableCell>
-                  <TableCell>{reservation.userName}</TableCell>
-                  <TableCell>{reservation.date}</TableCell>
-                  <TableCell>{reservation.time}</TableCell>
+                  <TableCell className="font-medium">{reservation.cancha?.nombre}</TableCell>
+                  <TableCell>{reservation.usuario?.nombre}</TableCell>
+                  <TableCell>{reservation.fecha}</TableCell>
+                  <TableCell>{reservation.hora}</TableCell>
                   <TableCell>{getStatusBadge(reservation.status)}</TableCell>
-                  <TableCell>${reservation.price.toLocaleString()}</TableCell>
+                  <TableCell>${reservation.precio.toLocaleString()}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

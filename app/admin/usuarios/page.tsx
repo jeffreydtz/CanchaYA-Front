@@ -16,79 +16,35 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Edit, Trash2 } from "lucide-react"
 import { toast } from "sonner"
-
-interface User {
-  id: string
-  nombre: string
-  email: string
-  rol: string
-  estado: 'activo' | 'inactivo' | 'pendiente'
-  fechaRegistro: string
-  ultimoAcceso: string
-}
-
-const mockUsers: User[] = [
-  {
-    id: '1',
-    nombre: 'Juan Pérez',
-    email: 'juan@example.com',
-    rol: 'USUARIO',
-    estado: 'activo',
-    fechaRegistro: '2024-01-15',
-    ultimoAcceso: '2024-01-20'
-  },
-  {
-    id: '2',
-    nombre: 'María García',
-    email: 'maria@example.com',
-    rol: 'ADMINISTRADOR',
-    estado: 'activo',
-    fechaRegistro: '2024-01-10',
-    ultimoAcceso: '2024-01-21'
-  },
-  {
-    id: '3',
-    nombre: 'Carlos López',
-    email: 'carlos@example.com',
-    rol: 'USUARIO',
-    estado: 'pendiente',
-    fechaRegistro: '2024-01-18',
-    ultimoAcceso: '2024-01-19'
-  }
-]
+import apiClient, { User } from '@/lib/api-client'
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState<User[]>(mockUsers)
+  const [users, setUsers] = useState<User[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [roleFilter, setRoleFilter] = useState<string>("all")
   const [statusFilter, setStatusFilter] = useState<string>("all")
-
-  const loadUsers = useCallback(async () => {
-    try {
-      // For now, we'll use mock data instead of API call to avoid type conflicts
-      // const response = await apiClient.getUsers()
-      // if (response.data) {
-      //   setUsers(response.data)
-      // }
-      setUsers(mockUsers)
-    } catch (error) {
-      console.error('Error loading users:', error)
-      toast.error('Error al cargar usuarios')
-    } finally {
-      // setLoading(false) // Removed loading state
-    }
-  }, [])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    const loadUsers = async () => {
+      setLoading(true)
+      const response = await apiClient.getUsuarios()
+      if (response.data) {
+        setUsers(response.data)
+      } else {
+        setUsers([])
+      }
+      setLoading(false)
+    }
     loadUsers()
-  }, [loadUsers])
+  }, [])
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesRole = roleFilter === "all" || user.rol === roleFilter
-    const matchesStatus = statusFilter === "all" || user.estado === statusFilter
-    
+    // statusFilter solo si existe campo 'estado'
+    const matchesStatus = statusFilter === "all" || (user as any).estado === statusFilter
     return matchesSearch && matchesRole && matchesStatus
   })
 

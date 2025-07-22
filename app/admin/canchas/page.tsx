@@ -1,59 +1,40 @@
 "use client"
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Plus, Search, Edit, Trash2 } from 'lucide-react'
-
-interface Court {
-  id: string
-  name: string
-  sport: string
-  status: 'available' | 'maintenance' | 'reserved'
-  price: number
-  location: string
-}
-
-const mockCourts: Court[] = [
-  {
-    id: '1',
-    name: 'Cancha de Fútbol 1',
-    sport: 'Fútbol',
-    status: 'available',
-    price: 50000,
-    location: 'Zona Norte'
-  },
-  {
-    id: '2',
-    name: 'Cancha de Baloncesto 1',
-    sport: 'Baloncesto',
-    status: 'maintenance',
-    price: 30000,
-    location: 'Zona Sur'
-  },
-  {
-    id: '3',
-    name: 'Cancha de Tenis 1',
-    sport: 'Tenis',
-    status: 'reserved',
-    price: 40000,
-    location: 'Zona Este'
-  }
-]
+import apiClient, { Cancha } from '@/lib/api-client'
 
 export default function AdminCourtsPage() {
+  const [courts, setCourts] = useState<Cancha[]>([])
   const [searchTerm, setSearchTerm] = useState('')
+  const [loading, setLoading] = useState(true)
 
-  const filteredCourts = mockCourts.filter(court =>
-    court.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    court.sport.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    court.location.toLowerCase().includes(searchTerm.toLowerCase())
+  useEffect(() => {
+    const loadCourts = async () => {
+      setLoading(true)
+      const response = await apiClient.getCanchas()
+      if (response.data) {
+        setCourts(response.data)
+      } else {
+        setCourts([])
+      }
+      setLoading(false)
+    }
+    loadCourts()
+  }, [])
+
+  const filteredCourts = courts.filter(court =>
+    court.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (court.deporte?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (court.ubicacion?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   )
 
-  const getStatusBadge = (status: Court['status']) => {
+  const getStatusBadge = (status: Cancha['status']) => {
     switch (status) {
       case 'available':
         return <Badge variant="default" className="bg-green-100 text-green-800">Disponible</Badge>
@@ -109,25 +90,39 @@ export default function AdminCourtsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredCourts.map((court) => (
-                <TableRow key={court.id}>
-                  <TableCell className="font-medium">{court.name}</TableCell>
-                  <TableCell>{court.sport}</TableCell>
-                  <TableCell>{getStatusBadge(court.status)}</TableCell>
-                  <TableCell>${court.price.toLocaleString()}</TableCell>
-                  <TableCell>{court.location}</TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button variant="outline" size="sm">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8">
+                    Cargando canchas...
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : filteredCourts.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8">
+                    No se encontraron canchas.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredCourts.map((court) => (
+                  <TableRow key={court.id}>
+                    <TableCell className="font-medium">{court.nombre}</TableCell>
+                    <TableCell>{court.deporte}</TableCell>
+                    <TableCell>{getStatusBadge(court.status)}</TableCell>
+                    <TableCell>${court.precio.toLocaleString()}</TableCell>
+                    <TableCell>{court.ubicacion}</TableCell>
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        <Button variant="outline" size="sm">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
