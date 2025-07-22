@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
+import { apiRequest } from '@/lib/api-client'
 
 interface ErrorBoundaryState {
   hasError: boolean
@@ -295,7 +296,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     }
 
     // Example: Send to error tracking service
-    // fetch('/api/errors', {
+    // await apiRequest('/api/errors', {
     //   method: 'POST',
     //   headers: { 'Content-Type': 'application/json' },
     //   body: JSON.stringify(errorReport)

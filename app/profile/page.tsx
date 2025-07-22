@@ -15,12 +15,12 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import apiClient from '@/lib/api-client'
-import { getClientUser } from '@/lib/auth'
+import { useAuth } from '@/components/auth/auth-context'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { toast } from '@/components/ui/use-toast'
+import { apiRequest } from '@/lib/api-client'
 
 interface Persona {
   id: string
@@ -49,14 +49,14 @@ export default function ProfilePage() {
   const [formPerfil, setFormPerfil] = useState<Partial<PerfilCompetitivo>>({})
 
   // Get current user from auth context or cookie
-  const user = getClientUser()
+  const { user } = useAuth()
 
   useEffect(() => {
     if (!user) return
     setLoading(true)
     Promise.all([
-      apiClient.apiRequest<Persona>(`/personas/${user.id}`),
-      apiClient.apiRequest<PerfilCompetitivo>(`/perfil-competitivo/${user.id}`),
+      apiRequest<Persona>(`/personas/${user?.id}`),
+      apiRequest<PerfilCompetitivo>(`/perfil-competitivo/${user?.id}`),
     ]).then(([personaRes, perfilRes]) => {
       if (personaRes.data) setPersona(personaRes.data)
       if (perfilRes.data) setPerfil(perfilRes.data)
@@ -70,7 +70,7 @@ export default function ProfilePage() {
   }
   const handlePersonaSave = async () => {
     if (!persona) return
-    const res = await apiClient.apiRequest<Persona>(`/personas/${persona.id}`, {
+    const res = await apiRequest<Persona>(`/personas/${persona.id}`, {
       method: 'PUT',
       body: JSON.stringify(formPersona),
     })
@@ -89,7 +89,7 @@ export default function ProfilePage() {
   }
   const handlePerfilSave = async () => {
     if (!perfil) return
-    const res = await apiClient.apiRequest<PerfilCompetitivo>(`/perfil-competitivo/${perfil.id}`, {
+    const res = await apiRequest<PerfilCompetitivo>(`/perfil-competitivo/${perfil.id}`, {
       method: 'PUT',
       body: JSON.stringify(formPerfil),
     })

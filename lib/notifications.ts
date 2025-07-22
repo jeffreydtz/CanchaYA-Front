@@ -4,6 +4,7 @@
  */
 
 import { toast } from 'sonner'
+import { apiRequest } from './api-client'
 
 export const showSuccess = (message: string) => {
     toast.success(message)
@@ -170,19 +171,16 @@ export class NotificationManager {
 // Notification API functions
 export async function getNotifications(token: string): Promise<NotificationData[]> {
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/notificaciones`, {
+        const response = await apiRequest<{ notifications: NotificationData[] }>('/notificaciones', {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json',
             },
         })
-
-        if (!response.ok) {
-            throw new Error('Failed to fetch notifications')
+        if (response.error) {
+            throw new Error(response.error)
         }
-
-        const data = await response.json()
-        return data.notifications || []
+        return response.data?.notifications || []
     } catch (error) {
         console.error('Error fetching notifications:', error)
         return []

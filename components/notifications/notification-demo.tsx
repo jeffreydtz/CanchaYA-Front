@@ -22,49 +22,49 @@ export function NotificationDemo({ className }: NotificationDemoProps) {
   const { showCustomNotification } = useNotifications()
   const [selectedType, setSelectedType] = useState<'high' | 'medium' | 'low'>('medium')
 
-  // Elimina mockNotifications y usa solo notificaciones reales
-  // const mockNotifications: Omit<NotificationData, 'id' | 'timestamp' | 'read' | 'userId'>[] = [
-  //   {
-  //     type: 'RESERVATION_CONFIRMED',
-  //     title: '¡Reserva confirmada!',
-  //     message: 'Tu reserva para la Cancha de Fútbol 5 "El Fortín" el 25/12/2024 a las 20:00 ha sido confirmada.',
-  //     priority: 'high',
-  //     actionUrl: '/mis-reservas',
-  //     courtId: '1',
-  //     reservationId: 'res-123'
-  //   },
-  //   {
-  //     type: 'SLOT_RELEASED',
-  //     title: 'Horario disponible',
-  //     message: 'Se liberó un horario en "Estadio Central" para el 26/12/2024 a las 18:00. ¡Reserva ahora!',
-  //     priority: 'medium',
-  //     actionUrl: '/cancha/2',
-  //     courtId: '2'
-  //   },
-  //   {
-  //     type: 'RESERVATION_CANCELLED',
-  //     title: 'Reserva cancelada',
-  //     message: 'Tu reserva para "Club Atlético" del 24/12/2024 ha sido cancelada. Se te reintegrará el pago.',
-  //     priority: 'high',
-  //     courtId: '3',
-  //     reservationId: 'res-124'
-  //   },
-  //   {
-  //     type: 'REMINDER',
-  //     title: 'Recordatorio de reserva',
-  //     message: 'Tu partido es en 2 horas. No olvides confirmar tu asistencia para mantener la reserva.',
-  //     priority: 'medium',
-  //     actionUrl: '/mis-reservas',
-  //     reservationId: 'res-125'
-  //   },
-  //   {
-  //     type: 'PAYMENT_CONFIRMED',
-  //     title: 'Pago procesado',
-  //     message: 'Se procesó exitosamente el pago de $15.000 por tu reserva. ¡Nos vemos en la cancha!',
-  //     priority: 'low',
-  //     reservationId: 'res-126'
-  //   }
-  // ]
+  // Add mockNotifications array for demo/testing
+  const mockNotifications: Omit<NotificationData, 'id' | 'timestamp' | 'read' | 'userId'>[] = [
+    {
+      type: 'RESERVATION_CONFIRMED',
+      title: '¡Reserva confirmada!',
+      message: 'Tu reserva para la Cancha de Fútbol 5 "El Fortín" el 25/12/2024 a las 20:00 ha sido confirmada.',
+      priority: 'high',
+      actionUrl: '/mis-reservas',
+      courtId: '1',
+      reservationId: 'res-123'
+    },
+    {
+      type: 'SLOT_RELEASED',
+      title: 'Horario disponible',
+      message: 'Se liberó un horario en "Estadio Central" para el 26/12/2024 a las 18:00. ¡Reserva ahora!',
+      priority: 'medium',
+      actionUrl: '/cancha/2',
+      courtId: '2'
+    },
+    {
+      type: 'RESERVATION_CANCELLED',
+      title: 'Reserva cancelada',
+      message: 'Tu reserva para "Club Atlético" del 24/12/2024 ha sido cancelada. Se te reintegrará el pago.',
+      priority: 'high',
+      courtId: '3',
+      reservationId: 'res-124'
+    },
+    {
+      type: 'REMINDER',
+      title: 'Recordatorio de reserva',
+      message: 'Tu partido es en 2 horas. No olvides confirmar tu asistencia para mantener la reserva.',
+      priority: 'medium',
+      actionUrl: '/mis-reservas',
+      reservationId: 'res-125'
+    },
+    {
+      type: 'PAYMENT_CONFIRMED',
+      title: 'Pago procesado',
+      message: 'Se procesó exitosamente el pago de $15.000 por tu reserva. ¡Nos vemos en la cancha!',
+      priority: 'low',
+      reservationId: 'res-126'
+    }
+  ]
 
   const handleTestNotification = (notificationTemplate: typeof mockNotifications[0]) => {
     const notification: NotificationData = {

@@ -43,21 +43,15 @@ export default function AdminUsersPage() {
     const matchesSearch = user.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesRole = roleFilter === "all" || user.rol === roleFilter
-    // statusFilter solo si existe campo 'estado'
-    const matchesStatus = statusFilter === "all" || (user as any).estado === statusFilter
+    const matchesStatus = statusFilter === "all" || (statusFilter === "activo" ? user.activo : !user.activo)
     return matchesSearch && matchesRole && matchesStatus
   })
 
-  const getStatusBadge = (status: User['estado']) => {
-    switch (status) {
-      case 'activo':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Activo</Badge>
-      case 'inactivo':
-        return <Badge variant="secondary" className="bg-gray-100 text-gray-800">Inactivo</Badge>
-      case 'pendiente':
-        return <Badge variant="destructive" className="bg-yellow-100 text-yellow-800">Pendiente</Badge>
-      default:
-        return <Badge variant="outline">Desconocido</Badge>
+  const getStatusBadge = (activo: boolean) => {
+    if (activo) {
+      return <Badge variant="default" className="bg-green-100 text-green-800">Activo</Badge>
+    } else {
+      return <Badge variant="secondary" className="bg-gray-100 text-gray-800">Inactivo</Badge>
     }
   }
 
@@ -142,9 +136,9 @@ export default function AdminUsersPage() {
                   <TableCell className="font-medium">{user.nombre}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{getRoleBadge(user.rol)}</TableCell>
-                  <TableCell>{getStatusBadge(user.estado)}</TableCell>
-                  <TableCell>{user.fechaRegistro}</TableCell>
-                  <TableCell>{user.ultimoAcceso}</TableCell>
+                  <TableCell>{getStatusBadge(user.activo)}</TableCell>
+                  <TableCell>{user.fechaCreacion || '-'}</TableCell>
+                  <TableCell>-</TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
                       <Button variant="outline" size="sm">

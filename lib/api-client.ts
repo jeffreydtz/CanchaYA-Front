@@ -242,6 +242,8 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
   }
 }
 
+export { apiRequest }
+
 // --- API Client alineado con el backend ---
 
 const apiClient = {

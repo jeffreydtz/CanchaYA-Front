@@ -32,13 +32,13 @@ export default function AdminReservationsPage() {
     (reservation.usuario?.nombre?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   )
 
-  const getStatusBadge = (status: Reserva['status']) => {
-    switch (status) {
-      case 'confirmed':
+  const getStatusBadge = (estado: Reserva['estado']) => {
+    switch (estado) {
+      case 'CONFIRMADA':
         return <Badge variant="default" className="bg-green-100 text-green-800">Confirmada</Badge>
-      case 'pending':
+      case 'PENDIENTE':
         return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Pendiente</Badge>
-      case 'cancelled':
+      case 'CANCELADA':
         return <Badge variant="destructive" className="bg-red-100 text-red-800">Cancelada</Badge>
       default:
         return <Badge variant="outline">Desconocido</Badge>
@@ -100,8 +100,8 @@ export default function AdminReservationsPage() {
                   <TableCell>{reservation.usuario?.nombre}</TableCell>
                   <TableCell>{reservation.fecha}</TableCell>
                   <TableCell>{reservation.hora}</TableCell>
-                  <TableCell>{getStatusBadge(reservation.status)}</TableCell>
-                  <TableCell>${reservation.precio.toLocaleString()}</TableCell>
+                  <TableCell>{getStatusBadge(reservation.estado)}</TableCell>
+                  <TableCell>{reservation.monto !== undefined ? `$${reservation.monto.toLocaleString()}` : '-'}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
