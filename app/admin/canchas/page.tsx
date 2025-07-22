@@ -34,19 +34,6 @@ export default function AdminCourtsPage() {
     (court.ubicacion?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   )
 
-  const getStatusBadge = (status: Cancha['status']) => {
-    switch (status) {
-      case 'available':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Disponible</Badge>
-      case 'maintenance':
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Mantenimiento</Badge>
-      case 'reserved':
-        return <Badge variant="destructive" className="bg-red-100 text-red-800">Reservada</Badge>
-      default:
-        return <Badge variant="outline">Desconocido</Badge>
-    }
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -106,9 +93,15 @@ export default function AdminCourtsPage() {
                 filteredCourts.map((court) => (
                   <TableRow key={court.id}>
                     <TableCell className="font-medium">{court.nombre}</TableCell>
-                    <TableCell>{court.deporte}</TableCell>
-                    <TableCell>{getStatusBadge(court.status)}</TableCell>
-                    <TableCell>${court.precio.toLocaleString()}</TableCell>
+                    <TableCell>{court.deporte?.nombre || '-'}</TableCell>
+                    <TableCell>
+                      {court.disponible ? (
+                        <Badge variant="default" className="bg-green-100 text-green-800">Disponible</Badge>
+                      ) : (
+                        <Badge variant="secondary" className="bg-gray-200 text-gray-800">No disponible</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>${court.precioPorHora.toLocaleString()}</TableCell>
                     <TableCell>{court.ubicacion}</TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
