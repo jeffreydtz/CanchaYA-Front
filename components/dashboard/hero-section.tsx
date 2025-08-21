@@ -28,8 +28,6 @@ function useRosarioCentralEasterEgg() {
           body.style.backgroundSize = '20px 20px'
           body.style.animation = 'centralPride 2s ease-in-out'
           
-          console.log('🟡🔵 ¡¡¡DALE CANALLA!!! ¡¡¡VAMOS CENTRAL CARAJO!!! 🏆⚽')
-          
           setTimeout(() => {
             body.style.backgroundImage = ''
             body.style.backgroundSize = ''
@@ -142,18 +140,6 @@ export default function HeroSection() {
             </Card>
           </div>
           
-          {/* Easter Egg - Rosario Central */}
-          <div 
-            className="absolute top-4 right-4 text-xs text-white/30 hover:text-yellow-400 transition-all duration-300 cursor-pointer select-none z-20 bg-black/20 rounded-full w-8 h-8 flex items-center justify-center backdrop-blur-sm"
-            onClick={() => {
-              const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmESBTuW3PbOdCYDLo3N+t2QQAkTXrDr5axZGgxXs+rttWMeEUNgn9XyxnATBCeA0/Hes0UMAzuA0/HWgiUBKpLN9d2QQAkTXrDr5axZGg==')
-              audio.play().catch(() => {})
-              console.log('🟡🔵 ¡Dale Canalla! ¡Vamos Central! 🏆⚽')
-            }}
-            title="🟡🔵 Dale Central!"
-          >
-            RC
-          </div>
           
           {/* Stats section */}
           <div className={`mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 ${mounted ? 'fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.6s' }}>

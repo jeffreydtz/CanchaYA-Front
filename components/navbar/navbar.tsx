@@ -52,24 +52,6 @@ export default function Navbar() {
             }`}>
               CanchaYA
             </span>
-            {/* Hidden Central Easter Egg */}
-            <span 
-              className="ml-2 text-xs opacity-20 hover:opacity-100 hover:text-yellow-400 transition-all cursor-pointer select-none"
-              onClick={() => {
-                console.log('🟡🔵 ¡DALE CENTRAL! ¡Vamos Canalla! 🏆⚽')
-                // Quick flash effect
-                const navbar = document.querySelector('nav')
-                if (navbar) {
-                  navbar.style.background = 'linear-gradient(45deg, #FFD700, #1E40AF)'
-                  setTimeout(() => {
-                    navbar.style.background = ''
-                  }, 500)
-                }
-              }}
-              title="¿Hincha de Central?"
-            >
-              ◉
-            </span>
           </Link>
 
           {/* Desktop Navigation */}
