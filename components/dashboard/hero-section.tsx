@@ -11,6 +11,7 @@ import { MapPin, Calendar, Zap, Shield, Trophy } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useLanguage } from '@/lib/language-context'
+import apiClient from '@/lib/api-client'
 
 // Rosario Central Easter Egg Hook
 function useRosarioCentralEasterEgg() {
@@ -48,6 +49,12 @@ function useRosarioCentralEasterEgg() {
 
 export default function HeroSection() {
   const [mounted, setMounted] = useState(false)
+  const [stats, setStats] = useState({
+    courts: '500+',
+    users: '10K+',
+    bookings: '50K+',
+    rating: '4.9⭐'
+  })
   const { t } = useLanguage()
   
   // Activate Rosario Central easter egg
@@ -55,6 +62,30 @@ export default function HeroSection() {
 
   useEffect(() => {
     setMounted(true)
+    
+    // Fetch real stats from backend
+    const fetchStats = async () => {
+      try {
+        const [canchasResponse, reservasResponse] = await Promise.all([
+          apiClient.getCanchas(),
+          apiClient.getReservas()
+        ])
+
+        if (canchasResponse.data && reservasResponse.data) {
+          setStats({
+            courts: `${canchasResponse.data.length}+`,
+            users: '10K+', // This would need a users count endpoint
+            bookings: `${reservasResponse.data.length}+`,
+            rating: '4.9⭐' // This would need a ratings average endpoint
+          })
+        }
+      } catch (error) {
+        console.error('Error fetching stats:', error)
+        // Keep default values if API fails
+      }
+    }
+
+    fetchStats()
   }, [])
 
   return (
@@ -144,19 +175,19 @@ export default function HeroSection() {
           {/* Stats section */}
           <div className={`mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 ${mounted ? 'fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.6s' }}>
             <div className="text-center">
-              <div className="text-4xl md:text-5xl font-black text-white mb-2">500+</div>
+              <div className="text-4xl md:text-5xl font-black text-white mb-2">{stats.courts}</div>
               <div className="text-white/80 font-medium">{t('stats.courts')}</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl md:text-5xl font-black text-white mb-2">10K+</div>
+              <div className="text-4xl md:text-5xl font-black text-white mb-2">{stats.users}</div>
               <div className="text-white/80 font-medium">{t('stats.users')}</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl md:text-5xl font-black text-white mb-2">50K+</div>
+              <div className="text-4xl md:text-5xl font-black text-white mb-2">{stats.bookings}</div>
               <div className="text-white/80 font-medium">{t('stats.bookings')}</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl md:text-5xl font-black text-white mb-2">4.9⭐</div>
+              <div className="text-4xl md:text-5xl font-black text-white mb-2">{stats.rating}</div>
               <div className="text-white/80 font-medium">{t('stats.rating')}</div>
             </div>
           </div>

@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -14,6 +14,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Search, Filter, MapPin, Clock, Sliders, X, Star } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Slider } from '@/components/ui/slider'
+import apiClient, { Club, Deporte } from '@/lib/api-client'
 
 export default function CourtFilters() {
   const [filters, setFilters] = useState({
@@ -26,6 +27,34 @@ export default function CourtFilters() {
     rating: 0,
   })
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const [clubs, setClubes] = useState<Club[]>([])
+  const [deportes, setDeportes] = useState<Deporte[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Fetch clubs and sports data
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true)
+      try {
+        const [clubsResponse, deportesResponse] = await Promise.all([
+          apiClient.getClubes(),
+          apiClient.getDeportes()
+        ])
+        
+        if (clubsResponse.data) {
+          setClubes(clubsResponse.data)
+        }
+        if (deportesResponse.data) {
+          setDeportes(deportesResponse.data)
+        }
+      } catch (error) {
+        console.error('Error fetching filter data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
 
   const handleFilterChange = (key: string, value: string | number | number[]) => {
     setFilters(prev => ({ ...prev, [key]: value }))
@@ -78,11 +107,12 @@ export default function CourtFilters() {
                   </div>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos los deportes</SelectItem>
-                  <SelectItem value="futbol">⚽ Fútbol</SelectItem>
-                  <SelectItem value="tenis">🎾 Tenis</SelectItem>
-                  <SelectItem value="paddle">🏓 Paddle</SelectItem>
-                  <SelectItem value="basquet">🏀 Básquet</SelectItem>
+                  <SelectItem value="">Todos los deportes</SelectItem>
+                  {deportes.map((deporte) => (
+                    <SelectItem key={deporte.id} value={deporte.id}>
+                      {deporte.nombre}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
 
@@ -150,10 +180,12 @@ export default function CourtFilters() {
                     <SelectValue placeholder="Seleccionar club" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos los clubs</SelectItem>
-                    <SelectItem value="club-central">🏟️ Club Deportivo Central</SelectItem>
-                    <SelectItem value="tenis-premium">🎾 Club de Tenis Premium</SelectItem>
-                    <SelectItem value="paddle-elite">🏓 Club Paddle Elite</SelectItem>
+                    <SelectItem value="">Todos los clubs</SelectItem>
+                    {clubs.map((club) => (
+                      <SelectItem key={club.id} value={club.id}>
+                        {club.nombre}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
