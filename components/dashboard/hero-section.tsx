@@ -68,8 +68,8 @@ export default function HeroSection() {
                 <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-300 shadow-xl">
                   <Zap className="h-10 w-10 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold mb-4 text-white">{t('feature.instant.title')}</h3>
-                <p className="text-white/80 leading-relaxed text-base">{t('feature.instant.desc')}</p>
+                <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">{t('feature.instant.title')}</h3>
+                <p className="text-gray-700 dark:text-white/80 leading-relaxed text-base">{t('feature.instant.desc')}</p>
                 <div className="mt-4 flex items-center justify-center text-primary-300">
                   <div className="w-8 h-0.5 bg-primary-300 rounded-full"></div>
                 </div>
@@ -81,8 +81,8 @@ export default function HeroSection() {
                 <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-secondary to-accent rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-300 shadow-xl">
                   <Shield className="h-10 w-10 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold mb-4 text-white">{t('feature.secure.title')}</h3>
-                <p className="text-white/80 leading-relaxed text-base">{t('feature.secure.desc')}</p>
+                <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">{t('feature.secure.title')}</h3>
+                <p className="text-gray-700 dark:text-white/80 leading-relaxed text-base">{t('feature.secure.desc')}</p>
                 <div className="mt-4 flex items-center justify-center text-secondary-300">
                   <div className="w-8 h-0.5 bg-secondary-300 rounded-full"></div>
                 </div>
@@ -94,8 +94,8 @@ export default function HeroSection() {
                 <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-accent to-primary rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-300 shadow-xl">
                   <Trophy className="h-10 w-10 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold mb-4 text-white">{t('feature.premium.title')}</h3>
-                <p className="text-white/80 leading-relaxed text-base">{t('feature.premium.desc')}</p>
+                <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">{t('feature.premium.title')}</h3>
+                <p className="text-gray-700 dark:text-white/80 leading-relaxed text-base">{t('feature.premium.desc')}</p>
                 <div className="mt-4 flex items-center justify-center text-accent-300">
                   <div className="w-8 h-0.5 bg-accent-300 rounded-full"></div>
                 </div>
