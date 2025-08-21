@@ -144,7 +144,7 @@ export default function HeroSection() {
           
           {/* Easter Egg - Rosario Central */}
           <div 
-            className="hidden group-hover:block absolute top-4 right-4 text-xs text-white/20 hover:text-yellow-400 transition-all duration-300 cursor-pointer select-none"
+            className="absolute top-4 right-4 text-xs text-white/30 hover:text-yellow-400 transition-all duration-300 cursor-pointer select-none z-20 bg-black/20 rounded-full w-8 h-8 flex items-center justify-center backdrop-blur-sm"
             onClick={() => {
               const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmESBTuW3PbOdCYDLo3N+t2QQAkTXrDr5axZGgxXs+rttWMeEUNgn9XyxnATBCeA0/Hes0UMAzuA0/HWgiUBKpLN9d2QQAkTXrDr5axZGg==')
               audio.play().catch(() => {})
