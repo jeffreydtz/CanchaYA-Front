@@ -8,9 +8,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { LogOut, User, Menu, X, Home, Calendar, Shield } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { useLanguage } from '@/lib/language-context'
 
 export default function Navbar() {
   const { user, isAuthenticated, isAdmin, logout } = useAuth()
+  const { t } = useLanguage()
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
@@ -23,10 +25,10 @@ export default function Navbar() {
   }, [])
 
   const navigationItems = [
-    { href: '/', label: 'Inicio', icon: Home },
-    { href: '/mis-reservas', label: 'Mis Reservas', icon: Calendar },
-    ...(isAuthenticated ? [{ href: '/profile', label: 'Perfil', icon: User }] : []),
-    ...(isAdmin ? [{ href: '/admin', label: 'Admin', icon: Shield }] : []),
+    { href: '/', label: t('nav.home'), icon: Home },
+    { href: '/mis-reservas', label: t('nav.reservations'), icon: Calendar },
+    ...(isAuthenticated ? [{ href: '/profile', label: t('nav.profile'), icon: User }] : []),
+    ...(isAdmin ? [{ href: '/admin', label: t('nav.admin'), icon: Shield }] : []),
   ]
 
   return (
@@ -116,20 +118,20 @@ export default function Navbar() {
                     <DropdownMenuItem asChild>
                       <Link href="/profile" className="flex items-center p-3 rounded-lg hover:bg-muted cursor-pointer">
                         <User className="mr-3 h-5 w-5" />
-                        <span className="font-medium">Mi Perfil</span>
+                        <span className="font-medium">{t('nav.profile')}</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link href="/mis-reservas" className="flex items-center p-3 rounded-lg hover:bg-muted cursor-pointer">
                         <Calendar className="mr-3 h-5 w-5" />
-                        <span className="font-medium">Mis Reservas</span>
+                        <span className="font-medium">{t('nav.reservations')}</span>
                       </Link>
                     </DropdownMenuItem>
                     {isAdmin && (
                       <DropdownMenuItem asChild>
                         <Link href="/admin" className="flex items-center p-3 rounded-lg hover:bg-muted cursor-pointer">
                           <Shield className="mr-3 h-5 w-5" />
-                          <span className="font-medium">Panel Admin</span>
+                          <span className="font-medium">{t('nav.admin')}</span>
                         </Link>
                       </DropdownMenuItem>
                     )}
@@ -139,7 +141,7 @@ export default function Navbar() {
                       className="flex items-center p-3 rounded-lg hover:bg-destructive/10 text-destructive cursor-pointer"
                     >
                       <LogOut className="mr-3 h-5 w-5" />
-                      <span className="font-medium">Cerrar Sesión</span>
+                      <span className="font-medium">{t('nav.logout')}</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -156,12 +158,12 @@ export default function Navbar() {
                         : 'text-white/90 hover:text-white hover:bg-white/10'
                     }`}
                   >
-                    Iniciar Sesión
+                    {t('nav.login')}
                   </Button>
                 </Link>
                 <Link href="/register">
                   <Button size="sm" className="btn-glow shadow-lg">
-                    Registrarse
+                    {t('nav.register')}
                   </Button>
                 </Link>
               </div>
@@ -206,12 +208,12 @@ export default function Navbar() {
                   <div className="flex flex-col space-y-2">
                     <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
                       <Button variant="ghost" className="w-full justify-start" size="lg">
-                        Iniciar Sesión
+                        {t('nav.login')}
                       </Button>
                     </Link>
                     <Link href="/register" onClick={() => setIsMobileMenuOpen(false)}>
                       <Button className="w-full" size="lg">
-                        Registrarse
+                        {t('nav.register')}
                       </Button>
                     </Link>
                   </div>

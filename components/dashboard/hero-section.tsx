@@ -10,9 +10,11 @@ import { Card, CardContent } from '@/components/ui/card'
 import { MapPin, Calendar, Zap, Shield, Trophy } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { useLanguage } from '@/lib/language-context'
 
 export default function HeroSection() {
   const [mounted, setMounted] = useState(false)
+  const { t } = useLanguage()
 
   useEffect(() => {
     setMounted(true)
@@ -34,14 +36,11 @@ export default function HeroSection() {
           {/* Main heading */}
           <div className="mb-8">
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white mb-6 leading-tight">
-              Reserva tu{' '}
-              <span className="text-gradient bg-gradient-to-r from-white to-accent-100">
-                cancha deportiva
-              </span>
+              {t('hero.title')}
             </h1>
             <p className="text-xl md:text-2xl lg:text-3xl text-white/90 max-w-3xl mx-auto font-light leading-relaxed">
-              La plataforma más moderna para encontrar y reservar canchas deportivas.
-              <span className="block mt-2 text-white/80">¡Experiencia premium garantizada!</span>
+              {t('hero.subtitle')}
+              <span className="block mt-2 text-white/80">{t('hero.subtitle2')}</span>
             </p>
           </div>
           
@@ -50,47 +49,56 @@ export default function HeroSection() {
             <Link href="/">
               <Button size="xl" variant="glow" className="group relative overflow-hidden">
                 <MapPin className="mr-3 h-6 w-6 group-hover:rotate-12 transition-transform" />
-                Explorar Canchas
+{t('hero.explore')}
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
               </Button>
             </Link>
             <Link href="/mis-reservas">
               <Button size="xl" variant="glass" className="group">
                 <Calendar className="mr-3 h-6 w-6 group-hover:scale-110 transition-transform" />
-                Mis Reservas
+{t('hero.reservations')}
               </Button>
             </Link>
           </div>
 
           {/* Feature cards */}
           <div className={`grid grid-cols-1 md:grid-cols-3 gap-8 ${mounted ? 'fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
-            <Card className="glass-effect group hover:scale-105 transition-all duration-300 card-hover border-white/20">
-              <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-300">
-                  <Zap className="h-8 w-8 text-white" />
+            <Card className="glass-effect group hover:scale-105 transition-all duration-300 card-hover border-white/20 min-h-[280px] flex flex-col justify-center">
+              <CardContent className="p-8 text-center flex flex-col justify-center h-full">
+                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-300 shadow-xl">
+                  <Zap className="h-10 w-10 text-white" />
                 </div>
-                <h3 className="text-xl font-bold mb-3 text-white">Reserva Instantánea</h3>
-                <p className="text-white/80 leading-relaxed">Confirma tu cancha en menos de 30 segundos con nuestro sistema ultrarrápido</p>
+                <h3 className="text-2xl font-bold mb-4 text-white">{t('feature.instant.title')}</h3>
+                <p className="text-white/80 leading-relaxed text-base">{t('feature.instant.desc')}</p>
+                <div className="mt-4 flex items-center justify-center text-primary-300">
+                  <div className="w-8 h-0.5 bg-primary-300 rounded-full"></div>
+                </div>
               </CardContent>
             </Card>
             
-            <Card className="glass-effect group hover:scale-105 transition-all duration-300 card-hover border-white/20">
-              <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-secondary to-accent rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-300">
-                  <Shield className="h-8 w-8 text-white" />
+            <Card className="glass-effect group hover:scale-105 transition-all duration-300 card-hover border-white/20 min-h-[280px] flex flex-col justify-center">
+              <CardContent className="p-8 text-center flex flex-col justify-center h-full">
+                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-secondary to-accent rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-300 shadow-xl">
+                  <Shield className="h-10 w-10 text-white" />
                 </div>
-                <h3 className="text-xl font-bold mb-3 text-white">Pago Seguro</h3>
-                <p className="text-white/80 leading-relaxed">Tecnología de encriptación bancaria para proteger todas tus transacciones</p>
+                <h3 className="text-2xl font-bold mb-4 text-white">{t('feature.secure.title')}</h3>
+                <p className="text-white/80 leading-relaxed text-base">{t('feature.secure.desc')}</p>
+                <div className="mt-4 flex items-center justify-center text-secondary-300">
+                  <div className="w-8 h-0.5 bg-secondary-300 rounded-full"></div>
+                </div>
               </CardContent>
             </Card>
             
-            <Card className="glass-effect group hover:scale-105 transition-all duration-300 card-hover border-white/20">
-              <CardContent className="p-8 text-center">
-                <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-accent to-primary rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-300">
-                  <Trophy className="h-8 w-8 text-white" />
+            <Card className="glass-effect group hover:scale-105 transition-all duration-300 card-hover border-white/20 min-h-[280px] flex flex-col justify-center">
+              <CardContent className="p-8 text-center flex flex-col justify-center h-full">
+                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-accent to-primary rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-300 shadow-xl">
+                  <Trophy className="h-10 w-10 text-white" />
                 </div>
-                <h3 className="text-xl font-bold mb-3 text-white">Canchas Premium</h3>
-                <p className="text-white/80 leading-relaxed">Acceso exclusivo a las mejores instalaciones deportivas de la ciudad</p>
+                <h3 className="text-2xl font-bold mb-4 text-white">{t('feature.premium.title')}</h3>
+                <p className="text-white/80 leading-relaxed text-base">{t('feature.premium.desc')}</p>
+                <div className="mt-4 flex items-center justify-center text-accent-300">
+                  <div className="w-8 h-0.5 bg-accent-300 rounded-full"></div>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -99,19 +107,19 @@ export default function HeroSection() {
           <div className={`mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 ${mounted ? 'fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.6s' }}>
             <div className="text-center">
               <div className="text-4xl md:text-5xl font-black text-white mb-2">500+</div>
-              <div className="text-white/80 font-medium">Canchas Disponibles</div>
+              <div className="text-white/80 font-medium">{t('stats.courts')}</div>
             </div>
             <div className="text-center">
               <div className="text-4xl md:text-5xl font-black text-white mb-2">10K+</div>
-              <div className="text-white/80 font-medium">Usuarios Activos</div>
+              <div className="text-white/80 font-medium">{t('stats.users')}</div>
             </div>
             <div className="text-center">
               <div className="text-4xl md:text-5xl font-black text-white mb-2">50K+</div>
-              <div className="text-white/80 font-medium">Reservas Realizadas</div>
+              <div className="text-white/80 font-medium">{t('stats.bookings')}</div>
             </div>
             <div className="text-center">
               <div className="text-4xl md:text-5xl font-black text-white mb-2">4.9⭐</div>
-              <div className="text-white/80 font-medium">Calificación Promedio</div>
+              <div className="text-white/80 font-medium">{t('stats.rating')}</div>
             </div>
           </div>
         </div>

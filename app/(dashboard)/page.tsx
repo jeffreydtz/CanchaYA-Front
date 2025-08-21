@@ -9,6 +9,8 @@ import HeroSection from '@/components/dashboard/hero-section'
 import CourtFilters from '@/components/dashboard/court-filters'
 import FeaturedCourts from '@/components/dashboard/featured-courts'
 import Navbar from '@/components/navbar/navbar'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { LanguageToggle } from '@/components/ui/language-toggle'
 
 function LoadingSkeleton() {
   return (
@@ -116,20 +118,37 @@ export default function DashboardPage() {
             </div>
           </div>
           
-          <div className="border-t border-gray-200 dark:border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-sm text-gray-600 dark:text-gray-300">
-              © 2024 CanchaYA. Todos los derechos reservados.
-            </p>
-            <div className="flex space-x-6 mt-4 md:mt-0">
-              <Link href="/privacy" className="text-sm text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
-                Privacidad
-              </Link>
-              <Link href="/terms" className="text-sm text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
-                Términos
-              </Link>
-              <Link href="/cookies" className="text-sm text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
-                Cookies
-              </Link>
+          <div className="border-t border-gray-200 dark:border-gray-800 mt-8 pt-8">
+            {/* Main footer content */}
+            <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                © 2024 CanchaYA. Todos los derechos reservados.
+              </p>
+              <div className="flex space-x-6 mt-4 md:mt-0">
+                <Link href="/privacy" className="text-sm text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
+                  Privacidad
+                </Link>
+                <Link href="/terms" className="text-sm text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
+                  Términos
+                </Link>
+                <Link href="/cookies" className="text-sm text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
+                  Cookies
+                </Link>
+              </div>
+            </div>
+            
+            {/* Toggle switches */}
+            <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Theme:</span>
+                  <ThemeToggle />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Language:</span>
+                  <LanguageToggle />
+                </div>
+              </div>
             </div>
           </div>
         </div>
