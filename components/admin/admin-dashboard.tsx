@@ -4,12 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line } from 'recharts'
 import { Users, Calendar, DollarSign, TrendingUp } from 'lucide-react'
 
-interface DashboardData {
-  period: string
-  reservations: number
-  revenue: number
-  users: number
-}
 
 // Elimina mockData y usa solo datos reales de la API
 

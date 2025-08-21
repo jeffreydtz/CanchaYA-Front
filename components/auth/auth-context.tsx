@@ -26,23 +26,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// Utilidad para construir la URL base sin duplicar /api
-function getBackendUrl(path: string) {
-  const base = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend-cancha-ya-production.up.railway.app/api';
-  // Si la base ya termina en /api y el path empieza con /api, quitamos uno
-  if (base.endsWith('/api') && path.startsWith('/api')) {
-    return base + path.replace(/^\/api/, '');
-  }
-  // Si la base NO termina en /api y el path NO empieza con /, agregamos /
-  if (!base.endsWith('/') && !path.startsWith('/')) {
-    return base + '/' + path;
-  }
-  // Si la base termina en / y el path empieza con /, evitamos doble barra
-  if (base.endsWith('/') && path.startsWith('/')) {
-    return base + path.slice(1);
-  }
-  return base + path;
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)

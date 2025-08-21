@@ -7,7 +7,7 @@
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { MapPin, Calendar, Star, Zap, Shield, Trophy } from 'lucide-react'
+import { MapPin, Calendar, Zap, Shield, Trophy } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 

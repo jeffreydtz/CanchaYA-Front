@@ -4,6 +4,7 @@
  */
 
 import { Suspense } from 'react'
+import Link from 'next/link'
 import HeroSection from '@/components/dashboard/hero-section'
 import CourtFilters from '@/components/dashboard/court-filters'
 import FeaturedCourts from '@/components/dashboard/featured-courts'
@@ -86,10 +87,10 @@ export default function DashboardPage() {
             <div className="space-y-4">
               <h4 className="font-semibold text-gray-900 dark:text-white">Enlaces Rápidos</h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="/" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Inicio</a></li>
-                <li><a href="/canchas" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Canchas</a></li>
-                <li><a href="/reservas" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Mis Reservas</a></li>
-                <li><a href="/soporte" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Soporte</a></li>
+                <li><Link href="/" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Inicio</Link></li>
+                <li><Link href="/canchas" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Canchas</Link></li>
+                <li><Link href="/reservas" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Mis Reservas</Link></li>
+                <li><Link href="/soporte" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Soporte</Link></li>
               </ul>
             </div>
             
@@ -97,10 +98,10 @@ export default function DashboardPage() {
             <div className="space-y-4">
               <h4 className="font-semibold text-gray-900 dark:text-white">Deportes</h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="/futbol" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">⚽ Fútbol</a></li>
-                <li><a href="/tenis" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">🎾 Tenis</a></li>
-                <li><a href="/paddle" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">🏓 Paddle</a></li>
-                <li><a href="/basquet" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">🏀 Básquet</a></li>
+                <li><Link href="/futbol" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">⚽ Fútbol</Link></li>
+                <li><Link href="/tenis" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">🎾 Tenis</Link></li>
+                <li><Link href="/paddle" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">🏓 Paddle</Link></li>
+                <li><Link href="/basquet" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">🏀 Básquet</Link></li>
               </ul>
             </div>
             
@@ -120,15 +121,15 @@ export default function DashboardPage() {
               © 2024 CanchaYA. Todos los derechos reservados.
             </p>
             <div className="flex space-x-6 mt-4 md:mt-0">
-              <a href="/privacy" className="text-sm text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
+              <Link href="/privacy" className="text-sm text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
                 Privacidad
-              </a>
-              <a href="/terms" className="text-sm text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
+              </Link>
+              <Link href="/terms" className="text-sm text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
                 Términos
-              </a>
-              <a href="/cookies" className="text-sm text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
+              </Link>
+              <Link href="/cookies" className="text-sm text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
                 Cookies
-              </a>
+              </Link>
             </div>
           </div>
         </div>

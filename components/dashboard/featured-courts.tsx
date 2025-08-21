@@ -212,7 +212,7 @@ export default function FeaturedCourts() {
           setError('No se pudieron cargar las canchas')
           setCourts([])
         }
-      } catch (err) {
+      } catch {
         setError('Error al cargar las canchas')
         setCourts([])
       } finally {

@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent } from '@/components/ui/card'
-import { Search, Filter, MapPin, Calendar, Clock, Sliders, X, Star } from 'lucide-react'
+import { Search, Filter, MapPin, Clock, Sliders, X, Star } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Slider } from '@/components/ui/slider'
 
@@ -27,7 +27,7 @@ export default function CourtFilters() {
   })
   const [showAdvanced, setShowAdvanced] = useState(false)
 
-  const handleFilterChange = (key: string, value: any) => {
+  const handleFilterChange = (key: string, value: string | number | number[]) => {
     setFilters(prev => ({ ...prev, [key]: value }))
   }
 

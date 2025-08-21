@@ -218,7 +218,7 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
     let data
     try {
       data = await response.json()
-    } catch (parseError) {
+    } catch {
       data = {}
     }
 

@@ -6,7 +6,7 @@ import NotificationBell from '@/components/notifications/notification-bell'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { LogOut, User, Menu, X, Home, Calendar, Shield, Settings } from 'lucide-react'
+import { LogOut, User, Menu, X, Home, Calendar, Shield } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
 export default function Navbar() {

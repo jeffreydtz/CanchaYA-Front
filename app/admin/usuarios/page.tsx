@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Edit, Trash2 } from "lucide-react"
-import { toast } from "sonner"
 import apiClient, { User } from '@/lib/api-client'
 
 export default function AdminUsersPage() {
@@ -23,18 +22,15 @@ export default function AdminUsersPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [roleFilter, setRoleFilter] = useState<string>("all")
   const [statusFilter, setStatusFilter] = useState<string>("all")
-  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const loadUsers = async () => {
-      setLoading(true)
       const response = await apiClient.getUsuarios()
       if (response.data) {
         setUsers(response.data)
       } else {
         setUsers([])
       }
-      setLoading(false)
     }
     loadUsers()
   }, [])

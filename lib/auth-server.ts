@@ -8,20 +8,6 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { jwtDecode } from 'jwt-decode'
 
-// Utilidad para construir la URL base sin duplicar /api
-function getBackendUrl(path: string) {
-  const base = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://backend-cancha-ya-production.up.railway.app/api';
-  if (base.endsWith('/api') && path.startsWith('/api')) {
-    return base + path.replace(/^\/api/, '');
-  }
-  if (!base.endsWith('/') && !path.startsWith('/')) {
-    return base + '/' + path;
-  }
-  if (base.endsWith('/') && path.startsWith('/')) {
-    return base + path.slice(1);
-  }
-  return base + path;
-}
 
 export interface ServerUser {
   id: string
