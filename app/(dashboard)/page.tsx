@@ -11,6 +11,7 @@ import FeaturedCourts from '@/components/dashboard/featured-courts'
 import Navbar from '@/components/navbar/navbar'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { LanguageToggle } from '@/components/ui/language-toggle'
+import { FooterEasterEgg } from '@/components/easter-egg/footer-easter-egg'
 
 function LoadingSkeleton() {
   return (
@@ -123,32 +124,7 @@ export default function DashboardPage() {
             <div className="flex flex-col md:flex-row justify-between items-center mb-6">
               <p className="text-sm text-gray-600 dark:text-gray-300">
                 © 2024 CanchaYA. Todos los derechos reservados.
-                <span 
-                  className="ml-2 text-xs opacity-20 hover:opacity-100 transition-opacity cursor-pointer select-none"
-                  onClick={() => {
-                    const messages = [
-                      '🟡🔵 ¡Dale Canalla!',
-                      '⚽ ¡Vamos Central carajo!',
-                      '🏆 El Gigante de Arroyito',
-                      '💙💛 Académico hasta la muerte'
-                    ]
-                    const randomMsg = messages[Math.floor(Math.random() * messages.length)]
-                    console.log(randomMsg)
-                    
-                    // Create temporary yellow-blue flash
-                    document.body.style.transition = 'background-color 0.3s'
-                    document.body.style.backgroundColor = '#FFD700'
-                    setTimeout(() => {
-                      document.body.style.backgroundColor = '#1E40AF'
-                      setTimeout(() => {
-                        document.body.style.backgroundColor = ''
-                      }, 150)
-                    }, 150)
-                  }}
-                  title="¿Sos de Central?"
-                >
-                  •
-                </span>
+                <FooterEasterEgg />
               </p>
               <div className="flex space-x-6 mt-4 md:mt-0">
                 <Link href="/privacy" className="text-sm text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
