@@ -1,7 +1,6 @@
 /**
  * Dashboard Page for CanchaYA
- * Main landing page with hero section, search filters, and featured courts
- * Implements authentication checks and real-time updates
+ * Modern landing page with enhanced UX and performance optimizations
  */
 
 import { Suspense } from 'react'
@@ -12,13 +11,25 @@ import Navbar from '@/components/navbar/navbar'
 
 function LoadingSkeleton() {
   return (
-    <div className="space-y-8">
-      <div className="animate-pulse">
-        <div className="h-64 bg-gray-200 rounded-lg mb-8"></div>
-        <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="space-y-8 animate-pulse">
+      {/* Hero skeleton */}
+      <div className="h-screen bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800"></div>
+      
+      {/* Filters skeleton */}
+      <div className="container mx-auto px-4">
+        <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl mb-8"></div>
+        
+        {/* Courts grid skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-64 bg-gray-200 rounded-lg"></div>
+            <div key={i} className="space-y-4">
+              <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+              <div className="space-y-2">
+                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+              </div>
+            </div>
           ))}
         </div>
       </div>
@@ -28,15 +39,100 @@ function LoadingSkeleton() {
 
 export default function DashboardPage() {
   return (
-    <div>
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       <Navbar />
-      <main className="container mx-auto px-4 py-8">
+      
+      <main className="relative">
         <Suspense fallback={<LoadingSkeleton />}>
+          {/* Hero section - full viewport */}
           <HeroSection />
-          <CourtFilters />
-          <FeaturedCourts />
+          
+          {/* Content sections */}
+          <div className="relative z-10 bg-white dark:bg-gray-900">
+            <div className="container mx-auto px-4 py-16 space-y-16">
+              {/* Search and filters */}
+              <section className="animate-fade-in-up">
+                <CourtFilters />
+              </section>
+              
+              {/* Featured courts */}
+              <section className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+                <FeaturedCourts />
+              </section>
+            </div>
+          </div>
         </Suspense>
       </main>
+      
+      {/* Footer */}
+      <footer className="bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
+        <div className="container mx-auto px-4 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {/* Company info */}
+            <div className="space-y-4">
+              <div className="flex items-center space-x-3">
+                <div className="h-8 w-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">CY</span>
+                </div>
+                <span className="font-black text-xl text-gray-900 dark:text-white">CanchaYA</span>
+              </div>
+              <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
+                La plataforma líder para reservar canchas deportivas. 
+                Conectamos jugadores con las mejores instalaciones.
+              </p>
+            </div>
+            
+            {/* Quick links */}
+            <div className="space-y-4">
+              <h4 className="font-semibold text-gray-900 dark:text-white">Enlaces Rápidos</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="/" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Inicio</a></li>
+                <li><a href="/canchas" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Canchas</a></li>
+                <li><a href="/reservas" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Mis Reservas</a></li>
+                <li><a href="/soporte" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Soporte</a></li>
+              </ul>
+            </div>
+            
+            {/* Sports */}
+            <div className="space-y-4">
+              <h4 className="font-semibold text-gray-900 dark:text-white">Deportes</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="/futbol" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">⚽ Fútbol</a></li>
+                <li><a href="/tenis" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">🎾 Tenis</a></li>
+                <li><a href="/paddle" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">🏓 Paddle</a></li>
+                <li><a href="/basquet" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">🏀 Básquet</a></li>
+              </ul>
+            </div>
+            
+            {/* Contact */}
+            <div className="space-y-4">
+              <h4 className="font-semibold text-gray-900 dark:text-white">Contacto</h4>
+              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                <li>📧 info@canchaya.com</li>
+                <li>📱 +54 11 1234-5678</li>
+                <li>📍 Buenos Aires, Argentina</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="border-t border-gray-200 dark:border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              © 2024 CanchaYA. Todos los derechos reservados.
+            </p>
+            <div className="flex space-x-6 mt-4 md:mt-0">
+              <a href="/privacy" className="text-sm text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
+                Privacidad
+              </a>
+              <a href="/terms" className="text-sm text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
+                Términos
+              </a>
+              <a href="/cookies" className="text-sm text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
+                Cookies
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
