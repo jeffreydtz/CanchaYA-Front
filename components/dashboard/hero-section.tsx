@@ -12,9 +12,48 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useLanguage } from '@/lib/language-context'
 
+// Rosario Central Easter Egg Hook
+function useRosarioCentralEasterEgg() {
+  useEffect(() => {
+    const konamiCode = ['c', 'e', 'n', 't', 'r', 'a', 'l']
+    let konamiIndex = 0
+
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === konamiCode[konamiIndex]) {
+        konamiIndex++
+        if (konamiIndex === konamiCode.length) {
+          // Trigger special Central easter egg
+          const body = document.body
+          body.style.backgroundImage = 'linear-gradient(45deg, #FFD700 25%, #1E40AF 25%, #1E40AF 50%, #FFD700 50%, #FFD700 75%, #1E40AF 75%)'
+          body.style.backgroundSize = '20px 20px'
+          body.style.animation = 'centralPride 2s ease-in-out'
+          
+          console.log('🟡🔵 ¡¡¡DALE CANALLA!!! ¡¡¡VAMOS CENTRAL CARAJO!!! 🏆⚽')
+          
+          setTimeout(() => {
+            body.style.backgroundImage = ''
+            body.style.backgroundSize = ''
+            body.style.animation = ''
+          }, 3000)
+          
+          konamiIndex = 0
+        }
+      } else {
+        konamiIndex = 0
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyPress)
+    return () => window.removeEventListener('keydown', handleKeyPress)
+  }, [])
+}
+
 export default function HeroSection() {
   const [mounted, setMounted] = useState(false)
   const { t } = useLanguage()
+  
+  // Activate Rosario Central easter egg
+  useRosarioCentralEasterEgg()
 
   useEffect(() => {
     setMounted(true)
@@ -101,6 +140,19 @@ export default function HeroSection() {
                 </div>
               </CardContent>
             </Card>
+          </div>
+          
+          {/* Easter Egg - Rosario Central */}
+          <div 
+            className="hidden group-hover:block absolute top-4 right-4 text-xs text-white/20 hover:text-yellow-400 transition-all duration-300 cursor-pointer select-none"
+            onClick={() => {
+              const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmESBTuW3PbOdCYDLo3N+t2QQAkTXrDr5axZGgxXs+rttWMeEUNgn9XyxnATBCeA0/Hes0UMAzuA0/HWgiUBKpLN9d2QQAkTXrDr5axZGg==')
+              audio.play().catch(() => {})
+              console.log('🟡🔵 ¡Dale Canalla! ¡Vamos Central! 🏆⚽')
+            }}
+            title="🟡🔵 Dale Central!"
+          >
+            RC
           </div>
           
           {/* Stats section */}

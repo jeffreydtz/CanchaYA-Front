@@ -177,6 +177,30 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* Rosario Central Easter Egg Animation */
+  @keyframes centralPride {
+    0% { 
+      transform: scale(1); 
+      filter: brightness(1);
+    }
+    25% { 
+      transform: scale(1.02); 
+      filter: brightness(1.2);
+    }
+    50% { 
+      transform: scale(1.01); 
+      filter: brightness(1.5);
+    }
+    75% { 
+      transform: scale(1.02); 
+      filter: brightness(1.2);
+    }
+    100% { 
+      transform: scale(1); 
+      filter: brightness(1);
+    }
+  }
   
   .bg-grid {
     background-image: 
