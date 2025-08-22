@@ -93,7 +93,7 @@ export default function CourtFilters() {
                 placeholder="Buscar canchas por nombre, ubicación o deporte..."
                 value={filters.search}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
-                className="pl-12 pr-4 h-12 text-lg border-2 border-muted focus:border-primary rounded-xl bg-white dark:bg-white text-black font-bold"
+                className="pl-12 pr-4 h-12 text-lg border-2 border-gray-200 focus:border-primary rounded-xl bg-white dark:bg-white text-black font-bold"
               />
             </div>
 
