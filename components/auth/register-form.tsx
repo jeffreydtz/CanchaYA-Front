@@ -88,6 +88,7 @@ export function RegisterForm() {
               placeholder="Tu nombre completo"
               {...register('nombre')}
               disabled={isLoading}
+              className="bg-white dark:bg-white text-black font-bold"
             />
             {errors.nombre && (
               <p className="text-sm text-red-600">{errors.nombre.message}</p>
@@ -102,6 +103,7 @@ export function RegisterForm() {
               placeholder="tu@email.com"
               {...register('email')}
               disabled={isLoading}
+              className="bg-white dark:bg-white text-black font-bold"
             />
             {errors.email && (
               <p className="text-sm text-red-600">{errors.email.message}</p>
@@ -116,6 +118,7 @@ export function RegisterForm() {
               placeholder="••••••••"
               {...register('password')}
               disabled={isLoading}
+              className="bg-white dark:bg-white text-black font-bold"
             />
             {errors.password && (
               <p className="text-sm text-red-600">{errors.password.message}</p>
@@ -130,6 +133,7 @@ export function RegisterForm() {
               placeholder="••••••••"
               {...register('confirmPassword')}
               disabled={isLoading}
+              className="bg-white dark:bg-white text-black font-bold"
             />
             {errors.confirmPassword && (
               <p className="text-sm text-red-600">{errors.confirmPassword.message}</p>

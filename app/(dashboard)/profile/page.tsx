@@ -178,7 +178,7 @@ function ProfileForm() {
                   id="nombre"
                   {...register('nombre')}
                   disabled={!isEditing || loading}
-                  className={`pl-10 ${!isEditing ? 'bg-gray-50 dark:bg-gray-800' : ''}`}
+                  className={`pl-10 bg-white dark:bg-white text-black font-bold ${!isEditing ? 'opacity-70' : ''}`}
                 />
               </div>
               {errors.nombre && (
@@ -195,7 +195,7 @@ function ProfileForm() {
                   type="email"
                   {...register('email')}
                   disabled={!isEditing || loading}
-                  className={`pl-10 ${!isEditing ? 'bg-gray-50 dark:bg-gray-800' : ''}`}
+                  className={`pl-10 bg-white dark:bg-white text-black font-bold ${!isEditing ? 'opacity-70' : ''}`}
                 />
               </div>
               {errors.email && (
@@ -227,7 +227,7 @@ function ProfileForm() {
                 <Input
                   value={user.id}
                   disabled
-                  className="pl-10 bg-gray-50 dark:bg-gray-800 text-gray-500"
+                  className="pl-10 bg-white dark:bg-white text-black font-bold opacity-70"
                 />
               </div>
             </div>
@@ -516,7 +516,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-24 pb-8">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="mb-8">

@@ -115,7 +115,7 @@ export function LoginForm() {
                     placeholder="tu@email.com"
                     {...register('email')}
                     disabled={isLoading}
-                    className={`h-12 pl-4 pr-4 text-base border-2 rounded-xl transition-all duration-300 ${
+                    className={`h-12 pl-4 pr-4 text-base border-2 rounded-xl transition-all duration-300 bg-white dark:bg-white text-black font-bold ${
                       errors.email 
                         ? 'border-red-300 focus:border-red-500' 
                         : email 
@@ -152,7 +152,7 @@ export function LoginForm() {
                     placeholder="••••••••"
                     {...register('password')}
                     disabled={isLoading}
-                    className={`h-12 pl-4 pr-12 text-base border-2 rounded-xl transition-all duration-300 ${
+                    className={`h-12 pl-4 pr-12 text-base border-2 rounded-xl transition-all duration-300 bg-white dark:bg-white text-black font-bold ${
                       errors.password 
                         ? 'border-red-300 focus:border-red-500' 
                         : password 
