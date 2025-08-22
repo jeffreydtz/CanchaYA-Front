@@ -251,7 +251,7 @@ export default function CourtDetail() {
                             </SelectItem>
                           ))
                         ) : (
-                          <SelectItem value="" disabled>
+                          <SelectItem value="none" disabled>
                             No hay horarios disponibles para este día
                           </SelectItem>
                         )}

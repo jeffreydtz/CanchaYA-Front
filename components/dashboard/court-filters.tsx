@@ -19,8 +19,8 @@ import apiClient, { Club, Deporte } from '@/lib/api-client'
 export default function CourtFilters() {
   const [filters, setFilters] = useState({
     search: '',
-    deporte: '',
-    club: '',
+    deporte: 'all',
+    club: 'all',
     fecha: '',
     hora: '',
     precio: [0, 10000],
@@ -67,8 +67,8 @@ export default function CourtFilters() {
   const clearFilters = () => {
     setFilters({
       search: '',
-      deporte: '',
-      club: '',
+      deporte: 'all',
+      club: 'all',
       fecha: '',
       hora: '',
       precio: [0, 10000],
@@ -77,7 +77,7 @@ export default function CourtFilters() {
   }
 
   const activeFiltersCount = Object.values(filters).filter(value => 
-    value !== '' && (Array.isArray(value) ? value[0] !== 0 || value[1] !== 10000 : value !== 0)
+    value !== '' && value !== 'all' && (Array.isArray(value) ? value[0] !== 0 || value[1] !== 10000 : value !== 0)
   ).length
 
   return (
@@ -107,7 +107,7 @@ export default function CourtFilters() {
                   </div>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos los deportes</SelectItem>
+                  <SelectItem value="all">Todos los deportes</SelectItem>
                   {deportes.map((deporte) => (
                     <SelectItem key={deporte.id} value={deporte.id}>
                       {deporte.nombre}
@@ -180,7 +180,7 @@ export default function CourtFilters() {
                     <SelectValue placeholder="Seleccionar club" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos los clubs</SelectItem>
+                    <SelectItem value="all">Todos los clubs</SelectItem>
                     {clubs.map((club) => (
                       <SelectItem key={club.id} value={club.id}>
                         {club.nombre}
