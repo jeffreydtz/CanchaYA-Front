@@ -6,7 +6,7 @@ import NotificationBell from '@/components/notifications/notification-bell'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { LogOut, User, Menu, X, Home, Calendar, Shield, Search } from 'lucide-react'
+import { LogOut, User, Menu, X, Home, Calendar, Shield, Search, Trophy, Bell } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useLanguage } from '@/lib/language-context'
 
@@ -28,7 +28,10 @@ export default function Navbar() {
     { href: '/', label: t('nav.home'), icon: Home },
     { href: '/buscar', label: 'Buscar', icon: Search },
     { href: '/mis-reservas', label: t('nav.reservations'), icon: Calendar },
-    ...(isAuthenticated ? [{ href: '/profile', label: t('nav.profile'), icon: User }] : []),
+    ...(isAuthenticated ? [
+      { href: '/competitivo', label: 'Competitivo', icon: Trophy },
+      { href: '/profile', label: t('nav.profile'), icon: User }
+    ] : []),
     ...(isAdmin ? [{ href: '/admin', label: t('nav.admin'), icon: Shield }] : []),
   ]
 
@@ -126,6 +129,18 @@ export default function Navbar() {
                       <Link href="/mis-reservas" className="flex items-center p-3 rounded-lg hover:bg-muted cursor-pointer">
                         <Calendar className="mr-3 h-5 w-5" />
                         <span className="font-medium">{t('nav.reservations')}</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/competitivo" className="flex items-center p-3 rounded-lg hover:bg-muted cursor-pointer">
+                        <Trophy className="mr-3 h-5 w-5" />
+                        <span className="font-medium">Competitivo</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/notificaciones" className="flex items-center p-3 rounded-lg hover:bg-muted cursor-pointer">
+                        <Bell className="mr-3 h-5 w-5" />
+                        <span className="font-medium">Notificaciones</span>
                       </Link>
                     </DropdownMenuItem>
                     {isAdmin && (

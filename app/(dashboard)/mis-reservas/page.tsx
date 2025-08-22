@@ -21,7 +21,9 @@ import {
   XCircle,
   Filter,
   Plus,
-  MoreVertical
+  MoreVertical,
+  Trophy,
+  Swords
 } from 'lucide-react'
 import { useAuth } from '@/components/auth/auth-context'
 import apiClient, { Reserva } from '@/lib/api-client'
@@ -48,33 +50,42 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 
-function ReservationCard({ reserva, onCancel }: { reserva: Reserva; onCancel: (id: string) => void }) {
+function ReservationCard({ reserva, onCancel, onConfirm }: { 
+  reserva: Reserva; 
+  onCancel: (id: string) => void;
+  onConfirm: (id: string) => void;
+}) {
   const [showCancelDialog, setShowCancelDialog] = useState(false)
   const [cancelling, setCancelling] = useState(false)
+  const [confirming, setConfirming] = useState(false)
 
   const getStatusIcon = (estado: string) => {
-    switch (estado) {
-      case 'CONFIRMADA':
+    switch (estado.toLowerCase()) {
+      case 'confirmada':
         return <CheckCircle className="h-5 w-5 text-green-500" />
-      case 'PENDIENTE':
+      case 'pendiente':
         return <AlertCircle className="h-5 w-5 text-yellow-500" />
-      case 'CANCELADA':
-        return <XCircle className="h-5 w-5 text-red-500" />
+      case 'liberada':
+        return <XCircle className="h-5 w-5 text-orange-500" />
+      case 'completada':
+        return <CheckCircle className="h-5 w-5 text-blue-500" />
       default:
         return <AlertCircle className="h-5 w-5 text-gray-500" />
     }
   }
 
   const getStatusColor = (estado: string) => {
-    switch (estado) {
-      case 'CONFIRMADA':
-        return 'bg-green-100 text-green-800 border-green-200'
-      case 'PENDIENTE':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-      case 'CANCELADA':
-        return 'bg-red-100 text-red-800 border-red-200'
+    switch (estado.toLowerCase()) {
+      case 'confirmada':
+        return 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-200 dark:border-green-800'
+      case 'pendiente':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-200 dark:border-yellow-800'
+      case 'liberada':
+        return 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/20 dark:text-orange-200 dark:border-orange-800'
+      case 'completada':
+        return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-200 dark:border-blue-800'
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200'
+        return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/20 dark:text-gray-200 dark:border-gray-800'
     }
   }
 
@@ -96,9 +107,34 @@ function ReservationCard({ reserva, onCancel }: { reserva: Reserva; onCancel: (i
     }
   }
 
-  const canCancel = reserva.estado === 'PENDIENTE' || reserva.estado === 'CONFIRMADA'
+  const handleConfirm = async () => {
+    setConfirming(true)
+    try {
+      const response = await apiClient.confirmarReserva(reserva.id)
+      if (response.error) {
+        toast.error(response.error)
+      } else {
+        toast.success('Reserva confirmada exitosamente')
+        onConfirm(reserva.id)
+      }
+    } catch (error) {
+      toast.error('Error al confirmar la reserva')
+    } finally {
+      setConfirming(false)
+    }
+  }
+
+  const canCancel = reserva.estado.toLowerCase() === 'pendiente' || reserva.estado.toLowerCase() === 'confirmada'
+  const canConfirm = reserva.estado.toLowerCase() === 'pendiente'
   const reservationDate = new Date(`${reserva.fecha}T${reserva.hora}`)
   const isUpcoming = reservationDate > new Date()
+  
+  // Tiempo límite para confirmación (2 horas antes del partido)
+  const confirmationDeadline = new Date(reservationDate.getTime() - 2 * 60 * 60 * 1000)
+  const canStillConfirm = new Date() < confirmationDeadline
+  const timeUntilDeadline = confirmationDeadline > new Date() ? confirmationDeadline.getTime() - new Date().getTime() : 0
+  const hoursUntilDeadline = Math.floor(timeUntilDeadline / (1000 * 60 * 60))
+  const minutesUntilDeadline = Math.floor((timeUntilDeadline % (1000 * 60 * 60)) / (1000 * 60))
 
   return (
     <>
@@ -182,17 +218,52 @@ function ReservationCard({ reserva, onCancel }: { reserva: Reserva; onCancel: (i
                 )}
               </div>
 
-              {/* Action Buttons */}
-              {isUpcoming && reserva.estado === 'CONFIRMADA' && (
-                <div className="flex gap-2 pt-2">
-                  <Button size="sm" variant="outline">
-                    Modificar
-                  </Button>
-                  <Button size="sm" variant="outline">
-                    Contactar Club
-                  </Button>
+              {/* Confirmation Deadline Warning */}
+              {canConfirm && isUpcoming && canStillConfirm && (
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3 mt-3">
+                  <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
+                    <AlertCircle className="h-4 w-4" />
+                    <span className="text-sm font-medium">
+                      ⏰ Confirma antes de: {hoursUntilDeadline}h {minutesUntilDeadline}m
+                    </span>
+                  </div>
+                  <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
+                    Tu reserva será liberada automáticamente si no confirmas tu asistencia
+                  </p>
                 </div>
               )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 pt-3">
+                {/* Confirm Button - Only for pending reservations within deadline */}
+                {canConfirm && isUpcoming && canStillConfirm && (
+                  <Button 
+                    size="sm" 
+                    onClick={handleConfirm}
+                    disabled={confirming}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    {confirming ? 'Confirmando...' : '✓ Confirmar Asistencia'}
+                  </Button>
+                )}
+                
+                {/* Create Challenge Button - Only for confirmed reservations */}
+                {reserva.estado.toLowerCase() === 'confirmada' && isUpcoming && (
+                  <Link href={`/competitivo?action=create&reservaId=${reserva.id}`}>
+                    <Button size="sm" variant="outline" className="border-purple-300 text-purple-700 hover:bg-purple-50 dark:border-purple-600 dark:text-purple-300 dark:hover:bg-purple-900/20">
+                      <Trophy className="h-3 w-3 mr-1" />
+                      Crear Desafío
+                    </Button>
+                  </Link>
+                )}
+                
+                {/* Standard action buttons for confirmed reservations */}
+                {reserva.estado.toLowerCase() === 'confirmada' && isUpcoming && (
+                  <Button size="sm" variant="outline">
+                    📞 Contactar Club
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </CardContent>
@@ -286,6 +357,14 @@ export default function MisReservasPage() {
 
   const handleCancelReservation = (reservaId: string) => {
     setReservas(prev => prev.filter(r => r.id !== reservaId))
+  }
+
+  const handleConfirmReservation = (reservaId: string) => {
+    setReservas(prev => prev.map(r => 
+      r.id === reservaId 
+        ? { ...r, estado: 'confirmada' as const, fechaConfirmacion: new Date().toISOString() }
+        : r
+    ))
   }
 
   if (!isAuthenticated) {

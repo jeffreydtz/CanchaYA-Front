@@ -140,6 +140,9 @@ export default function CanchaDetailPage() {
     
     setReserving(true)
     try {
+      // Note: debt validation would be handled by backend during reservation creation
+      // For now, we'll proceed with reservation and let backend handle debt validation
+      
       const response = await apiClient.createReserva({
         canchaId: canchaId,
         usuarioId: '', // Se manejará en el backend con el token
@@ -148,7 +151,7 @@ export default function CanchaDetailPage() {
       })
       
       if (response.data) {
-        toast.success('¡Reserva creada exitosamente!')
+        toast.success('¡Reserva creada exitosamente! Recuerda confirmarla 2 horas antes del partido.')
         router.push('/mis-reservas')
       } else {
         toast.error(response.error || 'Error al crear la reserva')

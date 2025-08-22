@@ -35,8 +35,10 @@ export interface User {
   nombre: string
   email: string
   telefono?: string
-  rol: 'JUGADOR' | 'ADMINISTRADOR'
+  rol: 'usuario' | 'admin'
   activo: boolean
+  deudaPendiente?: number
+  estadoCuenta?: 'activo' | 'bloqueado'
   fechaCreacion: string
 }
 
@@ -75,8 +77,10 @@ export interface Reserva {
   canchaId: string // UUID
   fecha: string // YYYY-MM-DD
   hora: string // HH:MM
-  estado: 'PENDIENTE' | 'CONFIRMADA' | 'CANCELADA'
+  estado: 'pendiente' | 'confirmada' | 'liberada' | 'completada'
   monto?: number
+  fechaConfirmacion?: string
+  notificacionesEnviadas?: boolean
   usuario?: User
   cancha?: Cancha
   fechaCreacion: string
@@ -109,11 +113,12 @@ export interface Desafio {
 
 export interface Deuda {
   id: string // UUID
-  usuarioId: string // UUID
+  personaId: string // UUID (actualizado según backend)
   monto: number
+  descripcion: string
   fechaVencimiento: string // YYYY-MM-DD
-  estado: 'PENDIENTE' | 'PAGADA' | 'VENCIDA'
-  descripcion?: string
+  pagada: boolean
+  fechaPago?: string
   usuario?: User
   fechaCreacion: string
 }
@@ -167,6 +172,47 @@ export interface RankingEquipo {
   derrotas: number
   puntos: number
   posicion: number
+}
+
+// Nuevas interfaces según documentación del backend
+export interface PerfilCompetitivo {
+  id: string
+  personaId: string
+  deporteId: string
+  elo: number
+  partidosJugados: number
+  partidosGanados: number
+  partidosPerdidos: number
+  partidosEmpatados: number
+  golesAFavor: number
+  golesEnContra: number
+  rachaActual: number
+  mejorRacha: number
+  deporte?: Deporte
+}
+
+export interface EloHistory {
+  id: string
+  perfilId: string
+  eloAnterior: number
+  eloNuevo: number
+  cambio: number
+  contexto: string
+  fecha: string
+}
+
+export interface NotificationSubscription {
+  channel: 'email'
+  address: string
+}
+
+export interface NotificationLog {
+  id: string
+  tipo: string
+  destinatario: string
+  estado: 'pendiente' | 'enviada' | 'fallida'
+  fechaEnvio?: string
+  contenido?: string
 }
 
 export interface ReporteReservas {
@@ -435,16 +481,19 @@ const apiClient = {
   getReserva: (id: string) => apiRequest<Reserva>(`/reservas/${id}`),
 
   /**
+   * Confirmar reserva - PATCH /reservas/{id}/confirmar
+   */
+  confirmarReserva: (id: string) =>
+    apiRequest<Reserva>(`/reservas/${id}/confirmar`, { 
+      method: 'PATCH'
+    }),
+
+  /**
    * Cancelar reserva - DELETE /reservas/{id}
    */
   cancelReserva: (id: string) =>
     apiRequest<void>(`/reservas/${id}`, { method: 'DELETE' }),
 
-  /**
-   * Confirmar reserva - PATCH /reservas/{id}/confirmar
-   */
-  confirmarReserva: (id: string) =>
-    apiRequest<Reserva>(`/reservas/${id}/confirmar`, { method: 'PATCH' }),
 
   // ===== EQUIPOS =====
   
@@ -727,6 +776,90 @@ const apiClient = {
    */
   getRankingEquipos: (deporteId: string) =>
     apiRequest<RankingEquipo[]>(`/competicion/equipos-ranking?deporteId=${deporteId}`),
+
+  // ===== FUNCIONALIDADES CRÍTICAS DEL BACKEND =====
+
+  /**
+   * Obtener perfil competitivo del usuario - GET /perfil-competitivo
+   */
+  getPerfilCompetitivo: () => apiRequest<PerfilCompetitivo[]>('/perfil-competitivo'),
+
+  /**
+   * Obtener ranking global - GET /ranking
+   */
+  getRanking: (deporteId?: string) => apiRequest<PerfilCompetitivo[]>(`/ranking${deporteId ? `?deporteId=${deporteId}` : ''}`),
+
+  /**
+   * Obtener perfil competitivo por usuario ID - GET /ranking/usuario/{id}
+   */
+  getRankingByUsuarioId: (id: string) => apiRequest<PerfilCompetitivo>(`/ranking/usuario/${id}`),
+
+  /**
+   * Listar desafíos - GET /desafios
+   */
+  getDesafios: () => apiRequest<Desafio[]>('/desafios'),
+
+  /**
+   * Crear desafío - POST /desafios
+   */
+  createDesafio: (data: {
+    reservaId: string;
+    invitadosDesafiadosIds: string[];
+    jugadoresCreadorIds?: string[];
+  }) =>
+    apiRequest<Desafio>('/desafios', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  /**
+   * Aceptar desafío - PATCH /desafios/{id}/aceptar
+   */
+  aceptarDesafio: (id: string) =>
+    apiRequest<Desafio>(`/desafios/${id}/aceptar`, { method: 'PATCH' }),
+
+  /**
+   * Rechazar desafío - PATCH /desafios/{id}/rechazar
+   */
+  rechazarDesafio: (id: string) =>
+    apiRequest<Desafio>(`/desafios/${id}/rechazar`, { method: 'PATCH' }),
+
+  /**
+   * Finalizar desafío con resultado - PATCH /desafios/{id}/finalizar
+   */
+  finalizarDesafio: (id: string, data: { 
+    golesCreador: number;
+    golesDesafiado: number;
+  }) =>
+    apiRequest<Desafio>(`/desafios/${id}/finalizar`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  /**
+   * Suscribirse a notificaciones - POST /notifs/subscribe
+   */
+  subscribeToNotifications: (data: NotificationSubscription) =>
+    apiRequest<void>('/notifs/subscribe', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  /**
+   * Test de email - POST /notifs/test/email
+   */
+  testEmail: () =>
+    apiRequest<void>('/notifs/test/email', { method: 'POST' }),
+
+  /**
+   * Obtener deudas del usuario - GET /deudas (endpoint puede variar)
+   */
+  getDeudas: () => apiRequest<Deuda[]>('/deudas'),
+
+  /**
+   * Verificar si el usuario puede hacer reservas - Validación personalizada
+   */
+  canUserReserve: () => apiRequest<{ canReserve: boolean; reason?: string }>('/usuarios/can-reserve'),
 }
 
 export default apiClient 

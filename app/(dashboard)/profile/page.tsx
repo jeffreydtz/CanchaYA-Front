@@ -28,10 +28,14 @@ import {
   Lock,
   Trophy,
   Clock,
-  Target
+  Target,
+  Award,
+  Zap,
+  TrendingUp,
+  BarChart3
 } from 'lucide-react'
 import { useAuth } from '@/components/auth/auth-context'
-import apiClient, { User as UserType, Reserva, DisponibilidadJugador } from '@/lib/api-client'
+import apiClient, { User as UserType, Reserva, DisponibilidadJugador, PerfilCompetitivo } from '@/lib/api-client'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useForm } from 'react-hook-form'
@@ -362,12 +366,163 @@ function RecentActivity() {
   )
 }
 
+function CompetitiveProfile() {
+  const [perfil, setPerfil] = useState<PerfilCompetitivo | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchPerfil = async () => {
+      try {
+        const response = await apiClient.getPerfilCompetitivo()
+        if (response.data) {
+          setPerfil(response.data)
+        }
+      } catch (error) {
+        console.error('Error fetching competitive profile:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchPerfil()
+  }, [])
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Trophy className="h-5 w-5" />
+            Perfil Competitivo
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <Skeleton className="h-20 w-full" />
+            <div className="grid grid-cols-2 gap-4">
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (!perfil) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Trophy className="h-5 w-5" />
+            Perfil Competitivo
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <Trophy className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+            <p className="text-gray-500 mb-4">No tienes perfil competitivo aún</p>
+            <p className="text-sm text-gray-400">Participa en partidos para generar tu ranking ELO</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Trophy className="h-5 w-5" />
+          Perfil Competitivo
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* ELO Rating */}
+        <div className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 p-6 rounded-xl border border-yellow-200/50 dark:border-yellow-700/30">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-100">Rating ELO</h3>
+              <p className="text-3xl font-black text-yellow-800 dark:text-yellow-200">{perfil.eloRating}</p>
+              <p className="text-sm text-yellow-700 dark:text-yellow-300">Posición: #{perfil.ranking}</p>
+            </div>
+            <div className="p-4 bg-yellow-500 rounded-full">
+              <Award className="h-8 w-8 text-white" />
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-4 rounded-lg border border-green-200/50 dark:border-green-700/30">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp className="h-4 w-4 text-green-600" />
+              <span className="text-sm font-medium text-green-900 dark:text-green-100">Victorias</span>
+            </div>
+            <p className="text-2xl font-bold text-green-800 dark:text-green-200">{perfil.partidosGanados}</p>
+          </div>
+
+          <div className="bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 p-4 rounded-lg border border-red-200/50 dark:border-red-700/30">
+            <div className="flex items-center gap-2 mb-2">
+              <Target className="h-4 w-4 text-red-600" />
+              <span className="text-sm font-medium text-red-900 dark:text-red-100">Derrotas</span>
+            </div>
+            <p className="text-2xl font-bold text-red-800 dark:text-red-200">{perfil.partidosPerdidos}</p>
+          </div>
+
+          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 p-4 rounded-lg border border-blue-200/50 dark:border-blue-700/30">
+            <div className="flex items-center gap-2 mb-2">
+              <BarChart3 className="h-4 w-4 text-blue-600" />
+              <span className="text-sm font-medium text-blue-900 dark:text-blue-100">Total</span>
+            </div>
+            <p className="text-2xl font-bold text-blue-800 dark:text-blue-200">{perfil.partidosJugados}</p>
+          </div>
+
+          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 p-4 rounded-lg border border-purple-200/50 dark:border-purple-700/30">
+            <div className="flex items-center gap-2 mb-2">
+              <Zap className="h-4 w-4 text-purple-600" />
+              <span className="text-sm font-medium text-purple-900 dark:text-purple-100">Win Rate</span>
+            </div>
+            <p className="text-2xl font-bold text-purple-800 dark:text-purple-200">
+              {perfil.partidosJugados > 0 ? Math.round((perfil.partidosGanados / perfil.partidosJugados) * 100) : 0}%
+            </p>
+          </div>
+        </div>
+
+        {/* Recent Performance */}
+        <div className="border-t pt-4">
+          <h4 className="font-semibold mb-3 text-gray-900 dark:text-gray-100">Rendimiento Reciente</h4>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-green-500 to-emerald-500 transition-all duration-500"
+                style={{ 
+                  width: `${perfil.partidosJugados > 0 ? (perfil.partidosGanados / perfil.partidosJugados) * 100 : 0}%` 
+                }}
+              />
+            </div>
+            <span className="text-sm text-gray-600 dark:text-gray-300">
+              {perfil.partidosGanados}/{perfil.partidosJugados}
+            </span>
+          </div>
+        </div>
+
+        {/* Last Updated */}
+        <div className="text-xs text-gray-500 dark:text-gray-400 pt-2 border-t">
+          Última actualización: {new Date(perfil.ultimaActualizacion).toLocaleDateString()}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 function ProfileStats() {
   const [stats, setStats] = useState({
     totalReservas: 0,
     reservasConfirmadas: 0,
     reservasPendientes: 0,
   })
+  const { user } = useAuth()
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -540,18 +695,54 @@ export default function ProfilePage() {
         </div>
 
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="profile">Perfil</TabsTrigger>
             <TabsTrigger value="activity">Actividad</TabsTrigger>
+            <TabsTrigger value="competitive">Competitivo</TabsTrigger>
             <TabsTrigger value="settings">Configuración</TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile" className="mt-6">
-            <ProfileForm />
+            <div className="space-y-6">
+              <ProfileForm />
+              {/* Debt Status */}
+              {user?.deudaPendiente && user.deudaPendiente > 0 && (
+                <Card className="border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-700">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-red-800 dark:text-red-200">
+                      <Target className="h-5 w-5" />
+                      Estado de Cuenta
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-red-900 dark:text-red-100">Deuda Pendiente:</span>
+                        <span className="text-2xl font-bold text-red-800 dark:text-red-200">
+                          ${user.deudaPendiente}
+                        </span>
+                      </div>
+                      <div className="p-3 bg-red-100 dark:bg-red-800/30 rounded-lg">
+                        <p className="text-sm text-red-800 dark:text-red-200">
+                          ⚠️ No podrás hacer nuevas reservas hasta saldar tu deuda pendiente.
+                        </p>
+                      </div>
+                      <Button className="w-full bg-red-600 hover:bg-red-700">
+                        Pagar Deuda
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </TabsContent>
 
           <TabsContent value="activity" className="mt-6">
             <RecentActivity />
+          </TabsContent>
+
+          <TabsContent value="competitive" className="mt-6">
+            <CompetitiveProfile />
           </TabsContent>
 
           <TabsContent value="settings" className="mt-6">
