@@ -46,6 +46,11 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-white dark:bg-gray-900">
       <Navbar />
       
+      {/* Theme Toggle - Fixed Position */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <ThemeToggle />
+      </div>
+      
       <main className="relative">
         <Suspense fallback={<LoadingSkeleton />}>
           {/* Hero section - full viewport */}

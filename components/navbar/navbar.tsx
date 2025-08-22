@@ -6,7 +6,7 @@ import NotificationBell from '@/components/notifications/notification-bell'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { LogOut, User, Menu, X, Home, Calendar, Shield } from 'lucide-react'
+import { LogOut, User, Menu, X, Home, Calendar, Shield, Search } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useLanguage } from '@/lib/language-context'
 
@@ -26,6 +26,7 @@ export default function Navbar() {
 
   const navigationItems = [
     { href: '/', label: t('nav.home'), icon: Home },
+    { href: '/buscar', label: 'Buscar', icon: Search },
     { href: '/mis-reservas', label: t('nav.reservations'), icon: Calendar },
     ...(isAuthenticated ? [{ href: '/profile', label: t('nav.profile'), icon: User }] : []),
     ...(isAdmin ? [{ href: '/admin', label: t('nav.admin'), icon: Shield }] : []),

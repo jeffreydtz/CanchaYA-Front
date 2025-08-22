@@ -38,6 +38,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Link from 'next/link'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 
 const profileSchema = z.object({
   nombre: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
@@ -139,11 +140,11 @@ function ProfileForm() {
             <Avatar className="h-24 w-24">
               <AvatarImage src="/placeholder-user.png" alt={user.nombre} />
               <AvatarFallback className="text-2xl bg-gradient-to-br from-primary to-secondary text-white">
-                {user.nombre.charAt(0).toUpperCase()}
+                {user?.nombre?.charAt(0)?.toUpperCase() || 'U'}
               </AvatarFallback>
             </Avatar>
             <div className="space-y-2">
-              <h3 className="text-xl font-semibold">{user.nombre}</h3>
+              <h3 className="text-xl font-semibold">{user?.nombre || 'Usuario'}</h3>
               <div className="flex items-center gap-2">
                 <Badge variant={user.rol === 'ADMINISTRADOR' ? 'default' : 'secondary'}>
                   {user.rol === 'ADMINISTRADOR' ? (
@@ -517,6 +518,11 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-24 pb-8">
+      {/* Theme Toggle - Fixed Position */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <ThemeToggle />
+      </div>
+      
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="mb-8">

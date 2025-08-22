@@ -291,6 +291,11 @@ const apiClient = {
   getCanchas: () => apiRequest<Cancha[]>('/canchas'),
 
   /**
+   * Obtener cancha por ID - GET /canchas/{id}
+   */
+  getCanchaById: (id: string) => apiRequest<Cancha>(`/canchas/${id}`),
+
+  /**
    * Crear cancha - POST /canchas
    */
   createCancha: (data: {

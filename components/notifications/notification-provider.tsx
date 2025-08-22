@@ -107,6 +107,10 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       setNotifications(notifications)
     } catch (error) {
       console.error('Error loading notifications:', error)
+      // Don't show error toast for 404, the API endpoint might not exist yet
+      if (!(error instanceof Error && error.message.includes('404'))) {
+        console.error('Non-404 error fetching notifications:', error)
+      }
     }
   }, [])
 

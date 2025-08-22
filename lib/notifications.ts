@@ -178,6 +178,10 @@ export async function getNotifications(token: string): Promise<NotificationData[
             },
         })
         if (response.error) {
+            // Don't throw for 404 errors, just return empty array
+            if (response.status === 404) {
+                return []
+            }
             throw new Error(response.error)
         }
         return response.data?.notifications || []

@@ -46,6 +46,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import Link from 'next/link'
 import Image from 'next/image'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 
 function ReservationCard({ reserva, onCancel }: { reserva: Reserva; onCancel: (id: string) => void }) {
   const [showCancelDialog, setShowCancelDialog] = useState(false)
@@ -330,6 +331,11 @@ export default function MisReservasPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-24 pb-8">
+      {/* Theme Toggle - Fixed Position */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <ThemeToggle />
+      </div>
+      
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="mb-8">
