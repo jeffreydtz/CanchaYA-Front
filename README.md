@@ -66,8 +66,6 @@ npm install
 Crea un archivo `.env.local` en la raíz del proyecto:
 
 ```env
-# Backend API URL
-NEXT_PUBLIC_BACKEND_URL=https://backend-cancha-ya-production.up.railway.app/api
 
 # Para desarrollo local (si ejecutas el backend localmente):
 # NEXT_PUBLIC_BACKEND_URL=http://localhost:3000/api
