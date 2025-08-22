@@ -55,7 +55,7 @@ export async function loginAction(
 
       // Redirect based on user role
       const userRole = response.data.user.rol
-      if (userRole === 'ADMINISTRADOR') {
+      if (userRole === 'admin') {
         redirect('/admin')
       } else {
         redirect('/')

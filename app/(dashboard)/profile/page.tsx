@@ -150,8 +150,8 @@ function ProfileForm() {
             <div className="space-y-2">
               <h3 className="text-xl font-semibold">{user?.nombre || 'Usuario'}</h3>
               <div className="flex items-center gap-2">
-                <Badge variant={user.rol === 'ADMINISTRADOR' ? 'default' : 'secondary'}>
-                  {user.rol === 'ADMINISTRADOR' ? (
+                <Badge variant={user.rol === 'admin' ? 'default' : 'secondary'}>
+                  {user.rol === 'admin' ? (
                     <>
                       <Shield className="h-3 w-3 mr-1" />
                       Administrador
@@ -345,7 +345,7 @@ function RecentActivity() {
                   </p>
                 </div>
                 <Badge 
-                  variant={reserva.estado === 'CONFIRMADA' ? 'default' : 'secondary'}
+                  variant={reserva.estado === 'confirmada' ? 'default' : 'secondary'}
                   className="text-xs"
                 >
                   {reserva.estado}
@@ -374,8 +374,8 @@ function CompetitiveProfile() {
     const fetchPerfil = async () => {
       try {
         const response = await apiClient.getPerfilCompetitivo()
-        if (response.data) {
-          setPerfil(response.data)
+        if (response.data && response.data.length > 0) {
+          setPerfil(response.data[0]) // Get first competitive profile
         }
       } catch (error) {
         console.error('Error fetching competitive profile:', error)
@@ -443,8 +443,8 @@ function CompetitiveProfile() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-100">Rating ELO</h3>
-              <p className="text-3xl font-black text-yellow-800 dark:text-yellow-200">{perfil.eloRating}</p>
-              <p className="text-sm text-yellow-700 dark:text-yellow-300">Posición: #{perfil.ranking}</p>
+              <p className="text-3xl font-black text-yellow-800 dark:text-yellow-200">{perfil.elo}</p>
+              <p className="text-sm text-yellow-700 dark:text-yellow-300">Deporte: {perfil.deporte?.nombre}</p>
             </div>
             <div className="p-4 bg-yellow-500 rounded-full">
               <Award className="h-8 w-8 text-white" />
@@ -509,7 +509,7 @@ function CompetitiveProfile() {
 
         {/* Last Updated */}
         <div className="text-xs text-gray-500 dark:text-gray-400 pt-2 border-t">
-          Última actualización: {new Date(perfil.ultimaActualizacion).toLocaleDateString()}
+          Perfil competitivo del deporte: {perfil.deporte?.nombre}
         </div>
       </CardContent>
     </Card>
@@ -533,8 +533,8 @@ function ProfileStats() {
           const reservas = response.data
           setStats({
             totalReservas: reservas.length,
-            reservasConfirmadas: reservas.filter(r => r.estado === 'CONFIRMADA').length,
-            reservasPendientes: reservas.filter(r => r.estado === 'PENDIENTE').length,
+            reservasConfirmadas: reservas.filter(r => r.estado === 'confirmada').length,
+            reservasPendientes: reservas.filter(r => r.estado === 'pendiente').length,
           })
         }
       } catch (error) {

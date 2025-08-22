@@ -56,7 +56,7 @@ export default function MyReservations() {
 
       if (response.data) {
         setReservations(prev => 
-          prev.map(r => r.id === reservationId ? { ...r, estado: 'CONFIRMADA' as const } : r)
+          prev.map(r => r.id === reservationId ? { ...r, estado: 'confirmada' as const } : r)
         )
         toast.success('Tu reserva ha sido confirmada exitosamente')
       }
@@ -85,25 +85,32 @@ export default function MyReservations() {
 
   const getStatusBadge = (status: Reserva['estado']) => {
     switch (status) {
-      case 'CONFIRMADA':
+      case 'confirmada':
         return (
           <Badge variant="default" className="bg-green-100 text-green-800">
             <CheckCircle className="w-3 h-3 mr-1" />
             Confirmada
           </Badge>
         )
-      case 'PENDIENTE':
+      case 'pendiente':
         return (
           <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
             <AlertCircle className="w-3 h-3 mr-1" />
             Pendiente
           </Badge>
         )
-      case 'CANCELADA':
+      case 'liberada':
         return (
           <Badge variant="destructive" className="bg-red-100 text-red-800">
             <XCircle className="w-3 h-3 mr-1" />
-            Cancelada
+            Liberada
+          </Badge>
+        )
+      case 'completada':
+        return (
+          <Badge variant="outline" className="bg-blue-100 text-blue-800">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Completada
           </Badge>
         )
       default:
@@ -233,7 +240,7 @@ export default function MyReservations() {
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
-                          {reservation.estado === 'PENDIENTE' && (
+                          {reservation.estado === 'pendiente' && (
                             <>
                               <Button
                                 size="sm"
@@ -252,7 +259,7 @@ export default function MyReservations() {
                               </Button>
                             </>
                           )}
-                          {reservation.estado === 'CONFIRMADA' && (
+                          {reservation.estado === 'confirmada' && (
                             <Button
                               size="sm"
                               variant="outline"
@@ -304,7 +311,7 @@ export default function MyReservations() {
                   </div>
 
                   <div className="flex space-x-2">
-                    {reservation.estado === 'PENDIENTE' && (
+                    {reservation.estado === 'pendiente' && (
                       <>
                         <Button
                           size="sm"
@@ -323,7 +330,7 @@ export default function MyReservations() {
                         </Button>
                       </>
                     )}
-                    {reservation.estado === 'CONFIRMADA' && (
+                    {reservation.estado === 'confirmada' && (
                       <Button
                         size="sm"
                         variant="outline"

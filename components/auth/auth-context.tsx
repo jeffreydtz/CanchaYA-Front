@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           id: decoded.id,
           nombre: decoded.nombre,
           email: decoded.email,
-          rol: decoded.rol === 'ADMINISTRADOR' ? 'ADMINISTRADOR' : 'JUGADOR',
+          rol: decoded.rol === 'ADMINISTRADOR' ? 'admin' : 'usuario',
           activo: decoded.activo ?? true,
           fechaCreacion: decoded.fechaCreacion ?? '',
         })
@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             id: decoded.id,
             nombre: decoded.nombre,
             email: decoded.email,
-            rol: decoded.rol === 'ADMINISTRADOR' ? 'ADMINISTRADOR' : 'JUGADOR',
+            rol: decoded.rol === 'ADMINISTRADOR' ? 'admin' : 'usuario',
             activo: decoded.activo ?? true,
             fechaCreacion: decoded.fechaCreacion ?? '',
           })
@@ -120,7 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: decoded.id,
         nombre: decoded.nombre,
         email: decoded.email,
-        rol: decoded.rol === 'ADMINISTRADOR' ? 'ADMINISTRADOR' : 'JUGADOR',
+        rol: decoded.rol === 'ADMINISTRADOR' ? 'admin' : 'usuario',
         activo: decoded.activo ?? true,
         fechaCreacion: decoded.fechaCreacion ?? '',
       })
@@ -131,7 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const isAuthenticated = !!user
-  const isAdmin = user?.rol === 'ADMINISTRADOR'
+  const isAdmin = user?.rol === 'admin'
 
   const value: AuthContextType = {
     user,

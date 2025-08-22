@@ -794,29 +794,8 @@ const apiClient = {
    */
   getRankingByUsuarioId: (id: string) => apiRequest<PerfilCompetitivo>(`/ranking/usuario/${id}`),
 
-  /**
-   * Listar desafíos - GET /desafios
-   */
-  getDesafios: () => apiRequest<Desafio[]>('/desafios'),
 
-  /**
-   * Crear desafío - POST /desafios
-   */
-  createDesafio: (data: {
-    reservaId: string;
-    invitadosDesafiadosIds: string[];
-    jugadoresCreadorIds?: string[];
-  }) =>
-    apiRequest<Desafio>('/desafios', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
 
-  /**
-   * Aceptar desafío - PATCH /desafios/{id}/aceptar
-   */
-  aceptarDesafio: (id: string) =>
-    apiRequest<Desafio>(`/desafios/${id}/aceptar`, { method: 'PATCH' }),
 
   /**
    * Rechazar desafío - PATCH /desafios/{id}/rechazar
@@ -824,17 +803,6 @@ const apiClient = {
   rechazarDesafio: (id: string) =>
     apiRequest<Desafio>(`/desafios/${id}/rechazar`, { method: 'PATCH' }),
 
-  /**
-   * Finalizar desafío con resultado - PATCH /desafios/{id}/finalizar
-   */
-  finalizarDesafio: (id: string, data: { 
-    golesCreador: number;
-    golesDesafiado: number;
-  }) =>
-    apiRequest<Desafio>(`/desafios/${id}/finalizar`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    }),
 
   /**
    * Suscribirse a notificaciones - POST /notifs/subscribe
@@ -851,10 +819,6 @@ const apiClient = {
   testEmail: () =>
     apiRequest<void>('/notifs/test/email', { method: 'POST' }),
 
-  /**
-   * Obtener deudas del usuario - GET /deudas (endpoint puede variar)
-   */
-  getDeudas: () => apiRequest<Deuda[]>('/deudas'),
 
   /**
    * Verificar si el usuario puede hacer reservas - Validación personalizada

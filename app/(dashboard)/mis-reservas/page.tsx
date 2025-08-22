@@ -392,7 +392,7 @@ export default function MisReservasPage() {
       case 'upcoming':
         return reservas.filter(r => {
           const reservationDate = new Date(`${r.fecha}T${r.hora}`)
-          return reservationDate > now && (r.estado === 'CONFIRMADA' || r.estado === 'PENDIENTE')
+          return reservationDate > now && (r.estado === 'confirmada' || r.estado === 'pendiente')
         })
       case 'past':
         return reservas.filter(r => {
@@ -400,7 +400,7 @@ export default function MisReservasPage() {
           return reservationDate <= now
         })
       case 'cancelled':
-        return reservas.filter(r => r.estado === 'CANCELADA')
+        return reservas.filter(r => r.estado === 'liberada')
       default:
         return reservas
     }
@@ -449,7 +449,7 @@ export default function MisReservasPage() {
           <Card>
             <CardContent className="p-6 text-center">
               <div className="text-2xl font-bold text-green-600 mb-1">
-                {reservas.filter(r => r.estado === 'CONFIRMADA').length}
+                {reservas.filter(r => r.estado === 'confirmada').length}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-300">Confirmadas</div>
             </CardContent>
@@ -457,7 +457,7 @@ export default function MisReservasPage() {
           <Card>
             <CardContent className="p-6 text-center">
               <div className="text-2xl font-bold text-yellow-600 mb-1">
-                {reservas.filter(r => r.estado === 'PENDIENTE').length}
+                {reservas.filter(r => r.estado === 'pendiente').length}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-300">Pendientes</div>
             </CardContent>
@@ -465,7 +465,7 @@ export default function MisReservasPage() {
           <Card>
             <CardContent className="p-6 text-center">
               <div className="text-2xl font-bold text-red-600 mb-1">
-                {reservas.filter(r => r.estado === 'CANCELADA').length}
+                {reservas.filter(r => r.estado === 'liberada').length}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-300">Canceladas</div>
             </CardContent>
@@ -526,6 +526,7 @@ export default function MisReservasPage() {
                     key={reserva.id}
                     reserva={reserva}
                     onCancel={handleCancelReservation}
+                    onConfirm={handleConfirmReservation}
                   />
                 ))}
               </div>

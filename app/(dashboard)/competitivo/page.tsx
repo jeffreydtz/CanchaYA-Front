@@ -46,7 +46,7 @@ function LeaderBoard() {
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        const response = await apiClient.getPerfilesCompetitivos()
+        const response = await apiClient.getPerfilCompetitivo()
         if (response.data) {
           setPerfiles(response.data)
         }
@@ -137,13 +137,13 @@ function LeaderBoard() {
                   <Avatar className="h-12 w-12">
                     <AvatarImage src="/placeholder-user.png" />
                     <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white">
-                      {perfil.usuario?.nombre?.charAt(0)?.toUpperCase() || 'U'}
+                      {perfil.personaId?.charAt(0)?.toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   
                   <div className="flex-1">
                     <p className="font-semibold text-gray-900 dark:text-white">
-                      {perfil.usuario?.nombre || 'Usuario'}
+                      Jugador #{position}
                     </p>
                     <p className="text-sm text-gray-600 dark:text-gray-300">
                       {perfil.partidosJugados} partidos • {perfil.partidosGanados}W/{perfil.partidosPerdidos}L
@@ -152,7 +152,7 @@ function LeaderBoard() {
                   
                   <div className="text-right">
                     <div className="text-2xl font-bold text-primary">
-                      {perfil.eloRating}
+                      {perfil.elo}
                     </div>
                     <div className="text-xs text-gray-500">
                       ELO
@@ -252,7 +252,7 @@ function ActiveChallenges() {
               <div key={desafio.id} className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-200/50 dark:border-blue-700/30">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-semibold text-blue-900 dark:text-blue-100">
-                    {desafio.equipoDesafiante?.nombre} vs {desafio.equipoDesafiado?.nombre}
+                    {desafio.equipoRetador?.nombre} vs {desafio.equipoRival?.nombre || 'Esperando rival'}
                   </h3>
                   <Badge 
                     variant={desafio.estado === 'ACEPTADO' ? 'default' : 'secondary'}
@@ -265,15 +265,15 @@ function ActiveChallenges() {
                 <div className="space-y-2 text-sm text-blue-800 dark:text-blue-200">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
-                    <span>{new Date(desafio.fechaPropuesta).toLocaleDateString()}</span>
+                    <span>{new Date(desafio.fecha).toLocaleDateString()}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4" />
-                    <span>{desafio.horaPropuesta}</span>
+                    <span>{desafio.hora}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
-                    <span>{desafio.cancha?.nombre}</span>
+                    <span>{desafio.deporte?.nombre}</span>
                   </div>
                 </div>
 
