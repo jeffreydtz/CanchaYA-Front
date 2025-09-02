@@ -72,19 +72,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return false
       }
       
-      if (response.data?.token) {
+      // Check for both token and accessToken fields
+      const authToken = response.data?.token || response.data?.accessToken
+      
+      if (authToken) {
         console.log('Token received, saving...')
         
         // Clear any existing cookie first
         deleteCookie('token')
         
         // Set cookie using the utility function
-        setCookie('token', response.data.token, 7)
+        setCookie('token', authToken, 7)
         
         console.log('Cookie set, decoding token...')
         
         try {
-          const decoded: any = jwtDecode(response.data.token)
+          const decoded: any = jwtDecode(authToken)
           console.log('Token decoded successfully:', decoded)
           console.log('Token fields - id:', decoded.id, 'nombre:', decoded.nombre, 'email:', decoded.email, 'rol:', decoded.rol)
           
@@ -116,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return true
         } catch (e) {
           console.error('Error decoding token:', e)
-          console.error('Token that failed to decode:', response.data.token)
+          console.error('Token that failed to decode:', authToken)
           setUser(null)
           deleteCookie('token')
           toast.error('Token inválido')

@@ -299,7 +299,7 @@ const apiClient = {
    * Login - POST /auth/login
    */
   login: (credentials: LoginCredentials) =>
-    apiRequest<{ token: string; user: User }>('/auth/login', {
+    apiRequest<{ accessToken: string; token?: string; user?: User }>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
     }),
