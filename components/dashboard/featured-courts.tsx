@@ -102,9 +102,9 @@ function CourtCard({ court, index }: CourtCardProps) {
           <h3 className="font-bold text-lg text-gray-900 dark:text-white line-clamp-2 group-hover:text-primary transition-colors">
             {court.nombre}
           </h3>
-          <div className="flex items-center bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded-lg ml-2">
-            <Star className="h-4 w-4 text-yellow-500 fill-current" />
-            <span className="text-sm font-bold text-yellow-700 dark:text-yellow-400 ml-1">4.8</span>
+          <div className="flex items-center bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg ml-2">
+            <Star className="h-4 w-4 text-blue-500 fill-current" />
+            <span className="text-sm font-bold text-blue-700 dark:text-blue-400 ml-1">4.8</span>
           </div>
         </div>
 

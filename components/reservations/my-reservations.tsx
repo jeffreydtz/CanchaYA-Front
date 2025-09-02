@@ -95,7 +95,7 @@ export default function MyReservations() {
         )
       case 'pendiente':
         return (
-          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+          <Badge variant="secondary" className="bg-orange-100 text-orange-800">
             <AlertCircle className="w-3 h-3 mr-1" />
             Pendiente
           </Badge>

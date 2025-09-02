@@ -87,7 +87,7 @@ function CourtCard({ cancha }: { cancha: Cancha }) {
                 <span>24/7</span>
               </div>
               <div className="flex items-center">
-                <Star className="h-4 w-4 mr-1 text-yellow-500" />
+                <Star className="h-4 w-4 mr-1 text-blue-500" />
                 <span>4.5</span>
               </div>
             </div>

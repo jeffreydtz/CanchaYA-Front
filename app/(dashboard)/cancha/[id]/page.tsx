@@ -238,11 +238,11 @@ export default function CanchaDetailPage() {
                     {cancha.deporte?.nombre}
                   </Badge>
                   <div className="flex items-center gap-1">
-                    <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                    <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                    <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                    <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                    <Star className="h-4 w-4 text-yellow-400/50" />
+                    <Star className="h-4 w-4 text-blue-400 fill-current" />
+                    <Star className="h-4 w-4 text-blue-400 fill-current" />
+                    <Star className="h-4 w-4 text-blue-400 fill-current" />
+                    <Star className="h-4 w-4 text-blue-400 fill-current" />
+                    <Star className="h-4 w-4 text-blue-400/50" />
                     <span className="text-white/90 text-sm ml-1">4.5 (128)</span>
                   </div>
                 </div>
@@ -458,7 +458,7 @@ export default function CanchaDetailPage() {
                         <span>Duración:</span>
                         <span className="font-semibold">1 hora</span>
                       </div>
-                      <Separator className="bg-amber-200 dark:bg-amber-700" />
+                      <Separator className="bg-blue-200 dark:bg-blue-700" />
                       <div className="flex justify-between items-center font-bold text-lg text-amber-900 dark:text-amber-100">
                         <span>Total:</span>
                         <span className="text-2xl">${cancha.precioPorHora}</span>

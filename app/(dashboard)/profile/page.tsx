@@ -439,14 +439,14 @@ function CompetitiveProfile() {
       </CardHeader>
       <CardContent className="space-y-6">
         {/* ELO Rating */}
-        <div className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 p-6 rounded-xl border border-yellow-200/50 dark:border-yellow-700/30">
+        <div className="bg-gradient-to-r from-blue-50 to-slate-50 dark:from-blue-900/20 dark:to-slate-900/20 p-6 rounded-xl border border-blue-200/50 dark:border-blue-700/30">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-100">Rating ELO</h3>
-              <p className="text-3xl font-black text-yellow-800 dark:text-yellow-200">{perfil.elo}</p>
-              <p className="text-sm text-yellow-700 dark:text-yellow-300">Deporte: {perfil.deporte?.nombre}</p>
+              <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100">Rating ELO</h3>
+              <p className="text-3xl font-black text-blue-800 dark:text-blue-200">{perfil.elo}</p>
+              <p className="text-sm text-blue-700 dark:text-blue-300">Deporte: {perfil.deporte?.nombre}</p>
             </div>
-            <div className="p-4 bg-yellow-500 rounded-full">
+            <div className="p-4 bg-blue-500 rounded-full">
               <Award className="h-8 w-8 text-white" />
             </div>
           </div>
@@ -586,8 +586,8 @@ function ProfileStats() {
       title: 'Pendientes',
       value: stats.reservasPendientes,
       icon: Clock,
-      color: 'text-yellow-600',
-      bgColor: 'bg-yellow-100',
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-100',
     },
   ]
 

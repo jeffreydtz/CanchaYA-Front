@@ -106,9 +106,9 @@ function LeaderBoard() {
             perfiles.slice(0, 10).map((perfil, index) => {
               const position = index + 1
               const medalColor = 
-                position === 1 ? 'text-yellow-500' :
+                position === 1 ? 'text-blue-500' :
                 position === 2 ? 'text-gray-400' :
-                position === 3 ? 'text-amber-600' : 'text-gray-600'
+                position === 3 ? 'text-slate-600' : 'text-gray-600'
               
               const MedalIcon = position <= 3 ? Medal : Trophy
 
@@ -117,13 +117,13 @@ function LeaderBoard() {
                   key={perfil.id} 
                   className={`flex items-center gap-4 p-4 rounded-lg transition-all hover:shadow-md ${
                     position <= 3 
-                      ? 'bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border border-yellow-200/50 dark:border-yellow-700/30'
+                      ? 'bg-gradient-to-r from-blue-50 to-slate-50 dark:from-blue-900/20 dark:to-slate-900/20 border border-blue-200/50 dark:border-blue-700/30'
                       : 'bg-gray-50 dark:bg-gray-800'
                   }`}
                 >
                   <div className="flex items-center gap-3">
                     <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
-                      position <= 3 ? 'bg-gradient-to-br from-yellow-400 to-amber-500' : 'bg-gray-200 dark:bg-gray-700'
+                      position <= 3 ? 'bg-gradient-to-br from-blue-400 to-slate-500' : 'bg-gray-200 dark:bg-gray-700'
                     }`}>
                       <span className={`font-bold text-sm ${
                         position <= 3 ? 'text-white' : 'text-gray-600 dark:text-gray-300'
