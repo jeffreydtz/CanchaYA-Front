@@ -91,7 +91,7 @@ export default function HeroSection() {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Animated background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary via-secondary to-accent opacity-90" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary via-secondary to-accent" />
       <div className="absolute inset-0 bg-grid opacity-20" />
       
       {/* Floating orbs */}
@@ -99,7 +99,7 @@ export default function HeroSection() {
       <div className="absolute top-40 right-32 w-24 h-24 bg-accent/20 rounded-full blur-lg floating" style={{ animationDelay: '1s' }} />
       <div className="absolute bottom-32 left-1/3 w-40 h-40 bg-secondary/10 rounded-full blur-2xl floating" style={{ animationDelay: '2s' }} />
       
-      <div className="container mx-auto px-4 relative z-10">
+      <div className="container mx-auto px-4 relative z-10 pt-20">
         <div className={`max-w-5xl mx-auto text-center ${mounted ? 'fade-in-up' : 'opacity-0'}`}>
           {/* Main heading */}
           <div className="mb-8">

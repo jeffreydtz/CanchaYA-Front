@@ -123,8 +123,8 @@ export default function CourtFilters() {
               <DatePicker
                 date={filters.fecha}
                 onDateChange={(date) => handleFilterChange('fecha', date)}
-                placeholder="dd/mm/yyyy"
-                className="h-12 min-w-[160px] rounded-xl border-2 border-muted"
+                placeholder="Seleccionar fecha"
+                className="h-12 min-w-[200px] rounded-xl border-2 border-muted"
                 disablePastDates
               />
 

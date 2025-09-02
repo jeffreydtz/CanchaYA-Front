@@ -55,7 +55,7 @@ export function DatePicker({
         <Button
           variant="outline"
           className={cn(
-            "justify-start text-left font-normal",
+            "justify-start text-left font-normal min-w-[200px]",
             !date && "text-muted-foreground",
             className
           )}
@@ -73,6 +73,7 @@ export function DatePicker({
           disabled={isDateDisabledFn}
           initialFocus
           weekStartsOn={1}
+          className="rounded-md border-0 shadow-none"
         />
       </PopoverContent>
     </Popover>
