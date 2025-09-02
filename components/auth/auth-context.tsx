@@ -41,11 +41,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Garantiza que los campos requeridos existan
         const userData: User = {
           id: decoded.id,
-          nombre: decoded.nombre,
+          nombre: decoded.nombre || decoded.email.split('@')[0] || 'Usuario',
           email: decoded.email,
-          rol: decoded.rol === 'ADMINISTRADOR' ? 'admin' : 'usuario',
+          rol: decoded.rol === 'ADMINISTRADOR' || decoded.rol === 'admin' ? 'admin' : 'usuario',
           activo: decoded.activo ?? true,
-          fechaCreacion: decoded.fechaCreacion ?? '',
+          fechaCreacion: decoded.fechaCreacion ?? new Date().toISOString(),
         }
         setUser(userData)
       } catch (e) {
@@ -91,19 +91,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.log('Token decoded successfully:', decoded)
           console.log('Token fields - id:', decoded.id, 'nombre:', decoded.nombre, 'email:', decoded.email, 'rol:', decoded.rol)
           
-          // Validate that required fields exist
-          if (!decoded.id || !decoded.nombre || !decoded.email) {
+          // Validate that required fields exist (nombre is optional, can use email as fallback)
+          if (!decoded.id || !decoded.email) {
             console.error('Missing required fields in token:', decoded)
             throw new Error('Token missing required fields')
           }
           
           const userData: User = {
             id: decoded.id,
-            nombre: decoded.nombre,
+            nombre: decoded.nombre || decoded.email.split('@')[0] || 'Usuario',
             email: decoded.email,
-            rol: decoded.rol === 'ADMINISTRADOR' ? 'admin' : 'usuario',
+            rol: decoded.rol === 'ADMINISTRADOR' || decoded.rol === 'admin' ? 'admin' : 'usuario',
             activo: decoded.activo ?? true,
-            fechaCreacion: decoded.fechaCreacion ?? '',
+            fechaCreacion: decoded.fechaCreacion ?? new Date().toISOString(),
           }
           
           setUser(userData)
@@ -167,11 +167,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       const userData: User = {
         id: decoded.id,
-        nombre: decoded.nombre,
+        nombre: decoded.nombre || decoded.email.split('@')[0] || 'Usuario',
         email: decoded.email,
-        rol: decoded.rol === 'ADMINISTRADOR' ? 'admin' : 'usuario',
+        rol: decoded.rol === 'ADMINISTRADOR' || decoded.rol === 'admin' ? 'admin' : 'usuario',
         activo: decoded.activo ?? true,
-        fechaCreacion: decoded.fechaCreacion ?? '',
+        fechaCreacion: decoded.fechaCreacion ?? new Date().toISOString(),
       }
       
       setUser(userData)
