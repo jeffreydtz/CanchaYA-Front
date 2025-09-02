@@ -14,6 +14,7 @@ import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import apiClient, { Cancha } from '@/lib/api-client'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useSearch } from '@/lib/search-context'
 
 interface CourtCardProps {
   court: Cancha
@@ -196,7 +197,7 @@ function CourtSkeleton({ index }: { index: number }) {
 }
 
 export default function FeaturedCourts() {
-  const [courts, setCourts] = useState<Cancha[]>([])
+  const { filteredCourts, allCourts, setAllCourts, setFilteredCourts, isLoading: searchLoading } = useSearch()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -207,14 +208,17 @@ export default function FeaturedCourts() {
       try {
         const response = await apiClient.getCanchas()
         if (response.data) {
-          setCourts(response.data)
+          setAllCourts(response.data)
+          setFilteredCourts(response.data) // Initially show all courts
         } else {
           setError('No se pudieron cargar las canchas')
-          setCourts([])
+          setAllCourts([])
+          setFilteredCourts([])
         }
       } catch {
         setError('Error al cargar las canchas')
-        setCourts([])
+        setAllCourts([])
+        setFilteredCourts([])
       } finally {
         setLoading(false)
       }
@@ -234,6 +238,14 @@ export default function FeaturedCourts() {
             Descubre las instalaciones deportivas más populares y mejor calificadas. 
             Reserva con confianza en canchas verificadas y de alta calidad.
           </p>
+          {!loading && allCourts.length > 0 && (
+            <p className="text-sm text-muted-foreground mt-4">
+              {filteredCourts.length === allCourts.length 
+                ? `Mostrando todas las ${allCourts.length} canchas disponibles`
+                : `Mostrando ${filteredCourts.length} de ${allCourts.length} canchas`
+              }
+            </p>
+          )}
         </div>
 
         {/* Content */}
@@ -258,17 +270,20 @@ export default function FeaturedCourts() {
               </Button>
             </div>
           </div>
-        ) : courts.length === 0 ? (
+        ) : filteredCourts.length === 0 ? (
           <div className="text-center py-16">
             <div className="max-w-md mx-auto">
               <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
                 <MapPin className="h-12 w-12 text-gray-400" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                No hay canchas disponibles
+                {allCourts.length === 0 ? 'No hay canchas disponibles' : 'No se encontraron canchas'}
               </h3>
               <p className="text-gray-600 dark:text-gray-300 mb-6">
-                Parece que no hay canchas registradas en este momento.
+                {allCourts.length === 0 
+                  ? 'Parece que no hay canchas registradas en este momento.'
+                  : 'No hay canchas que coincidan con los filtros aplicados. Intenta cambiar los criterios de búsqueda.'
+                }
               </p>
               <Button variant="outline">
                 Contactar Soporte
@@ -278,7 +293,7 @@ export default function FeaturedCourts() {
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-              {courts.map((court, index) => (
+              {filteredCourts.map((court, index) => (
                 <CourtCard key={court.id} court={court} index={index} />
               ))}
             </div>

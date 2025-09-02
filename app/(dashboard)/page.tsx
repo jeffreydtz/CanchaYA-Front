@@ -12,6 +12,7 @@ import Navbar from '@/components/navbar/navbar'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { LanguageToggle } from '@/components/ui/language-toggle'
 import { FooterEasterEgg } from '@/components/easter-egg/footer-easter-egg'
+import { SearchProvider } from '@/lib/search-context'
 
 function LoadingSkeleton() {
   return (
@@ -43,35 +44,36 @@ function LoadingSkeleton() {
 
 export default function DashboardPage() {
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
-      <Navbar />
-      
-      {/* Theme Toggle - Fixed Position */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <ThemeToggle />
-      </div>
-      
-      <main className="relative">
-        <Suspense fallback={<LoadingSkeleton />}>
-          {/* Hero section - full viewport */}
-          <HeroSection />
-          
-          {/* Content sections */}
-          <div className="relative z-10 bg-white dark:bg-gray-900">
-            <div className="container mx-auto px-4 pt-40 pb-16 space-y-16">
-              {/* Search and filters */}
-              <section className="animate-fade-in-up">
-                <CourtFilters />
-              </section>
-              
-              {/* Featured courts */}
-              <section className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-                <FeaturedCourts />
-              </section>
+    <SearchProvider>
+      <div className="min-h-screen bg-white dark:bg-gray-900">
+        <Navbar />
+        
+        {/* Theme Toggle - Fixed Position */}
+        <div className="fixed bottom-6 right-6 z-50">
+          <ThemeToggle />
+        </div>
+        
+        <main className="relative">
+          <Suspense fallback={<LoadingSkeleton />}>
+            {/* Hero section - full viewport */}
+            <HeroSection />
+            
+            {/* Content sections */}
+            <div className="relative z-10 bg-white dark:bg-gray-900">
+              <div className="container mx-auto px-4 pt-40 pb-16 space-y-16">
+                {/* Search and filters */}
+                <section className="animate-fade-in-up">
+                  <CourtFilters />
+                </section>
+                
+                {/* Featured courts */}
+                <section className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+                  <FeaturedCourts />
+                </section>
+              </div>
             </div>
-          </div>
-        </Suspense>
-      </main>
+          </Suspense>
+        </main>
       
       {/* Footer */}
       <footer className="bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
@@ -160,6 +162,7 @@ export default function DashboardPage() {
           </div>
         </div>
       </footer>
-    </div>
+      </div>
+    </SearchProvider>
   )
 }

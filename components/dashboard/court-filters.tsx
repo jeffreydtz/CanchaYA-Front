@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -17,17 +17,11 @@ import { Badge } from '@/components/ui/badge'
 import { Slider } from '@/components/ui/slider'
 import apiClient, { Club, Deporte } from '@/lib/api-client'
 import { formatDateForInput } from '@/lib/date-utils'
+import { useSearch } from '@/lib/search-context'
+import { toast } from 'sonner'
 
 export default function CourtFilters() {
-  const [filters, setFilters] = useState({
-    search: '',
-    deporte: 'all',
-    club: 'all',
-    fecha: undefined as Date | undefined,
-    hora: '',
-    precio: [0, 10000],
-    rating: 0,
-  })
+  const { filters, setFilters, applyFilters, clearFilters: clearSearchFilters, isLoading } = useSearch()
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [clubs, setClubes] = useState<Club[]>([])
   const [deportes, setDeportes] = useState<Deporte[]>([])
@@ -63,19 +57,18 @@ export default function CourtFilters() {
   }
 
   const handleSearch = () => {
-    console.log('Searching with filters:', filters)
+    try {
+      applyFilters()
+      toast.success('Filtros aplicados correctamente')
+    } catch (error) {
+      toast.error('Error al aplicar filtros')
+      console.error('Error applying filters:', error)
+    }
   }
 
   const clearFilters = () => {
-    setFilters({
-      search: '',
-      deporte: 'all',
-      club: 'all',
-      fecha: undefined,
-      hora: '',
-      precio: [0, 10000],
-      rating: 0,
-    })
+    clearSearchFilters()
+    toast.info('Filtros limpiados')
   }
 
   const activeFiltersCount = Object.values(filters).filter(value => {
@@ -132,9 +125,10 @@ export default function CourtFilters() {
                 onClick={handleSearch} 
                 size="lg" 
                 className="h-12 px-8 rounded-xl font-semibold"
+                disabled={isLoading}
               >
-                <Search className="h-5 w-5 mr-2" />
-                Buscar
+                <Search className={`h-5 w-5 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                {isLoading ? 'Buscando...' : 'Buscar'}
               </Button>
             </div>
           </div>
@@ -263,9 +257,10 @@ export default function CourtFilters() {
                 onClick={handleSearch} 
                 size="lg" 
                 className="px-12 rounded-xl font-semibold"
+                disabled={isLoading}
               >
-                <Filter className="h-5 w-5 mr-2" />
-                Aplicar Filtros
+                <Filter className={`h-5 w-5 mr-2 ${isLoading ? 'animate-pulse' : ''}`} />
+                {isLoading ? 'Aplicando...' : 'Aplicar Filtros'}
               </Button>
             </div>
           </CardContent>
@@ -277,25 +272,25 @@ export default function CourtFilters() {
         <div className="flex flex-wrap gap-2 animate-fade-in">
           {filters.deporte && filters.deporte !== 'all' && (
             <Badge variant="secondary" className="px-3 py-1">
-              {filters.deporte}
+              {deportes.find(d => d.id === filters.deporte)?.nombre || filters.deporte}
               <X 
                 className="h-3 w-3 ml-2 cursor-pointer" 
-                onClick={() => handleFilterChange('deporte', '')}
+                onClick={() => handleFilterChange('deporte', 'all')}
               />
             </Badge>
           )}
           {filters.club && filters.club !== 'all' && (
             <Badge variant="secondary" className="px-3 py-1">
-              {filters.club}
+              {clubs.find(c => c.id === filters.club)?.nombre || filters.club}
               <X 
                 className="h-3 w-3 ml-2 cursor-pointer" 
-                onClick={() => handleFilterChange('club', '')}
+                onClick={() => handleFilterChange('club', 'all')}
               />
             </Badge>
           )}
           {filters.fecha && (
             <Badge variant="secondary" className="px-3 py-1">
-              {formatDateForInput(filters.fecha)}
+              📅 {formatDateForInput(filters.fecha)}
               <X 
                 className="h-3 w-3 ml-2 cursor-pointer" 
                 onClick={() => handleFilterChange('fecha', undefined)}
@@ -304,10 +299,28 @@ export default function CourtFilters() {
           )}
           {filters.hora && (
             <Badge variant="secondary" className="px-3 py-1">
-              {filters.hora}
+              ⏰ {filters.hora === 'morning' ? 'Mañana' : filters.hora === 'afternoon' ? 'Tarde' : filters.hora === 'evening' ? 'Noche' : filters.hora}
               <X 
                 className="h-3 w-3 ml-2 cursor-pointer" 
                 onClick={() => handleFilterChange('hora', '')}
+              />
+            </Badge>
+          )}
+          {(filters.precio[0] !== 0 || filters.precio[1] !== 10000) && (
+            <Badge variant="secondary" className="px-3 py-1">
+              💰 ${filters.precio[0].toLocaleString()} - ${filters.precio[1].toLocaleString()}
+              <X 
+                className="h-3 w-3 ml-2 cursor-pointer" 
+                onClick={() => handleFilterChange('precio', [0, 10000])}
+              />
+            </Badge>
+          )}
+          {filters.rating > 0 && (
+            <Badge variant="secondary" className="px-3 py-1">
+              ⭐ {filters.rating}+ estrellas
+              <X 
+                className="h-3 w-3 ml-2 cursor-pointer" 
+                onClick={() => handleFilterChange('rating', 0)}
               />
             </Badge>
           )}
