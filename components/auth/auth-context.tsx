@@ -39,14 +39,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const decoded: any = jwtDecode(token)
         // Garantiza que los campos requeridos existan
-        setUser({
+        const userData: User = {
           id: decoded.id,
           nombre: decoded.nombre,
           email: decoded.email,
           rol: decoded.rol === 'ADMINISTRADOR' ? 'admin' : 'usuario',
           activo: decoded.activo ?? true,
           fechaCreacion: decoded.fechaCreacion ?? '',
-        })
+        }
+        setUser(userData)
       } catch (e) {
         setUser(null)
         deleteCookie('token')
@@ -93,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             throw new Error('Token missing required fields')
           }
           
-          const userData = {
+          const userData: User = {
             id: decoded.id,
             nombre: decoded.nombre,
             email: decoded.email,
@@ -161,7 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const decoded: any = jwtDecode(token)
       console.log('Token decoded successfully:', decoded)
       
-      const userData = {
+      const userData: User = {
         id: decoded.id,
         nombre: decoded.nombre,
         email: decoded.email,
