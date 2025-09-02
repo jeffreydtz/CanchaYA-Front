@@ -9,6 +9,7 @@ import { Calendar, Clock, MapPin, CheckCircle, XCircle, AlertCircle, DollarSign 
 import { useAuth } from '@/components/auth/auth-context'
 import { toast } from 'sonner'
 import apiClient, { Reserva } from '@/lib/api-client'
+import { formatDate, formatTime } from '@/lib/date-utils'
 import Link from 'next/link'
 
 export default function MyReservations() {
@@ -122,19 +123,6 @@ export default function MyReservations() {
     }
   }
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('es-ES', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  }
-
-  const formatTime = (timeString: string) => {
-    return timeString.substring(0, 5) // Extract HH:MM from HH:MM:SS
-  }
 
   if (!isAuthenticated) {
     return (
@@ -222,7 +210,7 @@ export default function MyReservations() {
                       <TableCell>
                         <div className="flex items-center">
                           <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                          {formatDate(reservation.fecha)}
+                          {formatDate(reservation.fecha, 'LONG')}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -295,10 +283,10 @@ export default function MyReservations() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="grid grid-cols-1 gap-4 mb-4">
                     <div className="flex items-center">
                       <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                      <span className="text-sm">{formatDate(reservation.fecha)}</span>
+                      <span className="text-sm">{formatDate(reservation.fecha, 'LONG')}</span>
                     </div>
                     <div className="flex items-center">
                       <Clock className="w-4 h-4 mr-2 text-gray-400" />

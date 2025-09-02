@@ -11,17 +11,19 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent } from '@/components/ui/card'
+import { DatePicker } from '@/components/ui/date-picker'
 import { Search, Filter, MapPin, Clock, Sliders, X, Star } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Slider } from '@/components/ui/slider'
 import apiClient, { Club, Deporte } from '@/lib/api-client'
+import { formatDateForInput } from '@/lib/date-utils'
 
 export default function CourtFilters() {
   const [filters, setFilters] = useState({
     search: '',
     deporte: 'all',
     club: 'all',
-    fecha: '',
+    fecha: undefined as Date | undefined,
     hora: '',
     precio: [0, 10000],
     rating: 0,
@@ -56,7 +58,7 @@ export default function CourtFilters() {
     fetchData()
   }, [])
 
-  const handleFilterChange = (key: string, value: string | number | number[]) => {
+  const handleFilterChange = (key: string, value: string | number | number[] | Date | undefined) => {
     setFilters(prev => ({ ...prev, [key]: value }))
   }
 
@@ -69,16 +71,18 @@ export default function CourtFilters() {
       search: '',
       deporte: 'all',
       club: 'all',
-      fecha: '',
+      fecha: undefined,
       hora: '',
       precio: [0, 10000],
       rating: 0,
     })
   }
 
-  const activeFiltersCount = Object.values(filters).filter(value => 
-    value !== '' && value !== 'all' && (Array.isArray(value) ? value[0] !== 0 || value[1] !== 10000 : value !== 0)
-  ).length
+  const activeFiltersCount = Object.values(filters).filter(value => {
+    if (value === '' || value === 'all' || value === undefined || value === null) return false
+    if (Array.isArray(value)) return value[0] !== 0 || value[1] !== 10000
+    return value !== 0
+  }).length
 
   return (
     <div className="w-full space-y-6 mb-8">
@@ -93,7 +97,7 @@ export default function CourtFilters() {
                 placeholder="Buscar canchas por nombre, ubicación o deporte..."
                 value={filters.search}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
-                className="pl-12 pr-4 h-12 text-lg border-2 border-gray-200 focus:border-primary rounded-xl bg-white dark:bg-white text-black font-bold"
+                className="pl-12 pr-4 h-12 text-lg border-2 border-gray-200 focus:border-primary rounded-xl"
               />
             </div>
 
@@ -116,11 +120,12 @@ export default function CourtFilters() {
                 </SelectContent>
               </Select>
 
-              <Input
-                type="date"
-                value={filters.fecha}
-                onChange={(e) => handleFilterChange('fecha', e.target.value)}
-                className="h-12 min-w-[160px] rounded-xl border-2 border-muted bg-white dark:bg-white text-black font-bold"
+              <DatePicker
+                date={filters.fecha}
+                onDateChange={(date) => handleFilterChange('fecha', date)}
+                placeholder="dd/mm/yyyy"
+                className="h-12 min-w-[160px] rounded-xl border-2 border-muted"
+                disablePastDates
               />
 
               <Button 
@@ -290,10 +295,10 @@ export default function CourtFilters() {
           )}
           {filters.fecha && (
             <Badge variant="secondary" className="px-3 py-1">
-              {filters.fecha}
+              {formatDateForInput(filters.fecha)}
               <X 
                 className="h-3 w-3 ml-2 cursor-pointer" 
-                onClick={() => handleFilterChange('fecha', '')}
+                onClick={() => handleFilterChange('fecha', undefined)}
               />
             </Badge>
           )}

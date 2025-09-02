@@ -58,7 +58,7 @@ export default function DashboardPage() {
           
           {/* Content sections */}
           <div className="relative z-10 bg-white dark:bg-gray-900">
-            <div className="container mx-auto px-4 pt-32 pb-16 space-y-16">
+            <div className="container mx-auto px-4 pt-40 pb-16 space-y-16">
               {/* Search and filters */}
               <section className="animate-fade-in-up">
                 <CourtFilters />

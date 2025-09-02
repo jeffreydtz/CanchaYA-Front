@@ -8,16 +8,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { MapPin, DollarSign, Users } from 'lucide-react'
+import { MapPin, DollarSign, Users, Calendar as CalendarIcon, Clock } from 'lucide-react'
 import { toast } from 'sonner'
 import apiClient, { Cancha, Horario } from '@/lib/api-client'
+import { formatDateForInput, getWeekdayName, isDateDisabled, getNextAvailableDate, formatDate } from '@/lib/date-utils'
 import Image from 'next/image'
 
 export default function CourtDetail() {
   const params = useParams()
   const { user, isAuthenticated } = useAuth()
   const [court, setCourt] = useState<Cancha | null>(null)
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(getNextAvailableDate())
   const [selectedTime, setSelectedTime] = useState<string>('')
   const [horarios, setHorarios] = useState<Horario[]>([])
   const [loading, setLoading] = useState(true)
@@ -77,7 +78,7 @@ export default function CourtDetail() {
   const getAvailableHours = () => {
     if (!selectedDate || horarios.length === 0) return []
 
-    const dayName = selectedDate.toLocaleDateString('es-ES', { weekday: 'long' }).toLowerCase()
+    const dayName = getWeekdayName(selectedDate)
     const daySchedule = horarios.find(h => h.dia.toLowerCase() === dayName)
     
     if (!daySchedule) return []
@@ -111,7 +112,7 @@ export default function CourtDetail() {
 
     setReserving(true)
     try {
-      const dateString = selectedDate.toISOString().split('T')[0]
+      const dateString = formatDateForInput(selectedDate)
       const response = await apiClient.createReserva({
         usuarioId: user.id,
         canchaId: court.id,
@@ -126,7 +127,7 @@ export default function CourtDetail() {
 
       if (response.data) {
         toast.success('¡Reserva creada exitosamente!')
-        setSelectedDate(undefined)
+        setSelectedDate(getNextAvailableDate())
         setSelectedTime('')
       }
     } catch (error) {
@@ -226,19 +227,31 @@ export default function CourtDetail() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Seleccionar fecha</label>
+                  <label className="block text-sm font-medium mb-2 flex items-center gap-2">
+                    <CalendarIcon className="h-4 w-4" />
+                    Seleccionar fecha
+                  </label>
                   <Calendar
                     mode="single"
                     selected={selectedDate}
                     onSelect={setSelectedDate}
-                    disabled={(date) => date < new Date()}
-                    className="rounded-md border"
+                    disabled={(date) => isDateDisabled(date, { disablePastDates: true })}
+                    className="rounded-md border-0"
+                    weekStartsOn={1}
                   />
+                  {selectedDate && (
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Fecha seleccionada: {formatDate(selectedDate, 'LONG')}
+                    </p>
+                  )}
                 </div>
 
                 {selectedDate && (
                   <div>
-                    <label className="block text-sm font-medium mb-2">Seleccionar hora</label>
+                    <label className="block text-sm font-medium mb-2 flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      Seleccionar hora
+                    </label>
                     <Select value={selectedTime} onValueChange={setSelectedTime}>
                       <SelectTrigger>
                         <SelectValue placeholder="Elige un horario" />
@@ -257,6 +270,11 @@ export default function CourtDetail() {
                         )}
                       </SelectContent>
                     </Select>
+                    {availableHours.length === 0 && (
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Este día no tiene horarios configurados para esta cancha.
+                      </p>
+                    )}
                   </div>
                 )}
 
