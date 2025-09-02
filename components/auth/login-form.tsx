@@ -46,16 +46,33 @@ export function LoginForm() {
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
+    console.log('Form submit - attempting login for:', data.email)
+    
     try {
       const success = await login(data.email, data.password)
+      console.log('Login attempt result:', success)
+      
       if (success) {
         toast.success('¡Bienvenido de vuelta!', {
           description: 'Has iniciado sesión exitosamente.',
         })
-        router.push('/')
+        
+        console.log('Login successful, redirecting in 1.5 seconds...')
+        // Wait a bit longer for auth context to update, then redirect
+        setTimeout(() => {
+          console.log('Redirecting to home page...')
+          if (typeof window !== 'undefined') {
+            window.location.href = '/'
+          }
+        }, 1500)
+      } else {
+        console.log('Login failed - credentials invalid or server error')
+        toast.error('Error al iniciar sesión', {
+          description: 'Verifica tus credenciales e intenta nuevamente.',
+        })
       }
     } catch (error) {
-      console.error('Login error:', error)
+      console.error('Login error in form:', error)
       toast.error('Error al iniciar sesión', {
         description: 'Verifica tus credenciales e intenta nuevamente.',
       })

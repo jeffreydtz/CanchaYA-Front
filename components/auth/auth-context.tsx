@@ -60,33 +60,70 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setLoading(true)
+      console.log('Attempting login for:', email)
+      
       const response = await apiClient.login({ email, password })
+      console.log('Login response:', response)
+      
       if (response.error) {
+        console.error('Login error from API:', response.error)
         toast.error(response.error)
         return false
       }
+      
       if (response.data?.token) {
-        document.cookie = `token=${response.data.token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Strict`;
+        console.log('Token received, saving...')
+        
+        // Clear any existing cookie first
+        deleteCookie('token')
+        
+        // Set cookie using the utility function
         setCookie('token', response.data.token, 7)
+        
+        console.log('Cookie set, decoding token...')
+        
         try {
           const decoded: any = jwtDecode(response.data.token)
-          setUser({
+          console.log('Token decoded successfully:', decoded)
+          console.log('Token fields - id:', decoded.id, 'nombre:', decoded.nombre, 'email:', decoded.email, 'rol:', decoded.rol)
+          
+          // Validate that required fields exist
+          if (!decoded.id || !decoded.nombre || !decoded.email) {
+            console.error('Missing required fields in token:', decoded)
+            throw new Error('Token missing required fields')
+          }
+          
+          const userData = {
             id: decoded.id,
             nombre: decoded.nombre,
             email: decoded.email,
             rol: decoded.rol === 'ADMINISTRADOR' ? 'admin' : 'usuario',
             activo: decoded.activo ?? true,
             fechaCreacion: decoded.fechaCreacion ?? '',
-          })
+          }
+          
+          setUser(userData)
+          console.log('User set in context successfully:', userData)
+          
+          // Verify cookie was saved
+          setTimeout(() => {
+            const savedToken = getCookie('token')
+            console.log('Cookie verification - token saved:', savedToken ? 'YES' : 'NO')
+          }, 100)
+          
+          toast.success('¡Bienvenido!')
+          return true
         } catch (e) {
+          console.error('Error decoding token:', e)
+          console.error('Token that failed to decode:', response.data.token)
           setUser(null)
           deleteCookie('token')
           toast.error('Token inválido')
           return false
         }
-        toast.success('¡Bienvenido!')
-        return true
       }
+      
+      console.error('No token in response')
       toast.error('Error en la autenticación')
       return false
     } catch (error) {
@@ -109,22 +146,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = async () => {
     if (typeof window === 'undefined') return
+    
+    console.log('Refreshing user...')
     const token = getCookie('token')
+    console.log('Token from cookie:', token ? 'exists' : 'not found')
+    
     if (!token) {
+      console.log('No token found, setting user to null')
       setUser(null)
       return
     }
+    
     try {
       const decoded: any = jwtDecode(token)
-      setUser({
+      console.log('Token decoded successfully:', decoded)
+      
+      const userData = {
         id: decoded.id,
         nombre: decoded.nombre,
         email: decoded.email,
         rol: decoded.rol === 'ADMINISTRADOR' ? 'admin' : 'usuario',
         activo: decoded.activo ?? true,
         fechaCreacion: decoded.fechaCreacion ?? '',
-      })
+      }
+      
+      setUser(userData)
+      console.log('User refreshed:', userData)
     } catch (e) {
+      console.error('Error decoding token on refresh:', e)
       setUser(null)
       deleteCookie('token')
     }
