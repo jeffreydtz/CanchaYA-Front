@@ -49,6 +49,7 @@ import {
 import Link from 'next/link'
 import Image from 'next/image'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import Navbar from '@/components/navbar/navbar'
 
 function ReservationCard({ reserva, onCancel, onConfirm }: { 
   reserva: Reserva; 
@@ -409,13 +410,15 @@ export default function MisReservasPage() {
   const filteredReservas = filterReservas(reservas, activeTab)
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-24 pb-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Navbar />
+      
       {/* Theme Toggle - Fixed Position */}
       <div className="fixed bottom-6 right-6 z-50">
         <ThemeToggle />
       </div>
       
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 pt-24 pb-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">

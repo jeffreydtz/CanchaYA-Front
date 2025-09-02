@@ -43,6 +43,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Link from 'next/link'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import Navbar from '@/components/navbar/navbar'
 
 const profileSchema = z.object({
   nombre: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
@@ -672,13 +673,15 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-24 pb-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Navbar />
+      
       {/* Theme Toggle - Fixed Position */}
       <div className="fixed bottom-6 right-6 z-50">
         <ThemeToggle />
       </div>
       
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 pt-24 pb-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-2">

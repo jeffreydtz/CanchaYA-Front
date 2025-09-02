@@ -98,9 +98,9 @@ export default function DashboardPage() {
               <h4 className="font-semibold text-gray-900 dark:text-white">Enlaces Rápidos</h4>
               <ul className="space-y-2 text-sm">
                 <li><Link href="/" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Inicio</Link></li>
-                <li><Link href="/canchas" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Canchas</Link></li>
-                <li><Link href="/reservas" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Mis Reservas</Link></li>
-                <li><Link href="/soporte" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Soporte</Link></li>
+                <li><Link href="/buscar" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Buscar Canchas</Link></li>
+                <li><Link href="/mis-reservas" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Mis Reservas</Link></li>
+                <li><Link href="/competitivo" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">Competitivo</Link></li>
               </ul>
             </div>
             
@@ -108,10 +108,10 @@ export default function DashboardPage() {
             <div className="space-y-4">
               <h4 className="font-semibold text-gray-900 dark:text-white">Deportes</h4>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/futbol" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">⚽ Fútbol</Link></li>
-                <li><Link href="/tenis" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">🎾 Tenis</Link></li>
-                <li><Link href="/paddle" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">🏓 Paddle</Link></li>
-                <li><Link href="/basquet" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">🏀 Básquet</Link></li>
+                <li><Link href="/buscar" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">⚽ Fútbol</Link></li>
+                <li><Link href="/buscar" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">🎾 Tenis</Link></li>
+                <li><Link href="/buscar" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">🏓 Paddle</Link></li>
+                <li><Link href="/buscar" className="text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">🏀 Básquet</Link></li>
               </ul>
             </div>
             
@@ -140,7 +140,7 @@ export default function DashboardPage() {
                 <Link href="/terms" className="text-sm text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
                   Términos
                 </Link>
-                <Link href="/cookies" className="text-sm text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
+                <Link href="/terms" className="text-sm text-gray-600 dark:text-gray-300 hover:text-primary transition-colors">
                   Cookies
                 </Link>
               </div>
