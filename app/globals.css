@@ -80,11 +80,13 @@
   }
   
   .glass-effect {
-    @apply bg-white/80 backdrop-blur-md border border-white/30 shadow-xl;
+    @apply bg-white/90 backdrop-blur-md border border-white/40 shadow-xl;
+    background-color: rgba(255, 255, 255, 0.95) !important;
   }
   
   .dark .glass-effect {
-    @apply bg-gray-800/80 backdrop-blur-md border border-gray-600/30 shadow-xl;
+    @apply bg-gray-800/90 backdrop-blur-md border border-gray-600/40 shadow-xl;
+    background-color: rgba(31, 41, 55, 0.95) !important;
   }
   
   .card-hover {

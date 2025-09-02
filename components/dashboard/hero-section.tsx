@@ -131,7 +131,7 @@ export default function HeroSection() {
 
           {/* Feature cards */}
           <div className={`grid grid-cols-1 md:grid-cols-3 gap-8 ${mounted ? 'fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
-            <Card className="glass-effect group hover:scale-105 transition-all duration-300 card-hover min-h-[280px] flex flex-col justify-center">
+            <Card className="glass-effect group hover:scale-105 transition-all duration-300 card-hover min-h-[280px] flex flex-col justify-center bg-white/95 dark:bg-gray-800/95">
               <CardContent className="p-8 text-center flex flex-col justify-center h-full">
                 <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-500 to-slate-600 rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-300 shadow-xl">
                   <Zap className="h-10 w-10 text-white" />
@@ -144,7 +144,7 @@ export default function HeroSection() {
               </CardContent>
             </Card>
             
-            <Card className="glass-effect group hover:scale-105 transition-all duration-300 card-hover min-h-[280px] flex flex-col justify-center">
+            <Card className="glass-effect group hover:scale-105 transition-all duration-300 card-hover min-h-[280px] flex flex-col justify-center bg-white/95 dark:bg-gray-800/95">
               <CardContent className="p-8 text-center flex flex-col justify-center h-full">
                 <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-slate-600 to-gray-500 rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-300 shadow-xl">
                   <Shield className="h-10 w-10 text-white" />
@@ -157,7 +157,7 @@ export default function HeroSection() {
               </CardContent>
             </Card>
             
-            <Card className="glass-effect group hover:scale-105 transition-all duration-300 card-hover min-h-[280px] flex flex-col justify-center">
+            <Card className="glass-effect group hover:scale-105 transition-all duration-300 card-hover min-h-[280px] flex flex-col justify-center bg-white/95 dark:bg-gray-800/95">
               <CardContent className="p-8 text-center flex flex-col justify-center h-full">
                 <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-gray-500 to-blue-500 rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-300 shadow-xl">
                   <Trophy className="h-10 w-10 text-white" />
