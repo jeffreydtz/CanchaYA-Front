@@ -91,7 +91,7 @@ export default function HeroSection() {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Animated background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary via-secondary to-accent" />
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-slate-600 to-gray-400 dark:from-blue-600 dark:via-slate-700 dark:to-gray-600" />
       <div className="absolute inset-0 bg-grid opacity-20" />
       
       {/* Floating orbs */}
@@ -131,41 +131,41 @@ export default function HeroSection() {
 
           {/* Feature cards */}
           <div className={`grid grid-cols-1 md:grid-cols-3 gap-8 ${mounted ? 'fade-in-up' : 'opacity-0'}`} style={{ animationDelay: '0.4s' }}>
-            <Card className="glass-effect group hover:scale-105 transition-all duration-300 card-hover border-white/20 min-h-[280px] flex flex-col justify-center">
+            <Card className="glass-effect group hover:scale-105 transition-all duration-300 card-hover min-h-[280px] flex flex-col justify-center">
               <CardContent className="p-8 text-center flex flex-col justify-center h-full">
-                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-300 shadow-xl">
+                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-500 to-slate-600 rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-300 shadow-xl">
                   <Zap className="h-10 w-10 text-white" />
                 </div>
                 <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">{t('feature.instant.title')}</h3>
-                <p className="text-gray-700 dark:text-white/80 leading-relaxed text-base">{t('feature.instant.desc')}</p>
-                <div className="mt-4 flex items-center justify-center text-primary-300">
-                  <div className="w-8 h-0.5 bg-primary-300 rounded-full"></div>
+                <p className="text-gray-800 dark:text-gray-200 leading-relaxed text-base">{t('feature.instant.desc')}</p>
+                <div className="mt-4 flex items-center justify-center text-blue-500">
+                  <div className="w-8 h-0.5 bg-blue-500 rounded-full"></div>
                 </div>
               </CardContent>
             </Card>
             
-            <Card className="glass-effect group hover:scale-105 transition-all duration-300 card-hover border-white/20 min-h-[280px] flex flex-col justify-center">
+            <Card className="glass-effect group hover:scale-105 transition-all duration-300 card-hover min-h-[280px] flex flex-col justify-center">
               <CardContent className="p-8 text-center flex flex-col justify-center h-full">
-                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-secondary to-accent rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-300 shadow-xl">
+                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-slate-600 to-gray-500 rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-300 shadow-xl">
                   <Shield className="h-10 w-10 text-white" />
                 </div>
                 <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">{t('feature.secure.title')}</h3>
-                <p className="text-gray-700 dark:text-white/80 leading-relaxed text-base">{t('feature.secure.desc')}</p>
-                <div className="mt-4 flex items-center justify-center text-secondary-300">
-                  <div className="w-8 h-0.5 bg-secondary-300 rounded-full"></div>
+                <p className="text-gray-800 dark:text-gray-200 leading-relaxed text-base">{t('feature.secure.desc')}</p>
+                <div className="mt-4 flex items-center justify-center text-slate-600">
+                  <div className="w-8 h-0.5 bg-slate-600 rounded-full"></div>
                 </div>
               </CardContent>
             </Card>
             
-            <Card className="glass-effect group hover:scale-105 transition-all duration-300 card-hover border-white/20 min-h-[280px] flex flex-col justify-center">
+            <Card className="glass-effect group hover:scale-105 transition-all duration-300 card-hover min-h-[280px] flex flex-col justify-center">
               <CardContent className="p-8 text-center flex flex-col justify-center h-full">
-                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-accent to-primary rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-300 shadow-xl">
+                <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-gray-500 to-blue-500 rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-300 shadow-xl">
                   <Trophy className="h-10 w-10 text-white" />
                 </div>
                 <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">{t('feature.premium.title')}</h3>
-                <p className="text-gray-700 dark:text-white/80 leading-relaxed text-base">{t('feature.premium.desc')}</p>
-                <div className="mt-4 flex items-center justify-center text-accent-300">
-                  <div className="w-8 h-0.5 bg-accent-300 rounded-full"></div>
+                <p className="text-gray-800 dark:text-gray-200 leading-relaxed text-base">{t('feature.premium.desc')}</p>
+                <div className="mt-4 flex items-center justify-center text-gray-600">
+                  <div className="w-8 h-0.5 bg-gray-600 rounded-full"></div>
                 </div>
               </CardContent>
             </Card>
