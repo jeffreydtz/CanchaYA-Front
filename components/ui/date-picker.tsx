@@ -65,7 +65,7 @@ export function DatePicker({
           {date ? formatDate(date, 'DISPLAY') : placeholder}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
+      <PopoverContent className="w-auto p-0 max-w-none" align="start" side="bottom">
         <Calendar
           mode="single"
           selected={date}
@@ -73,7 +73,7 @@ export function DatePicker({
           disabled={isDateDisabledFn}
           initialFocus
           weekStartsOn={1}
-          className="rounded-md border-0 shadow-none"
+          className="rounded-lg border-0 shadow-none min-w-[320px]"
         />
       </PopoverContent>
     </Popover>
