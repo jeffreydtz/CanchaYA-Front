@@ -31,13 +31,13 @@ export function ThemeToggle() {
         <Switch
           checked={isDark}
           onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
-          className="transition-all duration-700 ease-in-out data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-slate-600 data-[state=checked]:to-slate-800 data-[state=unchecked]:bg-gradient-to-r data-[state=unchecked]:from-amber-300 data-[state=unchecked]:to-yellow-400 shadow-inner"
+          className="transition-all duration-700 ease-in-out data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-slate-600 data-[state=checked]:to-slate-800 data-[state=unchecked]:bg-gradient-to-r data-[state=unchecked]:from-blue-300 data-[state=unchecked]:to-blue-400 shadow-inner"
         />
         {/* Glow effect */}
         <div className={`absolute inset-0 rounded-full transition-all duration-700 pointer-events-none ${
           isDark
             ? 'bg-gradient-to-r from-blue-500/20 to-indigo-500/20 blur-sm'
-            : 'bg-gradient-to-r from-amber-300/30 to-yellow-400/30 blur-sm'
+            : 'bg-gradient-to-r from-blue-300/30 to-blue-400/30 blur-sm'
         }`} />
       </div>
       <Moon className={`h-5 w-5 transition-all duration-700 ease-in-out ${
