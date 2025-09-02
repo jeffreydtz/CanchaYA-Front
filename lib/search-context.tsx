@@ -47,6 +47,25 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
   const applyFilters = useCallback(() => {
     setIsLoading(true)
     
+    // Check if any filters are actually applied
+    const hasActiveFilters = 
+      filters.search.trim() !== '' ||
+      filters.deporte !== 'all' ||
+      filters.club !== 'all' ||
+      filters.fecha !== undefined ||
+      filters.hora !== '' ||
+      filters.precio[0] !== 0 ||
+      filters.precio[1] !== 10000 ||
+      filters.rating > 0
+
+    // If no filters are applied, show all available courts
+    if (!hasActiveFilters) {
+      const availableCourts = allCourts.filter(court => court.disponible)
+      setFilteredCourts(availableCourts)
+      setIsLoading(false)
+      return
+    }
+
     let filtered = [...allCourts]
 
     // Filter by search text
@@ -70,11 +89,13 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
       filtered = filtered.filter(court => court.clubId === filters.club)
     }
 
-    // Filter by price range
-    filtered = filtered.filter(court => {
-      const price = court.precioPorHora || 0
-      return price >= filters.precio[0] && price <= filters.precio[1]
-    })
+    // Filter by price range (only if not default range)
+    if (filters.precio[0] !== 0 || filters.precio[1] !== 10000) {
+      filtered = filtered.filter(court => {
+        const price = court.precioPorHora || 0
+        return price >= filters.precio[0] && price <= filters.precio[1]
+      })
+    }
 
     // Filter by rating (if we had ratings data)
     if (filters.rating > 0) {

@@ -209,7 +209,9 @@ export default function FeaturedCourts() {
         const response = await apiClient.getCanchas()
         if (response.data) {
           setAllCourts(response.data)
-          setFilteredCourts(response.data) // Initially show all courts
+          // Initially show all available courts
+          const availableCourts = response.data.filter(court => court.disponible)
+          setFilteredCourts(availableCourts)
         } else {
           setError('No se pudieron cargar las canchas')
           setAllCourts([])

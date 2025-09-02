@@ -59,7 +59,21 @@ export default function CourtFilters() {
   const handleSearch = () => {
     try {
       applyFilters()
-      toast.success('Filtros aplicados correctamente')
+      // Check if any filters are applied for different toast messages
+      const hasActiveFilters = 
+        filters.search.trim() !== '' ||
+        filters.deporte !== 'all' ||
+        filters.club !== 'all' ||
+        filters.fecha !== undefined ||
+        filters.hora !== '' ||
+        (filters.precio[0] !== 0 || filters.precio[1] !== 10000) ||
+        filters.rating > 0
+
+      if (hasActiveFilters) {
+        toast.success('Filtros aplicados correctamente')
+      } else {
+        toast.info('Mostrando todas las canchas disponibles')
+      }
     } catch (error) {
       toast.error('Error al aplicar filtros')
       console.error('Error applying filters:', error)
@@ -76,6 +90,15 @@ export default function CourtFilters() {
     if (Array.isArray(value)) return value[0] !== 0 || value[1] !== 10000
     return value !== 0
   }).length
+
+  const hasActiveFilters = 
+    filters.search.trim() !== '' ||
+    filters.deporte !== 'all' ||
+    filters.club !== 'all' ||
+    filters.fecha !== undefined ||
+    filters.hora !== '' ||
+    (filters.precio[0] !== 0 || filters.precio[1] !== 10000) ||
+    filters.rating > 0
 
   return (
     <div className="w-full space-y-6 mb-8">
@@ -128,7 +151,7 @@ export default function CourtFilters() {
                 disabled={isLoading}
               >
                 <Search className={`h-5 w-5 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                {isLoading ? 'Buscando...' : 'Buscar'}
+                {isLoading ? 'Buscando...' : hasActiveFilters ? 'Buscar' : 'Ver Todas'}
               </Button>
             </div>
           </div>
@@ -260,7 +283,7 @@ export default function CourtFilters() {
                 disabled={isLoading}
               >
                 <Filter className={`h-5 w-5 mr-2 ${isLoading ? 'animate-pulse' : ''}`} />
-                {isLoading ? 'Aplicando...' : 'Aplicar Filtros'}
+                {isLoading ? 'Aplicando...' : hasActiveFilters ? 'Aplicar Filtros' : 'Mostrar Todas'}
               </Button>
             </div>
           </CardContent>
