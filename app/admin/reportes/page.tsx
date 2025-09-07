@@ -105,11 +105,11 @@ export default function AdminReportsPage() {
               <SelectItem value="year">Este año</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={exportReport}>
+          <Button variant="outline" onClick={exportReport} className="border-gray-200 hover:bg-gray-50">
             <Download className="h-4 w-4 mr-2" />
             Exportar
           </Button>
-          <Button variant="outline">
+          <Button className="bg-gray-900 hover:bg-gray-800 text-white">
             <Filter className="h-4 w-4 mr-2" />
             Filtros
           </Button>
@@ -118,77 +118,77 @@ export default function AdminReportsPage() {
 
       {/* Enhanced Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-l-4 border-l-blue-500 bg-gradient-to-br from-blue-50 to-white">
+        <Card className="border-l-4 border-l-gray-800 bg-white shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Ingresos Totales</CardTitle>
             <div className="flex items-center space-x-2">
-              <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">
+              <Badge className="bg-gray-100 text-gray-700 hover:bg-gray-100 border-gray-200">
                 <ArrowUpRight className="h-3 w-3 mr-1" />
                 +12.5%
               </Badge>
-              <DollarSign className="h-5 w-5 text-blue-500" />
+              <DollarSign className="h-5 w-5 text-gray-700" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-blue-600">${(totalRevenue / 1000).toFixed(0)}K</div>
-            <p className="text-sm text-muted-foreground mt-1">
+            <div className="text-3xl font-bold text-gray-900">${(totalRevenue / 1000).toFixed(0)}K</div>
+            <p className="text-sm text-gray-500 mt-1">
               +$45K vs mes anterior
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-green-500 bg-gradient-to-br from-green-50 to-white">
+        <Card className="border-l-4 border-l-gray-700 bg-white shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Reservas Totales</CardTitle>
             <div className="flex items-center space-x-2">
-              <Badge className="bg-green-100 text-green-700 hover:bg-green-100">
+              <Badge className="bg-gray-100 text-gray-700 hover:bg-gray-100 border-gray-200">
                 <ArrowUpRight className="h-3 w-3 mr-1" />
                 +8.3%
               </Badge>
-              <Calendar className="h-5 w-5 text-green-500" />
+              <Calendar className="h-5 w-5 text-gray-700" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-600">{totalReservations.toLocaleString()}</div>
-            <p className="text-sm text-muted-foreground mt-1">
+            <div className="text-3xl font-bold text-gray-900">{totalReservations.toLocaleString()}</div>
+            <p className="text-sm text-gray-500 mt-1">
               +156 vs mes anterior
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-purple-500 bg-gradient-to-br from-purple-50 to-white">
+        <Card className="border-l-4 border-l-gray-600 bg-white shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Ocupación Promedio</CardTitle>
             <div className="flex items-center space-x-2">
-              <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100">
+              <Badge className="bg-gray-100 text-gray-700 hover:bg-gray-100 border-gray-200">
                 <ArrowUpRight className="h-3 w-3 mr-1" />
                 +5.2%
               </Badge>
-              <Activity className="h-5 w-5 text-purple-500" />
+              <Activity className="h-5 w-5 text-gray-700" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-purple-600">{occupancyRate}%</div>
-            <p className="text-sm text-muted-foreground mt-1">
+            <div className="text-3xl font-bold text-gray-900">{occupancyRate}%</div>
+            <p className="text-sm text-gray-500 mt-1">
               Promedio semanal
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-orange-500 bg-gradient-to-br from-orange-50 to-white">
+        <Card className="border-l-4 border-l-gray-500 bg-white shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Margen de Ganancia</CardTitle>
             <div className="flex items-center space-x-2">
-              <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100">
+              <Badge className="bg-red-50 text-red-700 hover:bg-red-50 border-red-200">
                 <ArrowDownRight className="h-3 w-3 mr-1" />
                 -2.1%
               </Badge>
-              <TrendingUp className="h-5 w-5 text-orange-500" />
+              <TrendingUp className="h-5 w-5 text-gray-700" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-orange-600">{profitMargin}%</div>
-            <p className="text-sm text-muted-foreground mt-1">
+            <div className="text-3xl font-bold text-gray-900">{profitMargin}%</div>
+            <p className="text-sm text-gray-500 mt-1">
               vs mes anterior
             </p>
           </CardContent>
@@ -197,11 +197,11 @@ export default function AdminReportsPage() {
 
       {/* Detailed Analytics Tabs */}
       <Tabs defaultValue="revenue" className="space-y-6">
-        <TabsList className="grid w-full lg:w-[500px] grid-cols-4">
-          <TabsTrigger value="revenue">Ingresos</TabsTrigger>
-          <TabsTrigger value="usage">Uso</TabsTrigger>
-          <TabsTrigger value="performance">Rendimiento</TabsTrigger>
-          <TabsTrigger value="trends">Tendencias</TabsTrigger>
+        <TabsList className="grid w-full lg:w-[500px] grid-cols-4 bg-gray-100">
+          <TabsTrigger value="revenue" className="data-[state=active]:bg-white data-[state=active]:text-gray-900">Ingresos</TabsTrigger>
+          <TabsTrigger value="usage" className="data-[state=active]:bg-white data-[state=active]:text-gray-900">Uso</TabsTrigger>
+          <TabsTrigger value="performance" className="data-[state=active]:bg-white data-[state=active]:text-gray-900">Rendimiento</TabsTrigger>
+          <TabsTrigger value="trends" className="data-[state=active]:bg-white data-[state=active]:text-gray-900">Tendencias</TabsTrigger>
         </TabsList>
 
         <TabsContent value="revenue" className="space-y-6">
