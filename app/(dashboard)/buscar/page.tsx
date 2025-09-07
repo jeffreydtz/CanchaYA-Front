@@ -217,8 +217,8 @@ export default function BuscarPage() {
         // Filtrar por búsqueda de texto
         if (filters.search) {
           filtered = filtered.filter(cancha => 
-            cancha.nombre.toLowerCase().includes(filters.search.toLowerCase()) ||
-            cancha.club?.nombre.toLowerCase().includes(filters.search.toLowerCase()) ||
+            cancha.nombre?.toLowerCase().includes(filters.search.toLowerCase()) ||
+            cancha.club?.nombre?.toLowerCase().includes(filters.search.toLowerCase()) ||
             cancha.ubicacion?.toLowerCase().includes(filters.search.toLowerCase())
           )
         }

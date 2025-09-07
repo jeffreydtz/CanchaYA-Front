@@ -72,10 +72,10 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
     if (filters.search.trim()) {
       const searchTerm = filters.search.toLowerCase().trim()
       filtered = filtered.filter(court => 
-        court.nombre.toLowerCase().includes(searchTerm) ||
-        court.ubicacion.toLowerCase().includes(searchTerm) ||
-        court.deporte?.nombre.toLowerCase().includes(searchTerm) ||
-        court.club?.nombre.toLowerCase().includes(searchTerm)
+        court.nombre?.toLowerCase().includes(searchTerm) ||
+        court.ubicacion?.toLowerCase().includes(searchTerm) ||
+        court.deporte?.nombre?.toLowerCase().includes(searchTerm) ||
+        court.club?.nombre?.toLowerCase().includes(searchTerm)
       )
     }
 

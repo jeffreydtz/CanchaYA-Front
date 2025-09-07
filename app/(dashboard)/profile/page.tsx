@@ -271,7 +271,7 @@ function RecentActivity() {
     const fetchRecentReservas = async () => {
       try {
         const response = await apiClient.getReservas()
-        if (response.data) {
+        if (response.data && Array.isArray(response.data)) {
           // Get the 5 most recent reservations
           const recent = response.data
             .sort((a, b) => new Date(b.fechaCreacion).getTime() - new Date(a.fechaCreacion).getTime())

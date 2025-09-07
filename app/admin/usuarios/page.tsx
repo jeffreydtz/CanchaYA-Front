@@ -36,8 +36,8 @@ export default function AdminUsersPage() {
   }, [])
 
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesSearch = user.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         user.email?.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesRole = roleFilter === "all" || user.rol === roleFilter
     const matchesStatus = statusFilter === "all" || (statusFilter === "activo" ? user.activo : !user.activo)
     return matchesSearch && matchesRole && matchesStatus
