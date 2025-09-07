@@ -230,7 +230,7 @@ export default function AdminCourtsPage() {
                               <AlertDialogHeader>
                                 <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Esta acción no se puede deshacer. La cancha "{court.nombre}" será eliminada permanentemente.
+                                  Esta acción no se puede deshacer. La cancha &quot;{court.nombre}&quot; será eliminada permanentemente.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
