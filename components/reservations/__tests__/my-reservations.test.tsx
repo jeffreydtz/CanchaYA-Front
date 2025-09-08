@@ -83,7 +83,7 @@ describe('MyReservations', () => {
       const confirmedBadge = screen.getByText('Confirmada')
       const cancelledBadge = screen.getByText('Cancelada')
 
-      expect(pendingBadge).toHaveClass('border-yellow-500', 'text-yellow-700')
+      expect(pendingBadge).toHaveClass('bg-gray-100', 'text-gray-800')
       expect(confirmedBadge).toHaveClass('bg-green-100', 'text-green-800')
       expect(cancelledBadge).toHaveClass('bg-destructive')
     })

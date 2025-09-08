@@ -332,7 +332,7 @@ export function AdminDashboard() {
                         <div>
                           <p className="font-medium">{court.name}</p>
                           <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                            <Star className="h-3 w-3 fill-current text-yellow-400" />
+                            <Star className="h-3 w-3 fill-current text-gray-400" />
                             <span>{court.rating}</span>
                             <span>•</span>
                             <span>{court.reservations} reservas</span>
@@ -458,7 +458,7 @@ export function AdminDashboard() {
                     <p className="text-sm font-medium text-muted-foreground">Satisfacción</p>
                     <p className="text-2xl font-bold">4.7/5</p>
                   </div>
-                  <Star className="h-8 w-8 text-yellow-500" />
+                  <Star className="h-8 w-8 text-gray-500" />
                 </div>
               </CardContent>
             </Card>

@@ -37,7 +37,7 @@ export default function AdminReservationsPage() {
       case 'confirmada':
         return <Badge variant="default" className="bg-green-100 text-green-800">Confirmada</Badge>
       case 'pendiente':
-        return <Badge variant="secondary" className="bg-orange-100 text-orange-800">Pendiente</Badge>
+        return <Badge variant="secondary" className="bg-gray-100 text-gray-800">Pendiente</Badge>
       case 'liberada':
         return <Badge variant="destructive" className="bg-red-100 text-red-800">Liberada</Badge>
       case 'completada':

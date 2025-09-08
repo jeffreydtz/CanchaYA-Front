@@ -272,15 +272,15 @@ export function ApiError({
 
         {/* Technical Details (Development) */}
         {process.env.NODE_ENV === 'development' && (
-          <Alert className="border-yellow-200 bg-yellow-50">
-            <AlertTriangle className="h-4 w-4 text-yellow-600" />
-            <AlertTitle className="text-yellow-800">Detalles técnicos</AlertTitle>
-            <AlertDescription className="text-yellow-700">
+          <Alert className="border-gray-200 bg-gray-50">
+            <AlertTriangle className="h-4 w-4 text-gray-600" />
+            <AlertTitle className="text-gray-800">Detalles técnicos</AlertTitle>
+            <AlertDescription className="text-gray-700">
               <details className="mt-1">
                 <summary className="cursor-pointer text-xs font-medium">
                   Ver error original
                 </summary>
-                <pre className="text-xs bg-yellow-100 p-2 rounded mt-2 overflow-x-auto">
+                <pre className="text-xs bg-gray-100 p-2 rounded mt-2 overflow-x-auto">
                   {errorMessage}
                 </pre>
               </details>

@@ -17,7 +17,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { toast } from '@/components/ui/use-toast'
 import { Plus, Search, Edit, Trash2, MoreHorizontal } from 'lucide-react'
 import {
   DropdownMenu,
@@ -25,6 +24,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { toast } from 'sonner'
 import apiClient, { Cancha } from '@/lib/api-client'
 
 export default function AdminCourtsPage() {
@@ -55,9 +55,8 @@ export default function AdminCourtsPage() {
 
   const handleEditCourt = (court: Cancha) => {
     // TODO: Abrir modal de edición
-    toast({
-      title: "Funcionalidad en desarrollo",
-      description: `Editar cancha: ${court.nombre}`,
+    toast.info('Funcionalidad en desarrollo', {
+      description: `Editar cancha: ${court.nombre}`
     })
   }
 
@@ -67,15 +66,12 @@ export default function AdminCourtsPage() {
       // TODO: Implementar eliminación real
       await new Promise(resolve => setTimeout(resolve, 1000)) // Simular API call
       setCourts(prev => prev.filter(court => court.id !== courtId))
-      toast({
-        title: "Cancha eliminada",
-        description: `La cancha "${courtName}" ha sido eliminada exitosamente.`,
+      toast.success('Cancha eliminada', {
+        description: `La cancha "${courtName}" ha sido eliminada exitosamente.`
       })
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "No se pudo eliminar la cancha. Inténtalo de nuevo.",
-        variant: "destructive",
+      toast.error('Error', {
+        description: 'No se pudo eliminar la cancha. Inténtalo de nuevo.'
       })
     } finally {
       setActionLoading(null)
@@ -84,9 +80,8 @@ export default function AdminCourtsPage() {
 
   const handleCreateCourt = () => {
     // TODO: Abrir modal de creación
-    toast({
-      title: "Funcionalidad en desarrollo",
-      description: "Crear nueva cancha",
+    toast.info('Funcionalidad en desarrollo', {
+      description: 'Crear nueva cancha'
     })
   }
 
@@ -100,15 +95,12 @@ export default function AdminCourtsPage() {
           ? { ...c, disponible: !c.disponible }
           : c
       ))
-      toast({
-        title: "Estado actualizado",
-        description: `La cancha "${court.nombre}" ha sido ${court.disponible ? 'desactivada' : 'activada'}.`,
+      toast.success('Estado actualizado', {
+        description: `La cancha "${court.nombre}" ha sido ${court.disponible ? 'desactivada' : 'activada'}.`
       })
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar el estado de la cancha.",
-        variant: "destructive",
+      toast.error('Error', {
+        description: 'No se pudo actualizar el estado de la cancha.'
       })
     } finally {
       setActionLoading(null)

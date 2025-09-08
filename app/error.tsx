@@ -187,10 +187,10 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
 
           {/* Error Details (Development Only) */}
           {process.env.NODE_ENV === 'development' && (
-            <Alert className="border-yellow-200 bg-yellow-50">
-              <Bug className="h-4 w-4 text-yellow-600" />
-              <AlertTitle className="text-yellow-800">Información de desarrollo</AlertTitle>
-              <AlertDescription className="text-yellow-700">
+            <Alert className="border-gray-200 bg-gray-50">
+              <Bug className="h-4 w-4 text-gray-600" />
+              <AlertTitle className="text-gray-800">Información de desarrollo</AlertTitle>
+              <AlertDescription className="text-gray-700">
                 <details className="mt-2">
                   <summary className="cursor-pointer font-medium">Ver detalles del error</summary>
                   <div className="mt-2 space-y-2">
@@ -211,7 +211,7 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
                     {error.stack && (
                       <div>
                         <strong>Stack trace:</strong>
-                        <pre className="text-xs bg-yellow-100 p-2 rounded mt-1 overflow-x-auto max-h-32">
+                        <pre className="text-xs bg-gray-100 p-2 rounded mt-1 overflow-x-auto max-h-32">
                           {error.stack}
                         </pre>
                       </div>
