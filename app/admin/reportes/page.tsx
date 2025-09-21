@@ -1,17 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, AreaChart, Area } from 'recharts'
 import { 
   TrendingUp, 
   TrendingDown, 
   DollarSign, 
-  Users, 
   Calendar,
   Download,
   Filter,
@@ -55,10 +53,10 @@ const hourlyRevenueData = [
 ]
 
 const sportData = [
-  { name: 'Fútbol', value: 45, color: '#2563eb', revenue: 125000 },
-  { name: 'Baloncesto', value: 30, color: '#dc2626', revenue: 89000 },
-  { name: 'Tenis', value: 15, color: '#16a34a', revenue: 45000 },
-  { name: 'Pádel', value: 10, color: '#ca8a04', revenue: 32000 }
+  { name: 'Fútbol', value: 45, color: '#818cf8', revenue: 125000 },
+  { name: 'Baloncesto', value: 30, color: '#a5b4fc', revenue: 89000 },
+  { name: 'Tenis', value: 15, color: '#bfdbfe', revenue: 45000 },
+  { name: 'Pádel', value: 10, color: '#fecdd3', revenue: 32000 }
 ]
 
 const locationData = [
@@ -70,16 +68,82 @@ const locationData = [
 
 export default function AdminReportsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState('month')
-  const [loading, setLoading] = useState(false)
   
   // Enhanced stats
   const totalReservations = 1255
   const totalRevenue = 328500
-  const totalUsers = 892
-  const averageReservations = 180
   const profitMargin = 28.5
-  const cancellationRate = 8.2
   const occupancyRate = 78.5
+
+  const overviewCards = [
+    {
+      id: 'revenue',
+      title: 'Ingresos totales',
+      value: `$${(totalRevenue / 1000).toFixed(0)}K`,
+      description: '+$45K vs mes anterior',
+      delta: '+12.5%',
+      trend: 'up',
+      icon: DollarSign,
+      iconClasses: 'bg-indigo-100 text-indigo-600',
+    },
+    {
+      id: 'reservations',
+      title: 'Reservas totales',
+      value: totalReservations.toLocaleString(),
+      description: '+156 vs mes anterior',
+      delta: '+8.3%',
+      trend: 'up',
+      icon: Calendar,
+      iconClasses: 'bg-sky-100 text-sky-600',
+    },
+    {
+      id: 'occupancy',
+      title: 'Ocupación promedio',
+      value: `${occupancyRate}%`,
+      description: 'Promedio semanal',
+      delta: '+5.2%',
+      trend: 'up',
+      icon: Activity,
+      iconClasses: 'bg-teal-100 text-teal-600',
+    },
+    {
+      id: 'profit',
+      title: 'Margen de ganancia',
+      value: `${profitMargin}%`,
+      description: 'vs mes anterior',
+      delta: '-2.1%',
+      trend: 'down',
+      icon: TrendingUp,
+      iconClasses: 'bg-rose-100 text-rose-500',
+    },
+  ]
+
+  const performanceHighlights = [
+    {
+      id: 'efficiency',
+      title: 'Eficiencia operativa',
+      value: '94.2%',
+      description: '+3.2% vs mes anterior',
+      icon: TrendingUp,
+      accent: 'bg-emerald-100 text-emerald-600',
+    },
+    {
+      id: 'satisfaction',
+      title: 'Satisfacción cliente',
+      value: '4.7/5',
+      description: '+0.2 vs mes anterior',
+      icon: Star,
+      accent: 'bg-indigo-100 text-indigo-600',
+    },
+    {
+      id: 'response',
+      title: 'Tiempo de respuesta',
+      value: '1.2s',
+      description: '-0.3s vs mes anterior',
+      icon: Clock,
+      accent: 'bg-amber-100 text-amber-600',
+    },
+  ]
 
   const exportReport = () => {
     // Export functionality
@@ -87,231 +151,208 @@ export default function AdminReportsPage() {
   }
 
   return (
-    <div className="space-y-8 p-6">
-      <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-        <div>
-          <h1 className="text-4xl font-bold tracking-tight">Reportes y Analíticas</h1>
-          <p className="text-muted-foreground text-lg">Análisis detallado del rendimiento empresarial</p>
+    <div className="min-h-screen space-y-10 bg-slate-50/60 p-6 pb-16 lg:p-10">
+      <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-indigo-50 via-white to-sky-50 p-8 shadow-sm">
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-4">
+            <span className="inline-flex w-fit items-center rounded-full border border-indigo-100 bg-white/70 px-3 py-1 text-xs font-medium tracking-wide text-indigo-500">
+              Panel inteligente
+            </span>
+            <h1 className="text-3xl font-semibold tracking-tight text-slate-900 lg:text-4xl">
+              Reportes & Analíticas
+            </h1>
+            <p className="max-w-xl text-base leading-relaxed text-slate-600">
+              Visión clara del rendimiento de tu club con métricas esenciales y tendencias en una vista limpia.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+              <SelectTrigger className="h-11 min-w-[180px] rounded-xl border-slate-200 bg-white/70 text-sm font-medium text-slate-600 shadow-sm focus:ring-2 focus:ring-indigo-200 focus:ring-offset-0">
+                <SelectValue placeholder="Selecciona periodo" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border border-slate-100 bg-white shadow-lg">
+                <SelectItem value="week">Esta semana</SelectItem>
+                <SelectItem value="month">Este mes</SelectItem>
+                <SelectItem value="quarter">Este trimestre</SelectItem>
+                <SelectItem value="year">Este año</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              onClick={exportReport}
+              className="h-11 rounded-xl border-slate-200 bg-white/80 text-sm font-medium text-slate-600 shadow-sm transition hover:border-indigo-200 hover:bg-white"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Exportar
+            </Button>
+            <Button className="h-11 rounded-xl bg-slate-900 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800">
+              <Filter className="mr-2 h-4 w-4" />
+              Filtros
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center space-x-3">
-          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-            <SelectTrigger className="w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="week">Esta semana</SelectItem>
-              <SelectItem value="month">Este mes</SelectItem>
-              <SelectItem value="quarter">Este trimestre</SelectItem>
-              <SelectItem value="year">Este año</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant="outline" onClick={exportReport} className="border-gray-200 hover:bg-gray-50">
-            <Download className="h-4 w-4 mr-2" />
-            Exportar
-          </Button>
-          <Button className="bg-gray-900 hover:bg-gray-800 text-white">
-            <Filter className="h-4 w-4 mr-2" />
-            Filtros
-          </Button>
-        </div>
-      </div>
+      </section>
 
-      {/* Enhanced Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-l-4 border-l-gray-800 bg-white shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Ingresos Totales</CardTitle>
-            <div className="flex items-center space-x-2">
-              <Badge className="bg-gray-100 text-gray-700 hover:bg-gray-100 border-gray-200">
-                <ArrowUpRight className="h-3 w-3 mr-1" />
-                +12.5%
-              </Badge>
-              <DollarSign className="h-5 w-5 text-gray-700" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-gray-900">${(totalRevenue / 1000).toFixed(0)}K</div>
-            <p className="text-sm text-gray-500 mt-1">
-              +$45K vs mes anterior
-            </p>
-          </CardContent>
-        </Card>
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {overviewCards.map((card) => {
+          const Icon = card.icon
+          const DeltaIcon = card.trend === 'up' ? ArrowUpRight : ArrowDownRight
+          const deltaColor =
+            card.trend === 'up'
+              ? 'bg-emerald-50 text-emerald-600'
+              : 'bg-rose-50 text-rose-500'
 
-        <Card className="border-l-4 border-l-gray-700 bg-white shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Reservas Totales</CardTitle>
-            <div className="flex items-center space-x-2">
-              <Badge className="bg-gray-100 text-gray-700 hover:bg-gray-100 border-gray-200">
-                <ArrowUpRight className="h-3 w-3 mr-1" />
-                +8.3%
-              </Badge>
-              <Calendar className="h-5 w-5 text-gray-700" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{totalReservations.toLocaleString()}</div>
-            <p className="text-sm text-gray-500 mt-1">
-              +156 vs mes anterior
-            </p>
-          </CardContent>
-        </Card>
+          return (
+            <Card
+              key={card.id}
+              className="relative overflow-hidden border border-slate-200 bg-white/80 shadow-none backdrop-blur transition-shadow hover:shadow-lg"
+            >
+              <CardHeader className="flex h-full flex-col gap-6 p-6">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <span className={`flex h-12 w-12 items-center justify-center rounded-2xl ${card.iconClasses}`}>
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <CardTitle className="text-sm font-medium text-slate-500">{card.title}</CardTitle>
+                  </div>
+                  <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${deltaColor}`}>
+                    <DeltaIcon className="h-3.5 w-3.5" />
+                    {card.delta}
+                  </span>
+                </div>
+                <div>
+                  <div className="text-3xl font-semibold text-slate-900">{card.value}</div>
+                  <p className="mt-2 text-sm text-slate-500">{card.description}</p>
+                </div>
+              </CardHeader>
+            </Card>
+          )
+        })}
+      </section>
 
-        <Card className="border-l-4 border-l-gray-600 bg-white shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Ocupación Promedio</CardTitle>
-            <div className="flex items-center space-x-2">
-              <Badge className="bg-gray-100 text-gray-700 hover:bg-gray-100 border-gray-200">
-                <ArrowUpRight className="h-3 w-3 mr-1" />
-                +5.2%
-              </Badge>
-              <Activity className="h-5 w-5 text-gray-700" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{occupancyRate}%</div>
-            <p className="text-sm text-gray-500 mt-1">
-              Promedio semanal
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-gray-500 bg-white shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Margen de Ganancia</CardTitle>
-            <div className="flex items-center space-x-2">
-              <Badge className="bg-red-50 text-red-700 hover:bg-red-50 border-red-200">
-                <ArrowDownRight className="h-3 w-3 mr-1" />
-                -2.1%
-              </Badge>
-              <TrendingUp className="h-5 w-5 text-gray-700" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{profitMargin}%</div>
-            <p className="text-sm text-gray-500 mt-1">
-              vs mes anterior
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Detailed Analytics Tabs */}
-      <Tabs defaultValue="revenue" className="space-y-6">
-        <TabsList className="grid w-full lg:w-[500px] grid-cols-4 bg-gray-100">
-          <TabsTrigger value="revenue" className="data-[state=active]:bg-white data-[state=active]:text-gray-900">Ingresos</TabsTrigger>
-          <TabsTrigger value="usage" className="data-[state=active]:bg-white data-[state=active]:text-gray-900">Uso</TabsTrigger>
-          <TabsTrigger value="performance" className="data-[state=active]:bg-white data-[state=active]:text-gray-900">Rendimiento</TabsTrigger>
-          <TabsTrigger value="trends" className="data-[state=active]:bg-white data-[state=active]:text-gray-900">Tendencias</TabsTrigger>
+      <Tabs defaultValue="revenue" className="space-y-8">
+        <TabsList className="w-full max-w-3xl rounded-full border border-slate-200 bg-white/80 p-1.5 shadow-sm backdrop-blur">
+          <TabsTrigger value="revenue" className="rounded-full px-5 py-2 text-sm font-medium text-slate-500 transition data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow">
+            Ingresos
+          </TabsTrigger>
+          <TabsTrigger value="usage" className="rounded-full px-5 py-2 text-sm font-medium text-slate-500 transition data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow">
+            Uso
+          </TabsTrigger>
+          <TabsTrigger value="performance" className="rounded-full px-5 py-2 text-sm font-medium text-slate-500 transition data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow">
+            Rendimiento
+          </TabsTrigger>
+          <TabsTrigger value="trends" className="rounded-full px-5 py-2 text-sm font-medium text-slate-500 transition data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow">
+            Tendencias
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="revenue" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5" />
-                  Análisis de Ingresos Mensuales
-                </CardTitle>
-                <CardDescription>Ingresos, ganancias y gastos por mes</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={400}>
-                  <AreaChart data={monthlyRevenueData}>
-                    <defs>
-                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
-                      </linearGradient>
-                      <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                    <XAxis dataKey="month" axisLine={false} tickLine={false} />
-                    <YAxis axisLine={false} tickLine={false} />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'white', 
-                        border: '1px solid #e2e8f0', 
-                        borderRadius: '12px',
-                        boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'
-                      }} 
-                    />
-                    <Legend />
-                    <Area 
-                      type="monotone" 
-                      dataKey="revenue" 
-                      stackId="1"
-                      stroke="#22c55e" 
-                      fill="url(#colorRevenue)" 
-                      name="Ingresos"
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="profit" 
-                      stackId="2"
-                      stroke="#3b82f6" 
-                      fill="url(#colorProfit)" 
-                      name="Ganancia"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
+          <Card className="border border-slate-200 bg-white/80 backdrop-blur">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-slate-900">
+                <DollarSign className="h-5 w-5 text-slate-500" />
+                Ingresos mensuales
+              </CardTitle>
+              <CardDescription className="text-slate-500">
+                Ingresos, ganancias y gastos por periodo seleccionado
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="px-2 pb-6 sm:px-6">
+              <ResponsiveContainer width="100%" height={380}>
+                <AreaChart data={monthlyRevenueData}>
+                  <defs>
+                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.25} />
+                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.25} />
+                      <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid stroke="#e2e8f0" strokeDasharray="4 4" />
+                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: 16,
+                      border: '1px solid #e2e8f0',
+                      boxShadow: '0 20px 45px -20px rgba(15, 23, 42, 0.25)',
+                      background: 'rgba(255, 255, 255, 0.98)',
+                    }}
+                    labelStyle={{ color: '#475569', fontWeight: 600 }}
+                  />
+                  <Legend iconType="circle" verticalAlign="bottom" height={36} wrapperStyle={{ paddingTop: 12 }} />
+                  <Area type="monotone" dataKey="revenue" stroke="#6366f1" strokeWidth={2.5} fill="url(#colorRevenue)" name="Ingresos" />
+                  <Area type="monotone" dataKey="profit" stroke="#0ea5e9" strokeWidth={2.5} fill="url(#colorProfit)" name="Ganancia" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <Card className="border border-slate-200 bg-white/80 backdrop-blur">
               <CardHeader>
-                <CardTitle>Ingresos por Deporte</CardTitle>
-                <CardDescription>Distribución de ingresos por categoría</CardDescription>
+                <CardTitle className="text-slate-900">Ingresos por deporte</CardTitle>
+                <CardDescription className="text-slate-500">
+                  Distribución de ingresos por categoría
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={350}>
+              <CardContent className="px-2 pb-6 sm:px-6">
+                <ResponsiveContainer width="100%" height={320}>
                   <PieChart>
                     <Pie
                       data={sportData}
                       cx="50%"
                       cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                      innerRadius={72}
                       outerRadius={120}
-                      fill="#8884d8"
+                      paddingAngle={4}
                       dataKey="value"
                     >
                       {sportData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                        <Cell key={`cell-${index}`} fill={entry.color} stroke="white" strokeWidth={1} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value, name) => [
-                      `$${sportData.find(s => s.name === name)?.revenue?.toLocaleString()}`, 
-                      'Ingresos'
-                    ]} />
+                    <Tooltip
+                      formatter={(value, name) => [
+                        `$${sportData.find((s) => s.name === name)?.revenue?.toLocaleString()}`,
+                        name,
+                      ]}
+                      contentStyle={{
+                        borderRadius: 16,
+                        border: '1px solid #e2e8f0',
+                        boxShadow: '0 10px 30px -15px rgba(15, 23, 42, 0.25)',
+                        background: 'rgba(255,255,255,0.95)',
+                      }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border border-slate-200 bg-white/80 backdrop-blur">
               <CardHeader>
-                <CardTitle>Ingresos por Hora</CardTitle>
-                <CardDescription>Picos de ingresos durante el día</CardDescription>
+                <CardTitle className="text-slate-900">Ingresos por hora</CardTitle>
+                <CardDescription className="text-slate-500">
+                  Picos de ingresos durante el día
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={350}>
+              <CardContent className="px-2 pb-6 sm:px-6">
+                <ResponsiveContainer width="100%" height={320}>
                   <BarChart data={hourlyRevenueData}>
-                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                    <XAxis dataKey="hour" axisLine={false} tickLine={false} />
-                    <YAxis axisLine={false} tickLine={false} />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'white', 
-                        border: '1px solid #e2e8f0', 
-                        borderRadius: '8px' 
-                      }} 
+                    <CartesianGrid stroke="#e2e8f0" vertical={false} />
+                    <XAxis dataKey="hour" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: 16,
+                        border: '1px solid #e2e8f0',
+                        boxShadow: '0 12px 35px -18px rgba(15, 23, 42, 0.25)',
+                        background: 'rgba(255,255,255,0.97)',
+                      }}
                     />
-                    <Bar dataKey="revenue" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="revenue" fill="#6366f1" radius={[8, 8, 4, 4]} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -320,140 +361,154 @@ export default function AdminReportsPage() {
         </TabsContent>
 
         <TabsContent value="usage" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <Card className="border border-slate-200 bg-white/80 backdrop-blur">
               <CardHeader>
-                <CardTitle>Reservas Semanales</CardTitle>
-                <CardDescription>Patrones de uso semanal</CardDescription>
+                <CardTitle className="text-slate-900">Reservas semanales</CardTitle>
+                <CardDescription className="text-slate-500">
+                  Patrones de uso semanal
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={350}>
+              <CardContent className="px-2 pb-6 sm:px-6">
+                <ResponsiveContainer width="100%" height={320}>
                   <LineChart data={weeklyData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="day" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line 
-                      type="monotone" 
-                      dataKey="reservations" 
-                      stroke="#f59e0b" 
+                    <CartesianGrid stroke="#e2e8f0" strokeDasharray="4 4" />
+                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: 16,
+                        border: '1px solid #e2e8f0',
+                        boxShadow: '0 12px 30px -18px rgba(15, 23, 42, 0.25)',
+                        background: 'rgba(255,255,255,0.97)',
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="reservations"
+                      stroke="#6366f1"
                       strokeWidth={3}
-                      dot={{ fill: '#f59e0b', strokeWidth: 2, r: 6 }}
+                      dot={{ r: 4, strokeWidth: 2, stroke: '#ffffff', fill: '#6366f1' }}
+                      activeDot={{ r: 6 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border border-slate-200 bg-white/80 backdrop-blur">
               <CardHeader>
-                <CardTitle>Rendimiento por Ubicación</CardTitle>
-                <CardDescription>Comparativa entre ubicaciones</CardDescription>
+                <CardTitle className="text-slate-900">Rendimiento por ubicación</CardTitle>
+                <CardDescription className="text-slate-500">
+                  Comparativa entre ubicaciones
+                </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {locationData.map((location, index) => (
-                    <div key={index} className="flex items-center justify-between p-4 rounded-lg border bg-gray-50/50">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <MapPin className="h-5 w-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="font-semibold">{location.location}</p>
-                          <p className="text-sm text-muted-foreground">{location.reservations} reservas</p>
-                        </div>
+              <CardContent className="space-y-4">
+                {locationData.map((location, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white/70 p-4 shadow-sm"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
+                        <MapPin className="h-5 w-5" />
                       </div>
-                      <div className="text-right">
-                        <p className="font-bold">${(location.revenue / 1000).toFixed(0)}K</p>
-                        <div className="flex items-center space-x-1">
-                          {location.growth > 0 ? (
-                            <TrendingUp className="h-3 w-3 text-green-500" />
-                          ) : (
-                            <TrendingDown className="h-3 w-3 text-red-500" />
-                          )}
-                          <span className={`text-xs ${
-                            location.growth > 0 ? 'text-green-600' : 'text-red-600'
-                          }`}>
-                            {location.growth > 0 ? '+' : ''}{location.growth}%
-                          </span>
-                        </div>
+                      <div>
+                        <p className="font-semibold text-slate-900">{location.location}</p>
+                        <p className="text-sm text-slate-500">{location.reservations} reservas</p>
                       </div>
                     </div>
-                  ))}
-                </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-slate-900">${(location.revenue / 1000).toFixed(0)}K</p>
+                      <div className="mt-1 flex items-center justify-end gap-1">
+                        {location.growth > 0 ? (
+                          <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
+                        ) : (
+                          <TrendingDown className="h-3.5 w-3.5 text-rose-400" />
+                        )}
+                        <span
+                          className={`text-xs font-medium ${
+                            location.growth > 0 ? 'text-emerald-600' : 'text-rose-500'
+                          }`}
+                        >
+                          {location.growth > 0 ? '+' : ''}
+                          {location.growth}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </CardContent>
             </Card>
           </div>
         </TabsContent>
 
         <TabsContent value="performance" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-green-700">Eficiencia Operativa</p>
-                    <p className="text-3xl font-bold text-green-600">94.2%</p>
-                    <p className="text-xs text-green-600 mt-1">+3.2% vs mes anterior</p>
-                  </div>
-                  <TrendingUp className="h-12 w-12 text-green-500 opacity-80" />
-                </div>
-              </CardContent>
-            </Card>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {performanceHighlights.map((highlight) => {
+              const Icon = highlight.icon
 
-            <Card className="bg-gradient-to-br from-blue-50 to-sky-50 border-blue-200">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-blue-700">Satisfacción Cliente</p>
-                    <p className="text-3xl font-bold text-blue-600">4.7/5</p>
-                    <p className="text-xs text-blue-600 mt-1">+0.2 vs mes anterior</p>
-                  </div>
-                  <Star className="h-12 w-12 text-blue-500 opacity-80" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-purple-700">Tiempo Respuesta</p>
-                    <p className="text-3xl font-bold text-purple-600">1.2s</p>
-                    <p className="text-xs text-purple-600 mt-1">-0.3s vs mes anterior</p>
-                  </div>
-                  <Clock className="h-12 w-12 text-purple-500 opacity-80" />
-                </div>
-              </CardContent>
-            </Card>
+              return (
+                <Card
+                  key={highlight.id}
+                  className="border border-slate-200 bg-white/80 shadow-none backdrop-blur transition-shadow hover:shadow-lg"
+                >
+                  <CardContent className="flex flex-col gap-6 p-6">
+                    <div className="flex items-center justify-between">
+                      <span className={`flex h-12 w-12 items-center justify-center rounded-2xl ${highlight.accent}`}>
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+                        Último mes
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-slate-500">{highlight.title}</p>
+                      <p className="mt-3 text-3xl font-semibold text-slate-900">{highlight.value}</p>
+                      <p className="mt-2 text-xs font-medium text-slate-500">{highlight.description}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
           </div>
         </TabsContent>
 
-        <TabsContent value="trends" className="space-y-6">
-          <Card>
+        <TabsContent value="trends">
+          <Card className="border border-slate-200 bg-white/80 backdrop-blur">
             <CardHeader>
-              <CardTitle>Tendencias de Crecimiento</CardTitle>
-              <CardDescription>Análisis predictivo basado en datos históricos</CardDescription>
+              <CardTitle className="text-slate-900">Tendencias de crecimiento</CardTitle>
+              <CardDescription className="text-slate-500">
+                Proyección basada en datos históricos y comportamiento reciente
+              </CardDescription>
             </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
+            <CardContent className="px-2 pb-6 sm:px-6">
+              <ResponsiveContainer width="100%" height={360}>
                 <AreaChart data={monthlyRevenueData}>
                   <defs>
                     <linearGradient id="colorTrend" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#818cf8" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#818cf8" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Area 
-                    type="monotone" 
-                    dataKey="reservations" 
-                    stroke="#8b5cf6" 
-                    fillOpacity={1} 
+                  <CartesianGrid stroke="#e2e8f0" strokeDasharray="4 4" />
+                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: 16,
+                      border: '1px solid #e2e8f0',
+                      boxShadow: '0 12px 30px -18px rgba(15, 23, 42, 0.25)',
+                      background: 'rgba(255,255,255,0.97)',
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="reservations"
+                    stroke="#818cf8"
+                    strokeWidth={2.5}
                     fill="url(#colorTrend)"
+                    name="Reservas"
                   />
                 </AreaChart>
               </ResponsiveContainer>
