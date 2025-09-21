@@ -53,10 +53,10 @@ const hourlyRevenueData = [
 ]
 
 const sportData = [
-  { name: 'Fútbol', value: 45, color: '#818cf8', revenue: 125000 },
-  { name: 'Baloncesto', value: 30, color: '#a5b4fc', revenue: 89000 },
-  { name: 'Tenis', value: 15, color: '#bfdbfe', revenue: 45000 },
-  { name: 'Pádel', value: 10, color: '#fecdd3', revenue: 32000 }
+  { name: 'Fútbol', value: 45, color: '#2563eb', revenue: 125000 },
+  { name: 'Baloncesto', value: 30, color: '#dc2626', revenue: 89000 },
+  { name: 'Tenis', value: 15, color: '#16a34a', revenue: 45000 },
+  { name: 'Pádel', value: 10, color: '#8b5cf6', revenue: 32000 }
 ]
 
 const locationData = [
@@ -141,7 +141,7 @@ export default function AdminReportsPage() {
       value: '1.2s',
       description: '-0.3s vs mes anterior',
       icon: Clock,
-      accent: 'bg-amber-100 text-amber-600',
+      accent: 'bg-purple-100 text-purple-600',
     },
   ]
 

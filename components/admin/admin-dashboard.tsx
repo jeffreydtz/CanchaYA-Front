@@ -55,7 +55,7 @@ const sportData = [
   { name: 'Fútbol', value: 45, color: '#2563eb' },
   { name: 'Baloncesto', value: 30, color: '#dc2626' },
   { name: 'Tenis', value: 15, color: '#16a34a' },
-  { name: 'Pádel', value: 10, color: '#ca8a04' }
+  { name: 'Pádel', value: 10, color: '#8b5cf6' }
 ]
 
 const topCourts = [
@@ -391,7 +391,7 @@ export function AdminDashboard() {
                     <XAxis dataKey="hour" />
                     <YAxis />
                     <Tooltip />
-                    <Bar dataKey="reservations" fill="#f59e0b" />
+                    <Bar dataKey="reservations" fill="#8b5cf6" />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
