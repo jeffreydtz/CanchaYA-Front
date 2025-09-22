@@ -339,13 +339,13 @@ export default function CanchaDetailPage() {
                       )}
                       
                       {cancha.club?.email && (
-                        <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-xl border border-orange-200/50 dark:border-orange-700/30">
-                          <div className="p-2 bg-orange-500 rounded-lg">
+                        <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-xl border border-blue-200/50 dark:border-blue-700/30">
+                          <div className="p-2 bg-blue-500 rounded-lg">
                             <Mail className="h-5 w-5 text-white" />
                           </div>
                           <div>
-                            <h3 className="font-semibold text-orange-900 dark:text-orange-100">Email</h3>
-                            <p className="text-orange-700 dark:text-orange-200 text-sm mt-1">
+                            <h3 className="font-semibold text-blue-900 dark:text-blue-100">Email</h3>
+                            <p className="text-blue-700 dark:text-blue-200 text-sm mt-1">
                               {cancha.club.email}
                             </p>
                           </div>

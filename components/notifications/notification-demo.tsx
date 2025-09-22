@@ -129,7 +129,7 @@ export function NotificationDemo({ className }: NotificationDemoProps) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5 text-orange-600" />
+            <Zap className="h-5 w-5 text-blue-600" />
             Demo de Notificaciones
           </CardTitle>
           <p className="text-sm text-muted-foreground">

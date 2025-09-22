@@ -3,7 +3,7 @@
 export function FooterEasterEgg() {
   return (
     <span 
-      className="ml-2 text-xs opacity-50 hover:opacity-100 hover:text-yellow-400 transition-all cursor-pointer select-none bg-black/10 dark:bg-white/10 rounded-full w-4 h-4 inline-flex items-center justify-center"
+      className="ml-2 text-xs opacity-50 hover:opacity-100 hover:text-blue-400 transition-all cursor-pointer select-none bg-black/10 dark:bg-white/10 rounded-full w-4 h-4 inline-flex items-center justify-center"
       onClick={(e) => {
         e.preventDefault()
         

@@ -129,8 +129,8 @@ export function LoadingError({
     return (
       <Card className={className}>
         <CardHeader className="text-center pb-4">
-          <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
-            <Clock className="h-6 w-6 text-orange-600" />
+          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Clock className="h-6 w-6 text-blue-600" />
           </div>
           <CardTitle className="text-lg">La carga está tardando más de lo usual</CardTitle>
           <CardDescription>
@@ -139,7 +139,7 @@ export function LoadingError({
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <Alert className="border-orange-200 bg-orange-50">
+          <Alert className="border-blue-200 bg-blue-50">
             <Clock className="h-4 w-4" />
             <AlertTitle>¿Qué puedes hacer?</AlertTitle>
             <AlertDescription>
@@ -260,7 +260,7 @@ export function AsyncWrapper({ children, fallback, timeout = 10000, onTimeout }:
 
   if (hasTimedOut) {
     return (
-      <Alert className="border-orange-200 bg-orange-50">
+      <Alert className="border-blue-200 bg-blue-50">
         <Clock className="h-4 w-4" />
         <AlertTitle>Carga lenta detectada</AlertTitle>
         <AlertDescription>

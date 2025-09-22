@@ -25,7 +25,7 @@ export function ThemeToggle() {
       <Sun className={`h-5 w-5 transition-all duration-700 ease-in-out ${
         isDark 
           ? 'text-gray-500/60 scale-90 rotate-180' 
-          : 'text-yellow-400 scale-110 rotate-0 drop-shadow-sm'
+          : 'text-blue-400 scale-110 rotate-0 drop-shadow-sm'
       }`} />
       <div className="relative">
         <Switch

@@ -103,7 +103,7 @@ export function ApiError({
       return {
         type: 'Tiempo agotado',
         icon: <Clock className="h-5 w-5" />,
-        color: 'text-orange-600 bg-orange-50 border-orange-200',
+        color: 'text-blue-600 bg-blue-50 border-blue-200',
         description: 'La conexión tardó demasiado en responder',
         suggestions: [
           'La red puede estar lenta en este momento',
@@ -158,7 +158,7 @@ export function ApiError({
     return {
       type: 'Error de conexión',
       icon: <Wifi className="h-5 w-5" />,
-      color: 'text-orange-600 bg-orange-50 border-orange-200',
+      color: 'text-blue-600 bg-blue-50 border-blue-200',
       description: 'No se pudo completar la operación',
       suggestions: [
         'Verifica tu conexión a internet',

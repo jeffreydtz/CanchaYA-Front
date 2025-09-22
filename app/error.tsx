@@ -37,7 +37,7 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
     if (message.includes('fetch') || message.includes('network') || message.includes('api')) {
       return {
         type: 'Error de Conexión',
-        color: 'text-orange-600 bg-orange-50 border-orange-200',
+        color: 'text-blue-600 bg-blue-50 border-blue-200',
         title: 'Problema de conectividad',
         description: 'No se pudo establecer conexión con el servidor',
         suggestions: [

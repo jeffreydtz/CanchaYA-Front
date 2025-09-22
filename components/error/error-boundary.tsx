@@ -52,7 +52,7 @@ function DefaultErrorFallback({
     
     // Network/API errors
     if (errorMessage.includes('fetch') || errorMessage.includes('network') || errorMessage.includes('api')) {
-      return { type: 'Error de Conexión', severity: 'medium', color: 'text-orange-600 bg-orange-50 border-orange-200' }
+      return { type: 'Error de Conexión', severity: 'medium', color: 'text-blue-600 bg-blue-50 border-blue-200' }
     }
     
     // Authentication errors
