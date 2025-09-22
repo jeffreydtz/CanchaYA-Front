@@ -114,7 +114,7 @@ function NotificationList() {
       case 'RESERVA':
         return 'text-blue-600 bg-blue-50 dark:bg-blue-900/20'
       case 'DESAFIO':
-        return 'text-orange-600 bg-orange-50 dark:bg-orange-900/20'
+        return 'text-blue-600 bg-blue-50 dark:bg-blue-900/20'
       case 'SISTEMA':
         return 'text-purple-600 bg-purple-50 dark:bg-purple-900/20'
       default:

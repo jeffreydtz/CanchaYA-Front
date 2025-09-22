@@ -65,9 +65,9 @@ function ReservationCard({ reserva, onCancel, onConfirm }: {
       case 'confirmada':
         return <CheckCircle className="h-5 w-5 text-green-500" />
       case 'pendiente':
-        return <AlertCircle className="h-5 w-5 text-orange-500" />
+        return <AlertCircle className="h-5 w-5 text-blue-500" />
       case 'liberada':
-        return <XCircle className="h-5 w-5 text-orange-500" />
+        return <XCircle className="h-5 w-5 text-blue-500" />
       case 'completada':
         return <CheckCircle className="h-5 w-5 text-blue-500" />
       default:
@@ -80,9 +80,9 @@ function ReservationCard({ reserva, onCancel, onConfirm }: {
       case 'confirmada':
         return 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-200 dark:border-green-800'
       case 'pendiente':
-        return 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/20 dark:text-orange-200 dark:border-orange-800'
+        return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-200 dark:border-blue-800'
       case 'liberada':
-        return 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900/20 dark:text-orange-200 dark:border-orange-800'
+        return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-200 dark:border-blue-800'
       case 'completada':
         return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-200 dark:border-blue-800'
       default:
@@ -221,14 +221,14 @@ function ReservationCard({ reserva, onCancel, onConfirm }: {
 
               {/* Confirmation Deadline Warning */}
               {canConfirm && isUpcoming && canStillConfirm && (
-                <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-3 mt-3">
-                  <div className="flex items-center gap-2 text-orange-800 dark:text-orange-200">
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mt-3">
+                  <div className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
                     <AlertCircle className="h-4 w-4" />
                     <span className="text-sm font-medium">
                       ⏰ Confirma antes de: {hoursUntilDeadline}h {minutesUntilDeadline}m
                     </span>
                   </div>
-                  <p className="text-xs text-orange-700 dark:text-orange-300 mt-1">
+                  <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
                     Tu reserva será liberada automáticamente si no confirmas tu asistencia
                   </p>
                 </div>
@@ -459,7 +459,7 @@ export default function MisReservasPage() {
           </Card>
           <Card>
             <CardContent className="p-6 text-center">
-              <div className="text-2xl font-bold text-orange-600 mb-1">
+              <div className="text-2xl font-bold text-blue-600 mb-1">
                 {reservas.filter(r => r.estado === 'pendiente').length}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-300">Pendientes</div>
