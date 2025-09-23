@@ -120,8 +120,8 @@ export default function DashboardPage() {
               <h4 className="font-semibold text-gray-900 dark:text-white">Contacto</h4>
               <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
                 <li>📧 info@canchaya.com</li>
-                <li>📱 +54 11 1234-5678</li>
-                <li>📍 Buenos Aires, Argentina</li>
+                <li>📱 +54 341 123-4567</li>
+                <li>📍 Rosario, Argentina</li>
               </ul>
             </div>
           </div>
