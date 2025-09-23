@@ -13,7 +13,7 @@ describe('Reservation Integration Flow', () => {
   const mockReservations = [
     {
       id: '1',
-      fecha: '2024-03-20',
+      fecha: '2025-03-20',
       horaInicio: '14:00',
       horaFin: '15:00',
       estado: 'PENDIENTE',
@@ -30,7 +30,7 @@ describe('Reservation Integration Flow', () => {
 
   beforeEach(() => {
     jest.useFakeTimers();
-    jest.setSystemTime(new Date('2024-03-20T12:00:00Z'));
+    jest.setSystemTime(new Date('2025-03-20T12:00:00Z'));
     jest.clearAllMocks();
   });
   afterEach(() => {

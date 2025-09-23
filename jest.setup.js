@@ -78,7 +78,7 @@ jest.mock('lucide-react', () => mockIcons)
 // Mock external libraries
 jest.mock('date-fns', () => ({
   format: jest.fn((date, formatStr) => {
-    if (formatStr === 'dd/MM/yyyy') return '01/01/2024'
+    if (formatStr === 'dd/MM/yyyy') return '01/01/2025'
     if (formatStr === 'HH:mm') return '10:00'
     return date.toString()
   }),
@@ -208,7 +208,7 @@ global.testUser = {
   email: 'test@example.com',
   rol: 'JUGADOR',
   telefono: '+54911234567',
-  fechaRegistro: '2024-01-01T00:00:00.000Z',
+  fechaRegistro: '2025-01-01T00:00:00.000Z',
 }
 
 global.testCourt = {
@@ -230,7 +230,7 @@ global.testCourt = {
 
 global.testReservation = {
   id: '1',
-  fecha: '2024-12-25',
+  fecha: '2025-12-25',
   horaInicio: '10:00',
   horaFin: '11:00',
   estado: 'CONFIRMADA',
@@ -238,7 +238,7 @@ global.testReservation = {
   usuarioId: '1',
   canchaId: '1',
   cancha: global.testCourt,
-  fechaCreacion: '2024-01-01T00:00:00.000Z',
+  fechaCreacion: '2025-01-01T00:00:00.000Z',
 }
 
 // Mock the AuthContext

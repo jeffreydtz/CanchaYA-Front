@@ -27,7 +27,7 @@ export function NotificationDemo({ className }: NotificationDemoProps) {
     {
       type: 'RESERVATION_CONFIRMED',
       title: '¡Reserva confirmada!',
-      message: 'Tu reserva para la Cancha de Fútbol 5 "El Fortín" el 25/12/2024 a las 20:00 ha sido confirmada.',
+      message: 'Tu reserva para la Cancha de Fútbol 5 "El Fortín" el 25/12/2025 a las 20:00 ha sido confirmada.',
       priority: 'high',
       actionUrl: '/mis-reservas',
       courtId: '1',
@@ -36,7 +36,7 @@ export function NotificationDemo({ className }: NotificationDemoProps) {
     {
       type: 'SLOT_RELEASED',
       title: 'Horario disponible',
-      message: 'Se liberó un horario en "Estadio Central" para el 26/12/2024 a las 18:00. ¡Reserva ahora!',
+      message: 'Se liberó un horario en "Estadio Central" para el 26/12/2025 a las 18:00. ¡Reserva ahora!',
       priority: 'medium',
       actionUrl: '/cancha/2',
       courtId: '2'
@@ -44,7 +44,7 @@ export function NotificationDemo({ className }: NotificationDemoProps) {
     {
       type: 'RESERVATION_CANCELLED',
       title: 'Reserva cancelada',
-      message: 'Tu reserva para "Club Atlético" del 24/12/2024 ha sido cancelada. Se te reintegrará el pago.',
+      message: 'Tu reserva para "Club Atlético" del 24/12/2025 ha sido cancelada. Se te reintegrará el pago.',
       priority: 'high',
       courtId: '3',
       reservationId: 'res-124'

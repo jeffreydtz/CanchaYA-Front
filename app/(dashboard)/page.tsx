@@ -130,7 +130,7 @@ export default function DashboardPage() {
             {/* Main footer content */}
             <div className="flex flex-col md:flex-row justify-between items-center mb-6">
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                © 2024 CanchaYA. Todos los derechos reservados.
+                © 2025 CanchaYA. Todos los derechos reservados.
                 <FooterEasterEgg />
               </p>
               <div className="flex space-x-6 mt-4 md:mt-0">

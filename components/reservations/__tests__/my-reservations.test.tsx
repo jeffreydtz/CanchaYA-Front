@@ -21,7 +21,7 @@ const mockReservations = [
     id: '1',
     courtId: 'court1',
     userId: 'user1',
-    fecha: '2024-01-15',
+    fecha: '2025-01-15',
     hora: '14:00',
     duracion: 2,
     precio: 5000,
@@ -45,7 +45,7 @@ const mockReservations = [
 describe('MyReservations', () => {
   beforeEach(() => {
     jest.useFakeTimers()
-    jest.setSystemTime(new Date('2024-03-20T12:00:00Z'))
+    jest.setSystemTime(new Date('2025-03-20T12:00:00Z'))
   })
 
   afterEach(() => {
@@ -65,7 +65,7 @@ describe('MyReservations', () => {
       // Check first reservation
       expect(screen.getByText('Cancha de Fútbol 1')).toBeInTheDocument()
       expect(screen.getByText('Fútbol')).toBeInTheDocument()
-      expect(screen.getByText(/miércoles, 20 de marzo de 2024/i)).toBeInTheDocument()
+      expect(screen.getByText(/miércoles, 20 de marzo de 2025/i)).toBeInTheDocument()
       expect(screen.getByText(/14:00 - 15:00 hs/i)).toBeInTheDocument()
       expect(screen.getByText('Club Deportivo - Av. Principal 123')).toBeInTheDocument()
       expect(screen.getByText('$ 5.000')).toBeInTheDocument()
@@ -91,7 +91,7 @@ describe('MyReservations', () => {
     it('shows confirmation deadline for pending reservations', () => {
       const futureReservation = {
         ...mockReservations[0],
-        fecha: '2024-03-20',
+        fecha: '2025-03-20',
         hora: '16:00'
       }
 
@@ -113,7 +113,7 @@ describe('MyReservations', () => {
 
       const pendingReservation = {
         ...mockReservations[0],
-        fecha: '2024-03-20',
+        fecha: '2025-03-20',
         hora: '16:00' // 4 hours from mock current time
       }
 
@@ -146,7 +146,7 @@ describe('MyReservations', () => {
 
       const upcomingReservation = {
         ...mockReservations[0],
-        fecha: '2024-03-20',
+        fecha: '2025-03-20',
         hora: '16:00'
       }
 
@@ -234,7 +234,7 @@ describe('MyReservations', () => {
     it('disables confirmation button when past deadline', () => {
       const pastDeadlineReservation = {
         ...mockReservations[0],
-        fecha: '2024-03-20',
+        fecha: '2025-03-20',
         hora: '13:00' // 1 hour from mock current time
       }
 
@@ -251,7 +251,7 @@ describe('MyReservations', () => {
     it('disables cancellation button for past reservations', () => {
       const pastReservation = {
         ...mockReservations[0],
-        fecha: '2024-03-19',
+        fecha: '2025-03-19',
         hora: '10:00'
       }
 
