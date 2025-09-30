@@ -23,7 +23,8 @@ import {
   Phone,
   Mail,
   Calendar,
-  DollarSign
+  DollarSign,
+  Box
 } from 'lucide-react'
 import apiClient, { Cancha, Club, Deporte } from '@/lib/api-client'
 import { toast } from 'sonner'
@@ -32,6 +33,17 @@ import Image from 'next/image'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import Navbar from '@/components/navbar/navbar'
+import dynamic from 'next/dynamic'
+
+// Importación dinámica del mapa 3D
+const LocationMap3D = dynamic(() => import('@/components/3d/LocationMap3D'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[500px] bg-gray-900 rounded-lg flex items-center justify-center">
+      <div className="text-white">Cargando mapa 3D...</div>
+    </div>
+  ),
+})
 
 interface SearchFilters {
   search: string
@@ -169,7 +181,7 @@ export default function BuscarPage() {
   const [deportes, setDeportes] = useState<Deporte[]>([])
   const [loading, setLoading] = useState(true)
   const [searching, setSearching] = useState(false)
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | '3d'>('grid')
   
   // Load initial data
   useEffect(() => {
@@ -403,6 +415,7 @@ export default function BuscarPage() {
                   variant={viewMode === 'grid' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('grid')}
+                  title="Vista de Grilla"
                 >
                   <Grid3X3 className="h-4 w-4" />
                 </Button>
@@ -410,8 +423,17 @@ export default function BuscarPage() {
                   variant={viewMode === 'list' ? 'default' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('list')}
+                  title="Vista de Lista"
                 >
                   <List className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === '3d' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('3d')}
+                  title="Mapa 3D"
+                >
+                  <Box className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -430,7 +452,7 @@ export default function BuscarPage() {
           </div>
         </div>
         
-        {/* Courts Grid/List */}
+        {/* Courts Grid/List/3D */}
         {loading ? (
           <LoadingSkeleton />
         ) : canchas.length === 0 ? (
@@ -446,6 +468,30 @@ export default function BuscarPage() {
               </Button>
             </CardContent>
           </Card>
+        ) : viewMode === '3d' ? (
+          <LocationMap3D
+            locations={canchas.map((cancha, index) => ({
+              id: cancha.id,
+              name: cancha.nombre || `Cancha ${index + 1}`,
+              position: [
+                (index % 5) * 4 - 8,
+                0,
+                Math.floor(index / 5) * 4 - 8
+              ] as [number, number, number],
+              color: cancha.deporte?.nombre?.toLowerCase().includes('fútbol') ? '#10b981' :
+                    cancha.deporte?.nombre?.toLowerCase().includes('tenis') ? '#f59e0b' :
+                    cancha.deporte?.nombre?.toLowerCase().includes('pádel') ? '#3b82f6' :
+                    cancha.deporte?.nombre?.toLowerCase().includes('básquet') ? '#ef4444' : '#8b5cf6',
+              available: Math.floor(Math.random() * 10) + 1,
+              total: 15
+            }))}
+            onLocationClick={(location) => {
+              const cancha = canchas.find(c => c.id === location.id)
+              if (cancha) {
+                window.location.href = `/cancha/${cancha.id}`
+              }
+            }}
+          />
         ) : (
           <div className={viewMode === 'grid' 
             ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" 

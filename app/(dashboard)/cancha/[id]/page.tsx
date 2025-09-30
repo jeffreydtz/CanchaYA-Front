@@ -40,6 +40,17 @@ import Image from 'next/image'
 import { Skeleton } from '@/components/ui/skeleton'
 import Navbar from '@/components/navbar/navbar'
 import { useAuth } from '@/components/auth/auth-context'
+import dynamic from 'next/dynamic'
+
+// Importación dinámica del componente 3D (solo cliente)
+const Court3DViewer = dynamic(() => import('@/components/3d/Court3DViewer'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[400px] bg-gray-900 rounded-lg flex items-center justify-center">
+      <div className="text-white">Cargando vista 3D...</div>
+    </div>
+  ),
+})
 
 const timeSlots = [
   '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', 
@@ -356,6 +367,11 @@ export default function CanchaDetailPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Vista 3D de la Cancha */}
+            <div className="mt-6">
+              <Court3DViewer sport={cancha.deporte?.nombre || 'Fútbol'} />
+            </div>
 
             {/* Amenities */}
             <Card className="bg-white/80 backdrop-blur-sm border-white/20 shadow-xl">
