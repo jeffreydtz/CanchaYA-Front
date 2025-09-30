@@ -39,6 +39,7 @@ type RegisterFormData = z.infer<typeof registerSchema>
 export function RegisterForm() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+  const [password, setPassword] = useState('')
 
   const {
     register,
@@ -47,6 +48,15 @@ export function RegisterForm() {
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
   })
+
+  // Validadores de requisitos de contraseña
+  const passwordRequirements = {
+    minLength: password.length >= 8,
+    hasUpperCase: /[A-Z]/.test(password),
+    hasLowerCase: /[a-z]/.test(password),
+    hasNumber: /[0-9]/.test(password),
+    hasSymbol: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+  }
 
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true)
@@ -167,22 +177,145 @@ export function RegisterForm() {
               id="password"
               type="password"
               placeholder="••••••••"
-              {...register('password')}
+              {...register('password', {
+                onChange: (e) => setPassword(e.target.value)
+              })}
               disabled={isLoading}
               className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100"
             />
             {errors.password && (
               <p className="text-sm text-red-600 dark:text-red-400">{errors.password.message}</p>
             )}
-            <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 space-y-1">
-              <p className="font-medium">La contraseña debe contener:</p>
-              <ul className="list-disc list-inside space-y-0.5 ml-2">
-                <li>Mínimo 8 caracteres</li>
-                <li>Al menos una letra mayúscula (A-Z)</li>
-                <li>Al menos una letra minúscula (a-z)</li>
-                <li>Al menos un número (0-9)</li>
-                <li>Al menos un símbolo especial (!@#$%^&*)</li>
-              </ul>
+            
+            {/* Indicador de requisitos con colores */}
+            <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+              <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Requisitos de contraseña:</p>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <div className={`h-4 w-4 rounded-full flex items-center justify-center transition-all ${
+                    passwordRequirements.minLength 
+                      ? 'bg-green-500' 
+                      : password.length > 0 
+                        ? 'bg-red-500' 
+                        : 'bg-gray-300 dark:bg-gray-600'
+                  }`}>
+                    {passwordRequirements.minLength && (
+                      <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  <span className={`text-xs transition-colors ${
+                    passwordRequirements.minLength 
+                      ? 'text-green-600 dark:text-green-400 font-medium' 
+                      : password.length > 0 
+                        ? 'text-red-600 dark:text-red-400'
+                        : 'text-gray-500 dark:text-gray-400'
+                  }`}>
+                    Mínimo 8 caracteres
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className={`h-4 w-4 rounded-full flex items-center justify-center transition-all ${
+                    passwordRequirements.hasUpperCase 
+                      ? 'bg-green-500' 
+                      : password.length > 0 
+                        ? 'bg-red-500' 
+                        : 'bg-gray-300 dark:bg-gray-600'
+                  }`}>
+                    {passwordRequirements.hasUpperCase && (
+                      <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  <span className={`text-xs transition-colors ${
+                    passwordRequirements.hasUpperCase 
+                      ? 'text-green-600 dark:text-green-400 font-medium' 
+                      : password.length > 0 
+                        ? 'text-red-600 dark:text-red-400'
+                        : 'text-gray-500 dark:text-gray-400'
+                  }`}>
+                    Al menos una letra mayúscula (A-Z)
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className={`h-4 w-4 rounded-full flex items-center justify-center transition-all ${
+                    passwordRequirements.hasLowerCase 
+                      ? 'bg-green-500' 
+                      : password.length > 0 
+                        ? 'bg-red-500' 
+                        : 'bg-gray-300 dark:bg-gray-600'
+                  }`}>
+                    {passwordRequirements.hasLowerCase && (
+                      <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  <span className={`text-xs transition-colors ${
+                    passwordRequirements.hasLowerCase 
+                      ? 'text-green-600 dark:text-green-400 font-medium' 
+                      : password.length > 0 
+                        ? 'text-red-600 dark:text-red-400'
+                        : 'text-gray-500 dark:text-gray-400'
+                  }`}>
+                    Al menos una letra minúscula (a-z)
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className={`h-4 w-4 rounded-full flex items-center justify-center transition-all ${
+                    passwordRequirements.hasNumber 
+                      ? 'bg-green-500' 
+                      : password.length > 0 
+                        ? 'bg-red-500' 
+                        : 'bg-gray-300 dark:bg-gray-600'
+                  }`}>
+                    {passwordRequirements.hasNumber && (
+                      <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  <span className={`text-xs transition-colors ${
+                    passwordRequirements.hasNumber 
+                      ? 'text-green-600 dark:text-green-400 font-medium' 
+                      : password.length > 0 
+                        ? 'text-red-600 dark:text-red-400'
+                        : 'text-gray-500 dark:text-gray-400'
+                  }`}>
+                    Al menos un número (0-9)
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className={`h-4 w-4 rounded-full flex items-center justify-center transition-all ${
+                    passwordRequirements.hasSymbol 
+                      ? 'bg-green-500' 
+                      : password.length > 0 
+                        ? 'bg-red-500' 
+                        : 'bg-gray-300 dark:bg-gray-600'
+                  }`}>
+                    {passwordRequirements.hasSymbol && (
+                      <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </div>
+                  <span className={`text-xs transition-colors ${
+                    passwordRequirements.hasSymbol 
+                      ? 'text-green-600 dark:text-green-400 font-medium' 
+                      : password.length > 0 
+                        ? 'text-red-600 dark:text-red-400'
+                        : 'text-gray-500 dark:text-gray-400'
+                  }`}>
+                    Al menos un símbolo especial (!@#$%^&*)
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
