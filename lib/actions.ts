@@ -81,6 +81,7 @@ export async function registerAction(
 ): Promise<ActionState> {
   const registerData: RegisterData = {
     nombre: formData.get('nombre') as string,
+    apellido: formData.get('apellido') as string,
     email: formData.get('email') as string,
     password: formData.get('password') as string,
   }
@@ -88,7 +89,7 @@ export async function registerAction(
   const confirmPassword = formData.get('confirmPassword') as string
 
   // Validation
-  if (!registerData.nombre || !registerData.email || !registerData.password) {
+  if (!registerData.nombre || !registerData.apellido || !registerData.email || !registerData.password) {
     return {
       error: 'Todos los campos son requeridos',
       success: false,
