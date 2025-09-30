@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -11,24 +11,16 @@ import {
   Users, 
   Calendar, 
   DollarSign, 
-  TrendingUp, 
-  TrendingDown,
+  TrendingUp,
   Activity,
   Clock,
-  MapPin,
   Trophy,
   Star,
-  AlertCircle,
-  CheckCircle,
-  XCircle,
   ArrowUpRight,
-  ArrowDownRight,
-  MoreHorizontal,
   Filter,
   Download,
   RefreshCw
 } from 'lucide-react'
-import apiClient from '@/lib/api-client'
 
 // Mock data for demonstration - replace with real API data
 const revenueData = [

@@ -124,7 +124,7 @@ export function CanchaDistributionChart({
               dataKey="reservations" 
               radius={[0, 8, 8, 0]}
               cursor="pointer"
-              onClick={(data) => onBarClick?.(data)}
+              onClick={(data: any) => onBarClick?.(data.payload as CanchaData)}
             >
               {data.map((entry, index) => (
                 <Cell 
