@@ -30,11 +30,11 @@
 
   .dark {
     --background: 17 24 39;
-    --foreground: 248 250 252;
+    --foreground: 0 250 252;
     --card: 206 38 40;
-    --card-foreground: 248 250 252;
-    --popover: 30 41 59;
-    --popover-foreground: 248 250 252;
+    --card-foreground: 0 250 252;
+    --popover: 206 38 40;
+    --popover-foreground: 0 250 252;
     --primary: 59 130 246;
     --primary-foreground: 255 255 255;
     --secondary: 100 116 139;
@@ -44,7 +44,7 @@
     --accent: 96 165 250;
     --accent-foreground: 17 24 39;
     --destructive: 239 68 68;
-    --destructive-foreground: 248 250 252;
+    --destructive-foreground: 0 250 252;
     --border: 51 65 85;
     --input: 51 65 85;
     --ring: 59 130 246;
