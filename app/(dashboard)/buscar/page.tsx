@@ -283,24 +283,24 @@ export default function BuscarPage() {
         </div>
         
         {/* Search Filters */}
-        <Card className="mb-8 border-0 shadow-lg bg-gradient-to-r from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
+        <Card className="mb-8 border-0 shadow-xl bg-white dark:bg-gray-900/95 backdrop-blur-sm">
           <CardContent className="p-6">
             {/* Main Search */}
             <div className="flex flex-col lg:flex-row gap-4 mb-6">
               <div className="flex-1 relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 h-5 w-5" />
                 <Input
                   placeholder="Buscar por nombre, club o ubicación..."
                   value={filters.search}
                   onChange={(e) => handleFilterChange('search', e.target.value)}
-                  className="pl-12 pr-4 h-12 text-lg border-2 border-gray-200 focus:border-primary rounded-xl bg-white dark:bg-white text-black font-bold"
+                  className="pl-12 pr-4 h-12 text-base font-medium border-2 border-gray-200 dark:border-gray-700 focus:border-primary dark:focus:border-primary bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 rounded-xl transition-all duration-200"
                 />
               </div>
               
               <Select value={filters.deporte} onValueChange={(value) => handleFilterChange('deporte', value)}>
-                <SelectTrigger className="h-12 min-w-[160px] rounded-xl border-2 border-gray-200">
+                <SelectTrigger className="h-12 min-w-[160px] rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 font-medium">
                   <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <MapPin className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                     <SelectValue placeholder="Deporte" />
                   </div>
                 </SelectTrigger>
@@ -328,9 +328,9 @@ export default function BuscarPage() {
             {/* Advanced Filters */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="space-y-2">
-                <Label>Club</Label>
+                <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100">Club</Label>
                 <Select value={filters.club} onValueChange={(value) => handleFilterChange('club', value)}>
-                  <SelectTrigger className="rounded-lg bg-white dark:bg-white text-black font-bold">
+                  <SelectTrigger className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 font-medium">
                     <SelectValue placeholder="Seleccionar club" />
                   </SelectTrigger>
                   <SelectContent>
@@ -345,41 +345,41 @@ export default function BuscarPage() {
               </div>
               
               <div className="space-y-2">
-                <Label>Ubicación</Label>
+                <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100">Ubicación</Label>
                 <Input
                   placeholder="Zona, barrio..."
                   value={filters.ubicacion}
                   onChange={(e) => handleFilterChange('ubicacion', e.target.value)}
-                  className="rounded-lg bg-white dark:bg-white text-black font-bold"
+                  className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 font-medium"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label>Precio Mín.</Label>
+                <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100">Precio Mín.</Label>
                 <Input
                   type="number"
                   placeholder="$0"
                   value={filters.precioMin}
                   onChange={(e) => handleFilterChange('precioMin', e.target.value)}
-                  className="rounded-lg bg-white dark:bg-white text-black font-bold"
+                  className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 font-medium"
                 />
               </div>
               
               <div className="space-y-2">
-                <Label>Precio Máx.</Label>
+                <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100">Precio Máx.</Label>
                 <Input
                   type="number"
                   placeholder="$10000"
                   value={filters.precioMax}
                   onChange={(e) => handleFilterChange('precioMax', e.target.value)}
-                  className="rounded-lg bg-white dark:bg-white text-black font-bold"
+                  className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 font-medium"
                 />
               </div>
             </div>
             
             {/* Filter Actions */}
             <div className="flex justify-between items-center mt-4">
-              <Button variant="ghost" onClick={clearFilters} className="text-gray-600">
+              <Button variant="ghost" onClick={clearFilters} className="text-gray-600 dark:text-gray-300 font-medium hover:text-destructive dark:hover:text-destructive">
                 <Filter className="h-4 w-4 mr-2" />
                 Limpiar Filtros
               </Button>
