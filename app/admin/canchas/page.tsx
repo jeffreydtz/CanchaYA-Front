@@ -17,33 +17,43 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { Plus, Search, Edit, Trash2, MoreHorizontal } from 'lucide-react'
+import { Plus, Search, Edit, Trash2, MoreHorizontal, MapPin, DollarSign, RefreshCw } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { toast } from 'sonner'
 import apiClient, { Cancha } from '@/lib/api-client'
+import { EditCanchaDialog } from '@/components/admin/edit-cancha-dialog'
 
 export default function AdminCourtsPage() {
   const [courts, setCourts] = useState<Cancha[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [editingCourt, setEditingCourt] = useState<Cancha | null>(null)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
 
-  useEffect(() => {
-    const loadCourts = async () => {
-      setLoading(true)
+  const loadCourts = async () => {
+    setLoading(true)
+    try {
       const response = await apiClient.getCanchas()
       if (response.data) {
         setCourts(response.data)
       } else {
         setCourts([])
       }
+    } catch (error) {
+      toast.error('Error al cargar canchas')
+    } finally {
       setLoading(false)
     }
+  }
+
+  useEffect(() => {
     loadCourts()
   }, [])
 
@@ -54,17 +64,22 @@ export default function AdminCourtsPage() {
   )
 
   const handleEditCourt = (court: Cancha) => {
-    // TODO: Abrir modal de edición
-    toast.info('Funcionalidad en desarrollo', {
-      description: `Editar cancha: ${court.nombre}`
-    })
+    setEditingCourt(court)
+    setEditDialogOpen(true)
   }
 
   const handleDeleteCourt = async (courtId: string, courtName: string) => {
     setActionLoading(courtId)
     try {
-      // TODO: Implementar eliminación real
-      await new Promise(resolve => setTimeout(resolve, 1000)) // Simular API call
+      const response = await apiClient.deleteCancha(courtId)
+      
+      if (response.error) {
+        toast.error('Error al eliminar', {
+          description: response.error
+        })
+        return
+      }
+
       setCourts(prev => prev.filter(court => court.id !== courtId))
       toast.success('Cancha eliminada', {
         description: `La cancha "${courtName}" ha sido eliminada exitosamente.`
@@ -78,18 +93,20 @@ export default function AdminCourtsPage() {
     }
   }
 
-  const handleCreateCourt = () => {
-    // TODO: Abrir modal de creación
-    toast.info('Funcionalidad en desarrollo', {
-      description: 'Crear nueva cancha'
-    })
-  }
-
   const toggleCourtStatus = async (court: Cancha) => {
     setActionLoading(court.id)
     try {
-      // TODO: Implementar cambio de estado real
-      await new Promise(resolve => setTimeout(resolve, 1000)) // Simular API call
+      const response = await apiClient.updateCancha(court.id, {
+        disponible: !court.disponible
+      })
+
+      if (response.error) {
+        toast.error('Error al actualizar', {
+          description: response.error
+        })
+        return
+      }
+
       setCourts(prev => prev.map(c => 
         c.id === court.id 
           ? { ...c, disponible: !c.disponible }
@@ -108,146 +125,201 @@ export default function AdminCourtsPage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Gestión de Canchas</h1>
-          <p className="text-gray-600">Administra las canchas deportivas del sistema</p>
+    <>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-black text-gray-900 dark:text-white">Gestión de Canchas</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              Administra las canchas deportivas del sistema
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              onClick={loadCourts} 
+              variant="outline"
+              className="border-gray-200 dark:border-gray-700"
+              disabled={loading}
+            >
+              <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              Actualizar
+            </Button>
+          </div>
         </div>
-        <Button onClick={handleCreateCourt} className="bg-gray-900 hover:bg-gray-800 text-white">
-          <Plus className="mr-2 h-4 w-4" />
-          Nueva Cancha
-        </Button>
+
+        {/* Search and Filters Card */}
+        <Card className="border-gray-200 dark:border-gray-800 shadow-md">
+          <CardHeader className="border-b border-gray-100 dark:border-gray-800 bg-gradient-to-r from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
+            <CardTitle className="text-gray-900 dark:text-white flex items-center gap-2">
+              <MapPin className="h-5 w-5" />
+              Canchas Registradas
+            </CardTitle>
+            <CardDescription className="text-gray-600 dark:text-gray-400">
+              {courts.length} {courts.length === 1 ? 'cancha registrada' : 'canchas registradas'} en el sistema
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-6">
+            {/* Search Bar */}
+            <div className="flex items-center space-x-2 mb-6">
+              <div className="relative flex-1 max-w-sm">
+                <Search className="h-4 w-4 text-gray-400 dark:text-gray-500 absolute left-3 top-3" />
+                <Input
+                  placeholder="Buscar por nombre, deporte o ubicación..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+                />
+              </div>
+            </div>
+
+            {/* Table */}
+            <div className="rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
+              <Table>
+                <TableHeader className="bg-gray-50 dark:bg-gray-900">
+                  <TableRow className="hover:bg-gray-50 dark:hover:bg-gray-900">
+                    <TableHead className="font-semibold">Nombre</TableHead>
+                    <TableHead className="font-semibold">Deporte</TableHead>
+                    <TableHead className="font-semibold">Club</TableHead>
+                    <TableHead className="font-semibold">Estado</TableHead>
+                    <TableHead className="font-semibold">Precio/Hora</TableHead>
+                    <TableHead className="font-semibold">Superficie</TableHead>
+                    <TableHead className="font-semibold text-right">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-12">
+                        <div className="flex flex-col items-center gap-2">
+                          <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
+                          <p className="text-gray-500">Cargando canchas...</p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredCourts.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-12">
+                        <div className="flex flex-col items-center gap-2">
+                          <MapPin className="h-12 w-12 text-gray-300 dark:text-gray-700" />
+                          <p className="text-gray-500 dark:text-gray-400">
+                            {searchTerm ? 'No se encontraron canchas con ese criterio' : 'No hay canchas registradas'}
+                          </p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredCourts.map((court) => (
+                      <TableRow 
+                        key={court.id}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors"
+                      >
+                        <TableCell className="font-semibold text-gray-900 dark:text-white">
+                          {court.nombre}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="font-medium">
+                            {court.deporte?.nombre || '-'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-gray-600 dark:text-gray-400">
+                          {court.club?.nombre || '-'}
+                        </TableCell>
+                        <TableCell>
+                          <button
+                            onClick={() => toggleCourtStatus(court)}
+                            disabled={actionLoading === court.id}
+                            className="cursor-pointer transition-transform hover:scale-105"
+                          >
+                            {court.disponible ? (
+                              <Badge className="bg-green-100 text-green-700 border-green-200 hover:bg-green-200 dark:bg-green-950 dark:text-green-400 dark:border-green-800">
+                                ✓ Disponible
+                              </Badge>
+                            ) : (
+                              <Badge className="bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">
+                                ✕ No disponible
+                              </Badge>
+                            )}
+                          </button>
+                        </TableCell>
+                        <TableCell className="font-semibold text-gray-900 dark:text-white flex items-center gap-1">
+                          <DollarSign className="h-4 w-4 text-green-600" />
+                          {court.precioPorHora.toLocaleString()}
+                        </TableCell>
+                        <TableCell className="text-gray-600 dark:text-gray-400">
+                          {court.tipoSuperficie || '-'}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                disabled={actionLoading === court.id}
+                              >
+                                <MoreHorizontal className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                              <DropdownMenuItem 
+                                onClick={() => handleEditCourt(court)}
+                                className="text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+                              >
+                                <Edit className="mr-2 h-4 w-4" />
+                                Editar Cancha
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <DropdownMenuItem 
+                                    onSelect={(e) => e.preventDefault()}
+                                    className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 cursor-pointer"
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Eliminar
+                                  </DropdownMenuItem>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>¿Estás completamente seguro?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Esta acción no se puede deshacer. La cancha &quot;{court.nombre}&quot; será eliminada permanentemente del sistema.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel className="border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
+                                      Cancelar
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction 
+                                      onClick={() => handleDeleteCourt(court.id, court.nombre)}
+                                      className="bg-red-600 hover:bg-red-700 text-white"
+                                    >
+                                      {actionLoading === court.id ? 'Eliminando...' : 'Sí, Eliminar'}
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      <Card className="border-gray-200 shadow-sm">
-        <CardHeader className="border-b border-gray-100">
-          <CardTitle className="text-gray-900">Canchas Registradas</CardTitle>
-          <CardDescription className="text-gray-600">
-            Lista de todas las canchas deportivas en el sistema
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center space-x-2 mb-6">
-            <div className="relative max-w-sm">
-              <Search className="h-4 w-4 text-gray-400 absolute left-3 top-3" />
-              <Input
-                placeholder="Buscar canchas..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 border-gray-200 focus:border-gray-400 focus:ring-gray-400"
-              />
-            </div>
-          </div>
-
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Deporte</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Precio</TableHead>
-                <TableHead>Ubicación</TableHead>
-                <TableHead>Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
-                    Cargando canchas...
-                  </TableCell>
-                </TableRow>
-              ) : filteredCourts.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
-                    No se encontraron canchas.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredCourts.map((court) => (
-                  <TableRow key={court.id}>
-                    <TableCell className="font-medium">{court.nombre}</TableCell>
-                    <TableCell className="text-gray-600">{court.deporte?.nombre || '-'}</TableCell>
-                    <TableCell>
-                      <button
-                        onClick={() => toggleCourtStatus(court)}
-                        disabled={actionLoading === court.id}
-                        className="cursor-pointer"
-                      >
-                        {court.disponible ? (
-                          <Badge className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100">
-                            Disponible
-                          </Badge>
-                        ) : (
-                          <Badge className="bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100">
-                            No disponible
-                          </Badge>
-                        )}
-                      </button>
-                    </TableCell>
-                    <TableCell className="font-medium text-gray-900">${court.precioPorHora.toLocaleString()}</TableCell>
-                    <TableCell className="text-gray-600">{court.ubicacion}</TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-8 w-8 p-0 hover:bg-gray-100"
-                            disabled={actionLoading === court.id}
-                          >
-                            <MoreHorizontal className="h-4 w-4 text-gray-600" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-40">
-                          <DropdownMenuItem 
-                            onClick={() => handleEditCourt(court)}
-                            className="text-gray-700 hover:bg-gray-50"
-                          >
-                            <Edit className="mr-2 h-4 w-4" />
-                            Editar
-                          </DropdownMenuItem>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <DropdownMenuItem 
-                                onSelect={(e) => e.preventDefault()}
-                                className="text-red-600 hover:bg-red-50"
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Eliminar
-                              </DropdownMenuItem>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Esta acción no se puede deshacer. La cancha &quot;{court.nombre}&quot; será eliminada permanentemente.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel className="border-gray-200 hover:bg-gray-50">
-                                  Cancelar
-                                </AlertDialogCancel>
-                                <AlertDialogAction 
-                                  onClick={() => handleDeleteCourt(court.id, court.nombre)}
-                                  className="bg-red-600 hover:bg-red-700 text-white"
-                                >
-                                  {actionLoading === court.id ? 'Eliminando...' : 'Eliminar'}
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </div>
+      {/* Edit Dialog */}
+      <EditCanchaDialog
+        cancha={editingCourt}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onSuccess={loadCourts}
+      />
+    </>
   )
-} 
+}
