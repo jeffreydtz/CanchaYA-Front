@@ -58,6 +58,7 @@ export function SoccerCourt() {
         <ringGeometry args={[2, 2.12, 64]} />
         <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.2} />
       </mesh>
+      {/* Punto central (solo marca en el suelo, sin poste) */}
       <mesh position={[0, 0.17, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <circleGeometry args={[0.15, 32]} />
         <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.3} />
@@ -73,30 +74,53 @@ export function SoccerCourt() {
         <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.2} transparent opacity={0.3} wireframe />
       </mesh>
       
-      {/* Arcos mejorados */}
+      {/* Arcos profesionales */}
       {/* Arco izquierdo */}
       <group position={[-10.2, 0, 0]}>
-        {/* Postes */}
-        <mesh position={[0, 1.1, -2.2]} castShadow>
+        {/* Poste izquierdo */}
+        <mesh position={[0, 1.1, -2.2]} castShadow receiveShadow>
           <cylinderGeometry args={[0.06, 0.06, 2.2, 16]} />
-          <meshStandardMaterial color="#e8e8e8" metalness={0.7} roughness={0.3} />
+          <meshStandardMaterial color="#ffffff" metalness={0.8} roughness={0.2} />
         </mesh>
-        <mesh position={[0, 1.1, 2.2]} castShadow>
+        {/* Poste derecho */}
+        <mesh position={[0, 1.1, 2.2]} castShadow receiveShadow>
           <cylinderGeometry args={[0.06, 0.06, 2.2, 16]} />
-          <meshStandardMaterial color="#e8e8e8" metalness={0.7} roughness={0.3} />
+          <meshStandardMaterial color="#ffffff" metalness={0.8} roughness={0.2} />
         </mesh>
-        {/* Travesaño */}
-        <mesh position={[0, 2.2, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+        {/* Travesaño horizontal */}
+        <mesh position={[0, 2.2, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow receiveShadow>
           <cylinderGeometry args={[0.06, 0.06, 4.4, 16]} />
-          <meshStandardMaterial color="#e8e8e8" metalness={0.7} roughness={0.3} />
+          <meshStandardMaterial color="#ffffff" metalness={0.8} roughness={0.2} />
         </mesh>
-        {/* Red */}
-        <mesh position={[0.3, 1.1, 0]}>
+        {/* Red lateral */}
+        <mesh position={[0.4, 1.1, 0]} rotation={[0, Math.PI / 2, 0]}>
           <planeGeometry args={[4.4, 2.2]} />
           <meshStandardMaterial 
             color="#ffffff" 
             transparent 
-            opacity={0.4} 
+            opacity={0.3} 
+            wireframe 
+            side={2}
+          />
+        </mesh>
+        {/* Red superior */}
+        <mesh position={[0.2, 2.2, 0]} rotation={[-Math.PI / 4, 0, 0]}>
+          <planeGeometry args={[0.6, 4.4]} />
+          <meshStandardMaterial 
+            color="#ffffff" 
+            transparent 
+            opacity={0.25} 
+            wireframe 
+            side={2}
+          />
+        </mesh>
+        {/* Red trasera */}
+        <mesh position={[0.6, 1.1, 0]} rotation={[0, Math.PI / 2, 0]}>
+          <planeGeometry args={[4.4, 2.2]} />
+          <meshStandardMaterial 
+            color="#ffffff" 
+            transparent 
+            opacity={0.25} 
             wireframe 
             side={2}
           />
@@ -105,27 +129,50 @@ export function SoccerCourt() {
       
       {/* Arco derecho */}
       <group position={[10.2, 0, 0]}>
-        {/* Postes */}
-        <mesh position={[0, 1.1, -2.2]} castShadow>
+        {/* Poste izquierdo */}
+        <mesh position={[0, 1.1, -2.2]} castShadow receiveShadow>
           <cylinderGeometry args={[0.06, 0.06, 2.2, 16]} />
-          <meshStandardMaterial color="#e8e8e8" metalness={0.7} roughness={0.3} />
+          <meshStandardMaterial color="#ffffff" metalness={0.8} roughness={0.2} />
         </mesh>
-        <mesh position={[0, 1.1, 2.2]} castShadow>
+        {/* Poste derecho */}
+        <mesh position={[0, 1.1, 2.2]} castShadow receiveShadow>
           <cylinderGeometry args={[0.06, 0.06, 2.2, 16]} />
-          <meshStandardMaterial color="#e8e8e8" metalness={0.7} roughness={0.3} />
+          <meshStandardMaterial color="#ffffff" metalness={0.8} roughness={0.2} />
         </mesh>
-        {/* Travesaño */}
-        <mesh position={[0, 2.2, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+        {/* Travesaño horizontal */}
+        <mesh position={[0, 2.2, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow receiveShadow>
           <cylinderGeometry args={[0.06, 0.06, 4.4, 16]} />
-          <meshStandardMaterial color="#e8e8e8" metalness={0.7} roughness={0.3} />
+          <meshStandardMaterial color="#ffffff" metalness={0.8} roughness={0.2} />
         </mesh>
-        {/* Red */}
-        <mesh position={[-0.3, 1.1, 0]}>
+        {/* Red lateral */}
+        <mesh position={[-0.4, 1.1, 0]} rotation={[0, Math.PI / 2, 0]}>
           <planeGeometry args={[4.4, 2.2]} />
           <meshStandardMaterial 
             color="#ffffff" 
             transparent 
-            opacity={0.4} 
+            opacity={0.3} 
+            wireframe 
+            side={2}
+          />
+        </mesh>
+        {/* Red superior */}
+        <mesh position={[-0.2, 2.2, 0]} rotation={[-Math.PI / 4, 0, 0]}>
+          <planeGeometry args={[0.6, 4.4]} />
+          <meshStandardMaterial 
+            color="#ffffff" 
+            transparent 
+            opacity={0.25} 
+            wireframe 
+            side={2}
+          />
+        </mesh>
+        {/* Red trasera */}
+        <mesh position={[-0.6, 1.1, 0]} rotation={[0, Math.PI / 2, 0]}>
+          <planeGeometry args={[4.4, 2.2]} />
+          <meshStandardMaterial 
+            color="#ffffff" 
+            transparent 
+            opacity={0.25} 
             wireframe 
             side={2}
           />
