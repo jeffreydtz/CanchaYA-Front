@@ -33,6 +33,12 @@ const menuItems = [
     description: "Vista general del sistema"
   },
   {
+    title: "Analytics",
+    url: "/admin/dashboard",
+    icon: Trophy,
+    description: "Business Intelligence y métricas"
+  },
+  {
     title: "Canchas",
     url: "/admin/canchas",
     icon: MapPin,

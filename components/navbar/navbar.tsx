@@ -29,7 +29,6 @@ export default function Navbar() {
     { href: '/buscar', label: 'Buscar', icon: Search },
     { href: '/mis-reservas', label: t('nav.reservations'), icon: Calendar },
     ...(isAuthenticated ? [
-      { href: '/competitivo', label: 'Competitivo', icon: Trophy },
       { href: '/profile', label: t('nav.profile'), icon: User }
     ] : []),
     ...(isAdmin ? [{ href: '/admin', label: t('nav.admin'), icon: Shield }] : []),
@@ -129,12 +128,6 @@ export default function Navbar() {
                       <Link href="/mis-reservas" className="flex items-center p-3 rounded-lg hover:bg-muted cursor-pointer">
                         <Calendar className="mr-3 h-5 w-5" />
                         <span className="font-medium">{t('nav.reservations')}</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/competitivo" className="flex items-center p-3 rounded-lg hover:bg-muted cursor-pointer">
-                        <Trophy className="mr-3 h-5 w-5" />
-                        <span className="font-medium">Competitivo</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
