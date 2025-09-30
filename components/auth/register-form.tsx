@@ -20,6 +20,7 @@ import Link from 'next/link'
 
 const registerSchema = z.object({
   nombre: z.string().min(1, 'El nombre es requerido'),
+  apellido: z.string().min(1, 'El apellido es requerido'),
   email: z.string().email('Email inválido'),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
   confirmPassword: z.string(),
@@ -47,6 +48,7 @@ export function RegisterForm() {
     try {
       const response = await apiClient.register({
         nombre: data.nombre,
+        apellido: data.apellido,
         email: data.email,
         password: data.password,
       })
@@ -80,63 +82,80 @@ export function RegisterForm() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="nombre">Nombre completo</Label>
-            <Input
-              id="nombre"
-              type="text"
-              placeholder="Tu nombre completo"
-              {...register('nombre')}
-              disabled={isLoading}
-              className="bg-white dark:bg-white text-black font-bold"
-            />
-            {errors.nombre && (
-              <p className="text-sm text-red-600">{errors.nombre.message}</p>
-            )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="nombre" className="text-sm font-semibold text-gray-900 dark:text-gray-100">Nombre</Label>
+              <Input
+                id="nombre"
+                type="text"
+                placeholder="Juan"
+                {...register('nombre')}
+                disabled={isLoading}
+                className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100"
+              />
+              {errors.nombre && (
+                <p className="text-sm text-red-600 dark:text-red-400">{errors.nombre.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="apellido" className="text-sm font-semibold text-gray-900 dark:text-gray-100">Apellido</Label>
+              <Input
+                id="apellido"
+                type="text"
+                placeholder="Pérez"
+                {...register('apellido')}
+                disabled={isLoading}
+                className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100"
+              />
+              {errors.apellido && (
+                <p className="text-sm text-red-600 dark:text-red-400">{errors.apellido.message}</p>
+              )}
+            </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className="text-sm font-semibold text-gray-900 dark:text-gray-100">Email</Label>
             <Input
               id="email"
               type="email"
               placeholder="tu@email.com"
               {...register('email')}
               disabled={isLoading}
-              className="bg-white dark:bg-white text-black font-bold"
+              className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100"
             />
             {errors.email && (
-              <p className="text-sm text-red-600">{errors.email.message}</p>
+              <p className="text-sm text-red-600 dark:text-red-400">{errors.email.message}</p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Contraseña</Label>
+            <Label htmlFor="password" className="text-sm font-semibold text-gray-900 dark:text-gray-100">Contraseña</Label>
             <Input
               id="password"
               type="password"
               placeholder="••••••••"
               {...register('password')}
               disabled={isLoading}
-              className="bg-white dark:bg-white text-black font-bold"
+              className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100"
             />
             {errors.password && (
-              <p className="text-sm text-red-600">{errors.password.message}</p>
+              <p className="text-sm text-red-600 dark:text-red-400">{errors.password.message}</p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirmar contraseña</Label>
+            <Label htmlFor="confirmPassword" className="text-sm font-semibold text-gray-900 dark:text-gray-100">Confirmar contraseña</Label>
             <Input
               id="confirmPassword"
               type="password"
               placeholder="••••••••"
               {...register('confirmPassword')}
               disabled={isLoading}
-              className="bg-white dark:bg-white text-black font-bold"
+              className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100"
             />
             {errors.confirmPassword && (
-              <p className="text-sm text-red-600">{errors.confirmPassword.message}</p>
+              <p className="text-sm text-red-600 dark:text-red-400">{errors.confirmPassword.message}</p>
             )}
           </div>
 
