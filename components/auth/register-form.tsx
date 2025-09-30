@@ -22,7 +22,12 @@ const registerSchema = z.object({
   nombre: z.string().min(1, 'El nombre es requerido'),
   apellido: z.string().min(1, 'El apellido es requerido'),
   email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+  password: z.string()
+    .min(8, 'La contraseña debe tener al menos 8 caracteres')
+    .regex(/[A-Z]/, 'La contraseña debe tener al menos una mayúscula')
+    .regex(/[a-z]/, 'La contraseña debe tener al menos una minúscula')
+    .regex(/[0-9]/, 'La contraseña debe tener al menos un número')
+    .regex(/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/, 'La contraseña debe tener al menos un símbolo especial'),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Las contraseñas no coinciden",
@@ -54,6 +59,23 @@ export function RegisterForm() {
       })
       
       if (response.error) {
+        // Si el error es un objeto con array de errores
+        if (typeof response.error === 'string') {
+          try {
+            const errorData = JSON.parse(response.error)
+            if (errorData.errors && Array.isArray(errorData.errors)) {
+              // Mostrar cada error del backend
+              errorData.errors.forEach((err: string) => {
+                toast.error(err)
+              })
+              return
+            }
+          } catch {
+            // Si no se puede parsear, mostrar el error como string
+            toast.error(response.error)
+            return
+          }
+        }
         toast.error(response.error)
         return
       }
@@ -64,9 +86,19 @@ export function RegisterForm() {
       } else {
         toast.error('Error en el registro')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration error:', error)
-      toast.error('Error del servidor. Intenta nuevamente.')
+      
+      // Intentar extraer errores del backend
+      if (error.response?.data?.errors) {
+        error.response.data.errors.forEach((err: string) => {
+          toast.error(err)
+        })
+      } else if (error.message) {
+        toast.error(error.message)
+      } else {
+        toast.error('Error del servidor. Intenta nuevamente.')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -142,6 +174,16 @@ export function RegisterForm() {
             {errors.password && (
               <p className="text-sm text-red-600 dark:text-red-400">{errors.password.message}</p>
             )}
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 space-y-1">
+              <p className="font-medium">La contraseña debe contener:</p>
+              <ul className="list-disc list-inside space-y-0.5 ml-2">
+                <li>Mínimo 8 caracteres</li>
+                <li>Al menos una letra mayúscula (A-Z)</li>
+                <li>Al menos una letra minúscula (a-z)</li>
+                <li>Al menos un número (0-9)</li>
+                <li>Al menos un símbolo especial (!@#$%^&*)</li>
+              </ul>
+            </div>
           </div>
 
           <div className="space-y-2">

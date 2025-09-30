@@ -240,6 +240,20 @@ export default function BuscarPage() {
           )
         }
         
+        // Filtrar por precio mínimo
+        if (filters.precioMin && parseFloat(filters.precioMin) > 0) {
+          filtered = filtered.filter(cancha => 
+            cancha.precioPorHora >= parseFloat(filters.precioMin)
+          )
+        }
+        
+        // Filtrar por precio máximo
+        if (filters.precioMax && parseFloat(filters.precioMax) > 0) {
+          filtered = filtered.filter(cancha => 
+            cancha.precioPorHora <= parseFloat(filters.precioMax)
+          )
+        }
+        
         setCanchas(filtered)
       }
     } catch (error) {
