@@ -103,26 +103,26 @@ export default function CourtFilters() {
   return (
     <div className="w-full space-y-6 mb-8">
       {/* Main Search Bar */}
-      <Card className="border-0 shadow-lg bg-gradient-to-r from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
+      <Card className="border-0 shadow-xl bg-white dark:bg-gray-900/95 backdrop-blur-sm">
         <CardContent className="p-6">
           <div className="flex flex-col lg:flex-row gap-4">
             {/* Search Input */}
             <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 h-5 w-5" />
               <Input
                 placeholder="Buscar canchas por nombre, ubicación o deporte..."
                 value={filters.search}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
-                className="pl-12 pr-4 h-12 text-lg border-2 border-gray-200 focus:border-primary rounded-xl"
+                className="pl-12 pr-4 h-12 text-base font-medium border-2 border-gray-200 dark:border-gray-700 focus:border-primary dark:focus:border-primary bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 rounded-xl transition-all duration-200"
               />
             </div>
 
             {/* Quick Filters */}
             <div className="flex flex-col sm:flex-row gap-3 lg:w-auto">
               <Select value={filters.deporte} onValueChange={(value) => handleFilterChange('deporte', value)}>
-                <SelectTrigger className="h-12 min-w-[160px] rounded-xl border-2 border-muted">
+                <SelectTrigger className="h-12 min-w-[160px] rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 font-medium">
                   <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <MapPin className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                     <SelectValue placeholder="Deporte" />
                   </div>
                 </SelectTrigger>
@@ -140,7 +140,7 @@ export default function CourtFilters() {
                 date={filters.fecha}
                 onDateChange={(date) => handleFilterChange('fecha', date)}
                 placeholder="Seleccionar fecha"
-                className="h-12 min-w-[200px] rounded-xl border-2 border-muted"
+                className="h-12 min-w-[200px] rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 font-medium"
                 disablePastDates
               />
 
@@ -161,12 +161,12 @@ export default function CourtFilters() {
             <Button
               variant="ghost"
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="text-sm text-muted-foreground hover:text-primary"
+              className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary"
             >
               <Sliders className="h-4 w-4 mr-2" />
               Filtros avanzados
               {activeFiltersCount > 0 && (
-                <Badge variant="secondary" className="ml-2">
+                <Badge variant="secondary" className="ml-2 font-semibold">
                   {activeFiltersCount}
                 </Badge>
               )}
@@ -176,7 +176,7 @@ export default function CourtFilters() {
               <Button
                 variant="ghost"
                 onClick={clearFilters}
-                className="text-sm text-muted-foreground hover:text-destructive"
+                className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-destructive dark:hover:text-destructive"
               >
                 <X className="h-4 w-4 mr-2" />
                 Limpiar filtros
@@ -188,17 +188,17 @@ export default function CourtFilters() {
 
       {/* Advanced Filters Panel */}
       {showAdvanced && (
-        <Card className="border-0 shadow-lg animate-fade-in-up">
+        <Card className="border-0 shadow-xl bg-white dark:bg-gray-900/95 backdrop-blur-sm animate-fade-in-up">
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {/* Club Filter */}
               <div className="space-y-3">
-                <Label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                   <MapPin className="h-4 w-4" />
                   Club
                 </Label>
                 <Select value={filters.club} onValueChange={(value) => handleFilterChange('club', value)}>
-                  <SelectTrigger className="rounded-lg">
+                  <SelectTrigger className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 font-medium">
                     <SelectValue placeholder="Seleccionar club" />
                   </SelectTrigger>
                   <SelectContent>
@@ -214,12 +214,12 @@ export default function CourtFilters() {
 
               {/* Time Filter */}
               <div className="space-y-3">
-                <Label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                   <Clock className="h-4 w-4" />
                   Horario
                 </Label>
                 <Select value={filters.hora} onValueChange={(value) => handleFilterChange('hora', value)}>
-                  <SelectTrigger className="rounded-lg">
+                  <SelectTrigger className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 font-medium">
                     <SelectValue placeholder="Cualquier hora" />
                   </SelectTrigger>
                   <SelectContent>
@@ -232,7 +232,7 @@ export default function CourtFilters() {
 
               {/* Price Range */}
               <div className="space-y-3">
-                <Label className="text-sm font-semibold text-foreground">
+                <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                   Precio por hora: ${filters.precio[0].toLocaleString()} - ${filters.precio[1].toLocaleString()}
                 </Label>
                 <div className="px-3 py-2">
@@ -245,7 +245,7 @@ export default function CourtFilters() {
                     className="w-full"
                   />
                 </div>
-                <div className="flex justify-between text-xs text-muted-foreground">
+                <div className="flex justify-between text-xs font-medium text-gray-500 dark:text-gray-400">
                   <span>$0</span>
                   <span>$10,000+</span>
                 </div>
@@ -253,7 +253,7 @@ export default function CourtFilters() {
 
               {/* Rating Filter */}
               <div className="space-y-3">
-                <Label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                   <Star className="h-4 w-4" />
                   Calificación mínima
                 </Label>
@@ -261,7 +261,7 @@ export default function CourtFilters() {
                   value={filters.rating.toString()} 
                   onValueChange={(value) => handleFilterChange('rating', parseInt(value))}
                 >
-                  <SelectTrigger className="rounded-lg">
+                  <SelectTrigger className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 font-medium">
                     <SelectValue placeholder="Cualquier calificación" />
                   </SelectTrigger>
                   <SelectContent>

@@ -38,7 +38,7 @@ export default function Navbar() {
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
       isScrolled 
-        ? 'bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-lg border-b border-gray-200/50 dark:border-gray-700/50' 
+        ? 'bg-white/98 dark:bg-gray-950/98 backdrop-blur-lg shadow-xl border-b border-gray-200 dark:border-gray-800' 
         : 'bg-black/10 dark:bg-black/20 backdrop-blur-sm'
     }`}>
       <div className="container mx-auto px-4">
@@ -66,9 +66,9 @@ export default function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center space-x-2 text-sm font-medium transition-all duration-300 hover:scale-105 px-3 py-2 rounded-lg ${
+                  className={`flex items-center space-x-2 text-sm font-semibold antialiased transition-all duration-300 hover:scale-105 px-3 py-2 rounded-lg ${
                     isScrolled 
-                      ? 'text-gray-700 dark:text-gray-200 hover:text-primary hover:bg-primary/10' 
+                      ? 'text-gray-700 dark:text-gray-100 hover:text-primary dark:hover:text-primary hover:bg-primary/10' 
                       : 'text-white/90 hover:text-white hover:bg-white/10'
                   }`}
                 >
@@ -203,7 +203,7 @@ export default function Navbar() {
 
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50 shadow-lg">
+          <div className="md:hidden absolute top-full left-0 right-0 bg-white/98 dark:bg-gray-950/98 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800 shadow-xl">
             <div className="py-4 space-y-2">
               {navigationItems.map((item) => {
                 const Icon = item.icon
@@ -211,7 +211,7 @@ export default function Navbar() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-muted rounded-lg mx-2 transition-colors"
+                    className="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-100 font-semibold antialiased hover:bg-primary/10 hover:text-primary rounded-lg mx-2 transition-colors"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <Icon className="h-5 w-5" />
