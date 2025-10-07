@@ -117,7 +117,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.log('Cookie verification - token saved:', savedToken ? 'YES' : 'NO')
           }, 100)
           
-          toast.success('¡Bienvenido!')
           return true
         } catch (e) {
           console.error('Error decoding token:', e)
