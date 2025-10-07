@@ -57,26 +57,21 @@ export function LoginForm() {
           description: 'Has iniciado sesión exitosamente.',
         })
         
-        console.log('Login successful, redirecting in 1.5 seconds...')
-        // Wait a bit longer for auth context to update, then redirect
-        setTimeout(() => {
-          console.log('Redirecting to home page...')
-          if (typeof window !== 'undefined') {
-            window.location.href = '/'
-          }
-        }, 1500)
+        console.log('Login successful, redirecting...')
+        // Use router.push for smooth client-side navigation
+        router.push('/')
       } else {
         console.log('Login failed - credentials invalid or server error')
         toast.error('Error al iniciar sesión', {
           description: 'Verifica tus credenciales e intenta nuevamente.',
         })
+        setIsLoading(false)
       }
     } catch (error) {
       console.error('Login error in form:', error)
       toast.error('Error al iniciar sesión', {
         description: 'Verifica tus credenciales e intenta nuevamente.',
       })
-    } finally {
       setIsLoading(false)
     }
   }

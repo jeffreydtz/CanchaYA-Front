@@ -30,6 +30,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [initialLoad, setInitialLoad] = useState(true)
 
   // Inicializa el estado de autenticación leyendo el token y decodificando el usuario
   useEffect(() => {
@@ -56,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null)
     }
     setLoading(false)
+    setInitialLoad(false)
   }, [])
 
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -196,10 +198,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshUser,
   }
 
-  if (loading) {
+  // Only show loading spinner on initial page load, not during navigation
+  if (initialLoad && loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">Cargando...</p>
+        </div>
       </div>
     )
   }
