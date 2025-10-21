@@ -114,7 +114,7 @@ export default function HeroSection() {
           
           {/* CTA Buttons */}
           <div className={`flex flex-col sm:flex-row gap-6 justify-center mb-16 ${mounted ? 'scale-in' : 'opacity-0'}`} style={{ animationDelay: '0.2s' }}>
-            <Link href="/">
+            <Link href="/buscar">
               <Button size="xl" variant="glow" className="group relative overflow-hidden">
                 <MapPin className="mr-3 h-6 w-6 group-hover:rotate-12 transition-transform" />
 {t('hero.explore')}

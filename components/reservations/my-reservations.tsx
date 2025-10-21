@@ -163,7 +163,7 @@ export default function MyReservations() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Mis Reservas</h1>
-        <Link href="/">
+        <Link href="/buscar">
           <Button variant="outline">Hacer nueva reserva</Button>
         </Link>
       </div>
@@ -174,7 +174,7 @@ export default function MyReservations() {
             <Calendar className="mx-auto h-12 w-12 text-gray-400 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No tienes reservas</h3>
             <p className="text-gray-600 mb-4">¡Comienza a reservar canchas para jugar!</p>
-            <Link href="/">
+            <Link href="/buscar">
               <Button>Explorar Canchas</Button>
             </Link>
           </CardContent>

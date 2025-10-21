@@ -302,7 +302,7 @@ export default function FeaturedCourts() {
 
             {/* View all button */}
             <div className="text-center animate-fade-in-up" style={{ animationDelay: '600ms' }}>
-              <Link href="/">
+              <Link href="/buscar">
                 <Button variant="outline" size="lg" className="px-12 py-4 text-lg font-semibold">
                   Ver Todas las Canchas
                   <MapPin className="ml-2 h-5 w-5" />
