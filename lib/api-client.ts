@@ -445,6 +445,12 @@ const apiClient = {
   getCanchaById: (id: string) => apiRequest<Cancha>(`/canchas/${id}`),
 
   /**
+   * Obtener disponibilidades de una cancha - GET /canchas/{id}/disponibilidades
+   */
+  getDisponibilidadesByCancha: (canchaId: string) =>
+    apiRequest<DisponibilidadHorario[]>(`/canchas/${canchaId}/disponibilidades`),
+
+  /**
    * Crear cancha - POST /canchas (admin only)
    */
   createCancha: (data: {

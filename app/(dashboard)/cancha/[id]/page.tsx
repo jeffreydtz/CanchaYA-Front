@@ -33,7 +33,7 @@ import {
   Camera,
   CheckCircle
 } from 'lucide-react'
-import apiClient, { Cancha } from '@/lib/api-client'
+import apiClient, { Cancha, DisponibilidadHorario } from '@/lib/api-client'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -106,6 +106,7 @@ export default function CanchaDetailPage() {
   const { isAuthenticated } = useAuth()
   const [cancha, setCancha] = useState<Cancha | null>(null)
   const [loading, setLoading] = useState(true)
+  const [disponibilidades, setDisponibilidades] = useState<DisponibilidadHorario[]>([])
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [selectedTime, setSelectedTime] = useState<string>('')
   const [reserving, setReserving] = useState(false)
@@ -113,17 +114,27 @@ export default function CanchaDetailPage() {
   const canchaId = params.id as string
 
   useEffect(() => {
-    const fetchCancha = async () => {
+    const fetchCanchaData = async () => {
       if (!canchaId) return
       
       setLoading(true)
       try {
-        const response = await apiClient.getCanchaById(canchaId)
-        if (response.data) {
-          setCancha(response.data)
+        // Fetch cancha details and disponibilidades in parallel
+        const [canchaResponse, disponibilidadesResponse] = await Promise.all([
+          apiClient.getCanchaById(canchaId),
+          apiClient.getDisponibilidadesByCancha(canchaId)
+        ])
+        
+        if (canchaResponse.data) {
+          setCancha(canchaResponse.data)
         } else {
           toast.error('Cancha no encontrada')
           router.push('/buscar')
+          return
+        }
+
+        if (disponibilidadesResponse.data) {
+          setDisponibilidades(disponibilidadesResponse.data)
         }
       } catch (error) {
         console.error('Error fetching cancha:', error)
@@ -134,8 +145,35 @@ export default function CanchaDetailPage() {
       }
     }
     
-    fetchCancha()
+    fetchCanchaData()
   }, [canchaId, router])
+
+  // Get available time slots for the selected date based on disponibilidades
+  const getAvailableTimeSlots = (): string[] => {
+    if (!selectedDate || disponibilidades.length === 0) return []
+    
+    const dayOfWeek = selectedDate.getDay()
+    const availableSlots: string[] = []
+    
+    // Filter disponibilidades for the selected day
+    const dayDisponibilidades = disponibilidades.filter(disp => disp.diaSemana === dayOfWeek)
+    
+    // Extract time slots from each disponibilidad
+    dayDisponibilidades.forEach(disp => {
+      const startHour = parseInt(disp.horario.horaInicio.split(':')[0])
+      const endHour = parseInt(disp.horario.horaFin.split(':')[0])
+      
+      // Generate hourly slots within the range
+      for (let hour = startHour; hour < endHour; hour++) {
+        const timeSlot = `${String(hour).padStart(2, '0')}:00`
+        if (!availableSlots.includes(timeSlot)) {
+          availableSlots.push(timeSlot)
+        }
+      }
+    })
+    
+    return availableSlots.sort()
+  }
 
   const handleReservation = async () => {
     if (!isAuthenticated) {
@@ -151,21 +189,31 @@ export default function CanchaDetailPage() {
 
     setReserving(true)
     try {
-      // TODO: Fetch disponibilidades for this cancha and selected date/time
-      // For now, show a message that this needs to be implemented with the new API
+      // 1. Find the matching disponibilidad for selected date/time
+      const dayOfWeek = selectedDate.getDay() // 0 = Sunday, 6 = Saturday
+      const timeHour = selectedTime.split(':')[0] + ':00'
+      
+      const matchingDisponibilidad = disponibilidades.find(disp => 
+        disp.diaSemana === dayOfWeek && 
+        disp.horario.horaInicio === timeHour
+      )
 
-      toast.error('La funcionalidad de reservas necesita actualizarse para usar disponibilidades. Por favor, contacte al administrador.')
+      if (!matchingDisponibilidad) {
+        toast.error('No hay disponibilidad para el horario seleccionado')
+        return
+      }
 
-      // New API structure requires:
-      // 1. Fetch disponibilidades for this cancha
-      // 2. Find the matching disponibilidad for selected date/time
-      // 3. Create ISO 8601 fechaHora from selectedDate + selectedTime
-      // 4. Call createReserva with { disponibilidadId, fechaHora }
+      // 2. Create ISO 8601 fechaHora from selectedDate + selectedTime
+      // Format: "2025-10-21T18:00:00-03:00"
+      const year = selectedDate.getFullYear()
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0')
+      const day = String(selectedDate.getDate()).padStart(2, '0')
+      const fechaHora = `${year}-${month}-${day}T${selectedTime}:00-03:00`
 
-      /*
+      // 3. Call createReserva with { disponibilidadId, fechaHora }
       const response = await apiClient.createReserva({
-        disponibilidadId: 'uuid-from-disponibilidad',
-        fechaHora: new Date(selectedDate.toISOString().split('T')[0] + 'T' + selectedTime + ':00-03:00').toISOString()
+        disponibilidadId: matchingDisponibilidad.id,
+        fechaHora: fechaHora
       })
 
       if (response.data) {
@@ -174,7 +222,6 @@ export default function CanchaDetailPage() {
       } else {
         toast.error(response.error || 'Error al crear la reserva')
       }
-      */
     } catch (error) {
       console.error('Error creating reservation:', error)
       toast.error('Error al crear la reserva')
@@ -452,23 +499,32 @@ export default function CanchaDetailPage() {
                     <Clock className="h-4 w-4" />
                     Horarios disponibles
                   </h4>
-                  <div className="grid grid-cols-3 gap-2">
-                    {timeSlots.map((time) => (
-                      <Button
-                        key={time}
-                        variant={selectedTime === time ? 'default' : 'outline'}
-                        size="sm"
-                        className={`text-xs font-medium transition-all duration-200 ${
-                          selectedTime === time 
-                            ? 'bg-primary text-white shadow-md scale-105' 
-                            : 'hover:bg-green-100 hover:border-green-300 hover:text-green-800 dark:hover:bg-green-900/20'
-                        }`}
-                        onClick={() => setSelectedTime(time)}
-                      >
-                        {time}
-                      </Button>
-                    ))}
-                  </div>
+                  {(() => {
+                    const availableSlots = getAvailableTimeSlots()
+                    return availableSlots.length > 0 ? (
+                      <div className="grid grid-cols-3 gap-2">
+                        {availableSlots.map((time) => (
+                          <Button
+                            key={time}
+                            variant={selectedTime === time ? 'default' : 'outline'}
+                            size="sm"
+                            className={`text-xs font-medium transition-all duration-200 ${
+                              selectedTime === time 
+                                ? 'bg-primary text-white shadow-md scale-105' 
+                                : 'hover:bg-green-100 hover:border-green-300 hover:text-green-800 dark:hover:bg-green-900/20'
+                            }`}
+                            onClick={() => setSelectedTime(time)}
+                          >
+                            {time}
+                          </Button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-600 dark:text-gray-400 text-center py-4">
+                        No hay horarios disponibles para este día
+                      </p>
+                    )
+                  })()}
                 </div>
 
                 {/* Price Summary */}
