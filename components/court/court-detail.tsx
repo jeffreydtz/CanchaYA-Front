@@ -10,8 +10,8 @@ import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { MapPin, DollarSign, Users, Calendar as CalendarIcon, Clock } from 'lucide-react'
 import { toast } from 'sonner'
-import apiClient, { Cancha, Horario } from '@/lib/api-client'
-import { formatDateForInput, getWeekdayName, isDateDisabled, getNextAvailableDate, formatDate } from '@/lib/date-utils'
+import apiClient, { Cancha, Horario, DisponibilidadHorario } from '@/lib/api-client'
+import { getWeekdayName, isDateDisabled, getNextAvailableDate, formatDate } from '@/lib/date-utils'
 import Image from 'next/image'
 
 export default function CourtDetail() {
@@ -21,24 +21,41 @@ export default function CourtDetail() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(getNextAvailableDate())
   const [selectedTime, setSelectedTime] = useState<string>('')
   const [horarios, setHorarios] = useState<Horario[]>([])
+  const [disponibilidades, setDisponibilidades] = useState<DisponibilidadHorario[]>([])
   const [loading, setLoading] = useState(true)
   const [reserving, setReserving] = useState(false)
 
   const courtId = params?.id as string
 
   useEffect(() => {
-    const loadCourtDetails = async () => {
+    const loadCourtData = async () => {
       if (!courtId) return
 
       try {
-        const response = await apiClient.getCanchaById(courtId)
-        if (response.error) {
-          toast.error(response.error)
+        // Fetch court details, horarios, and disponibilidades in parallel
+        const [courtResponse, horariosResponse, disponibilidadesResponse] = await Promise.all([
+          apiClient.getCanchaById(courtId),
+          apiClient.getHorarios(),
+          apiClient.getDisponibilidadesByCancha(courtId)
+        ])
+
+        if (courtResponse.error) {
+          toast.error(courtResponse.error)
           return
         }
 
-        if (response.data) {
-          setCourt(response.data)
+        if (courtResponse.data) {
+          setCourt(courtResponse.data)
+        }
+
+        if (horariosResponse.data) {
+          // Filter schedules for this court
+          const courtSchedules = horariosResponse.data.filter(h => h.canchaId === courtId)
+          setHorarios(courtSchedules)
+        }
+
+        if (disponibilidadesResponse.data) {
+          setDisponibilidades(disponibilidadesResponse.data)
         }
       } catch (error) {
         console.error('Error loading court details:', error)
@@ -48,31 +65,7 @@ export default function CourtDetail() {
       }
     }
 
-    loadCourtDetails()
-  }, [courtId])
-
-  useEffect(() => {
-    const loadHorarios = async () => {
-      if (!courtId) return
-
-      try {
-        const response = await apiClient.getHorarios()
-        if (response.error) {
-          console.error('Error loading schedules:', response.error)
-          return
-        }
-
-        if (response.data) {
-          // Filter schedules for this court
-          const courtSchedules = response.data.filter(h => h.canchaId === courtId)
-          setHorarios(courtSchedules)
-        }
-      } catch (error) {
-        console.error('Error loading schedules:', error)
-      }
-    }
-
-    loadHorarios()
+    loadCourtData()
   }, [courtId])
 
   const getAvailableHours = () => {
@@ -112,21 +105,30 @@ export default function CourtDetail() {
 
     setReserving(true)
     try {
-      // TODO: Fetch disponibilidades for this cancha and selected date/time
-      // For now, show a message that this needs to be implemented with the new API
+      // 1. Find the matching disponibilidad for selected date/time
+      const dayOfWeek = selectedDate.getDay() // 0 = Sunday, 6 = Saturday
+      const timeHour = selectedTime.split(':')[0] + ':00'
       
-      toast.error('La funcionalidad de reservas necesita actualizarse para usar disponibilidades. Por favor, contacte al administrador.')
-      
-      // New API structure requires:
-      // 1. Fetch disponibilidades for this cancha
-      // 2. Find the matching disponibilidad for selected date/time
-      // 3. Create ISO 8601 fechaHora from selectedDate + selectedTime
-      // 4. Call createReserva with { disponibilidadId, fechaHora }
-      
-      /*
+      const matchingDisponibilidad = disponibilidades.find(disp => 
+        disp.diaSemana === dayOfWeek && 
+        disp.horario.horaInicio === timeHour
+      )
+
+      if (!matchingDisponibilidad) {
+        toast.error('No hay disponibilidad para el horario seleccionado')
+        return
+      }
+
+      // 2. Create ISO 8601 fechaHora from selectedDate + selectedTime
+      const year = selectedDate.getFullYear()
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0')
+      const day = String(selectedDate.getDate()).padStart(2, '0')
+      const fechaHora = `${year}-${month}-${day}T${selectedTime}:00-03:00`
+
+      // 3. Call createReserva with { disponibilidadId, fechaHora }
       const response = await apiClient.createReserva({
-        disponibilidadId: 'uuid-from-disponibilidad',
-        fechaHora: new Date(selectedDate.toISOString().split('T')[0] + 'T' + selectedTime + ':00-03:00').toISOString()
+        disponibilidadId: matchingDisponibilidad.id,
+        fechaHora: fechaHora
       })
 
       if (response.error) {
@@ -139,7 +141,6 @@ export default function CourtDetail() {
         setSelectedDate(getNextAvailableDate())
         setSelectedTime('')
       }
-      */
     } catch (error) {
       console.error('Error creating reservation:', error)
       toast.error('No se pudo crear la reserva')

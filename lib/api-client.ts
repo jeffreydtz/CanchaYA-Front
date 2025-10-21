@@ -2,8 +2,33 @@
  * API Client para CanchaYA
  * Cliente universal alineado con el backend NestJS
  * Base URL: https://backend-cancha-ya-production.up.railway.app/api
- * Autenticación: Bearer JWT token
- * Todos los IDs son UUIDs, fechas en formato YYYY-MM-DD, horas en HH:MM
+ * Autenticación: Bearer JWT token (Authorization: Bearer <accessToken>)
+ * Formato: JSON
+ * 
+ * DOCUMENTED ENDPOINTS (from API v1):
+ * - /auth (register, login, refresh, logout, me)
+ * - /usuarios (GET list - admin only)
+ * - /personas (search, get by id, update)
+ * - /canchas (list, get by id, get by club, create, update, delete)
+ * - /reservas (list, create, confirm, cancel)
+ * 
+ * UNDOCUMENTED BUT IMPLEMENTED (from backend seed scripts):
+ * - /canchas/{id}/disponibilidades - Get DisponibilidadHorario for a cancha
+ * - /horarios - Horarios management (CRUD operations)
+ * - /clubes - Clubs management (CRUD operations)  
+ * - /deportes - Sports management (CRUD operations)
+ * - /equipos - Teams management
+ * - /desafios - Challenges management
+ * - /deudas - Debts management
+ * - /valoraciones - Ratings management
+ * - /disponibilidades - Player availability (NOT IMPLEMENTED IN BACKEND)
+ * - /reportes - Various reports endpoints
+ * - /competicion - Competition/ranking endpoints
+ * 
+ * All IDs are UUIDs
+ * Dates in format: YYYY-MM-DD
+ * Times in format: HH:MM
+ * DateTime in ISO 8601: YYYY-MM-DDTHH:MM:SS-03:00
  */
 
 import { getCookie } from './auth'
@@ -446,6 +471,9 @@ const apiClient = {
 
   /**
    * Obtener disponibilidades de una cancha - GET /canchas/{id}/disponibilidades
+   * NOTE: This endpoint may not be documented but is needed for reservation system
+   * DisponibilidadHorario entities exist in backend (see seed scripts)
+   * Alternative: Could be retrieved via /horarios and filtered by cancha
    */
   getDisponibilidadesByCancha: (canchaId: string) =>
     apiRequest<DisponibilidadHorario[]>(`/canchas/${canchaId}/disponibilidades`),
@@ -482,9 +510,11 @@ const apiClient = {
     apiRequest<void>(`/canchas/${id}`, { method: 'DELETE' }),
 
   // ===== CLUBES =====
+  // NOTE: Clubes endpoints not in main API docs but implemented in backend (see seed scripts)
   
   /**
    * Listar clubes - GET /clubes
+   * @note Not documented in API v1 but implemented in backend
    */
   getClubes: () => apiRequest<Club[]>('/clubes'),
 
@@ -523,9 +553,11 @@ const apiClient = {
     apiRequest<void>(`/clubes/${id}`, { method: 'DELETE' }),
 
   // ===== DEPORTES =====
+  // NOTE: Deportes endpoints not in main API docs but implemented in backend (see seed scripts)
   
   /**
    * Listar deportes - GET /deportes
+   * @note Not documented in API v1 but implemented in backend
    */
   getDeportes: () => apiRequest<Deporte[]>('/deportes'),
 
@@ -604,9 +636,11 @@ const apiClient = {
 
 
   // ===== EQUIPOS =====
+  // NOTE: Equipos endpoints not in main API docs but implemented in backend
   
   /**
    * Listar equipos - GET /equipos
+   * @note Not documented in API v1 but implemented in backend
    */
   getEquipos: () => apiRequest<Equipo[]>('/equipos'),
 
@@ -644,9 +678,11 @@ const apiClient = {
     apiRequest<void>(`/equipos/${id}`, { method: 'DELETE' }),
 
   // ===== DESAFÍOS =====
+  // NOTE: Desafios are documented in API docs under "Entidades relacionadas"
   
   /**
    * Listar desafíos - GET /desafios
+   * @note Referenced in API v1 documentation
    */
   getDesafios: (params?: {
     estado?: string;
@@ -698,20 +734,23 @@ const apiClient = {
     }),
 
   // ===== DEUDAS =====
+  // NOTE: Deudas are documented in API docs under "Entidades relacionadas"
   
   /**
    * Listar deudas - GET /deudas
+   * @note Referenced in API v1 documentation
    */
   getDeudas: () => apiRequest<Deuda[]>('/deudas'),
 
   /**
    * Crear deuda - POST /deudas
+   * Request body should include personaId (from backend seed structure)
    */
   createDeuda: (data: {
-    usuarioId: string;
+    personaId: string; // UUID of Persona
     monto: number;
     fechaVencimiento: string; // YYYY-MM-DD
-    descripcion?: string;
+    pagada?: boolean;
   }) =>
     apiRequest<Deuda>('/deudas', {
       method: 'POST',
@@ -739,14 +778,19 @@ const apiClient = {
     apiRequest<void>(`/deudas/${id}`, { method: 'DELETE' }),
 
   // ===== DISPONIBILIDAD DE JUGADORES =====
+  // NOTE: These endpoints are NOT available in the current API
+  // DisponibilidadJugador feature is not implemented in backend
+  // Keeping interface for future implementation
   
   /**
    * Listar disponibilidades - GET /disponibilidades
+   * @deprecated NOT IMPLEMENTED IN BACKEND API
    */
   getDisponibilidades: () => apiRequest<DisponibilidadJugador[]>('/disponibilidades'),
 
   /**
    * Crear disponibilidad - POST /disponibilidades
+   * @deprecated NOT IMPLEMENTED IN BACKEND API
    */
   createDisponibilidad: (data: {
     fechaDesde: string; // YYYY-MM-DD
@@ -762,14 +806,18 @@ const apiClient = {
 
   /**
    * Eliminar disponibilidad - DELETE /disponibilidades/{id}
+   * @deprecated NOT IMPLEMENTED IN BACKEND API
    */
   deleteDisponibilidad: (id: string) =>
     apiRequest<void>(`/disponibilidades/${id}`, { method: 'DELETE' }),
 
   // ===== HORARIOS =====
+  // NOTE: Horarios endpoints not in main API docs but exist in backend (see seed scripts)
+  // Horarios define the schedule/availability for canchas
   
   /**
    * Listar horarios - GET /horarios
+   * @note Not documented in API v1 but implemented in backend
    */
   getHorarios: () => apiRequest<Horario[]>('/horarios'),
 
@@ -808,18 +856,22 @@ const apiClient = {
     apiRequest<void>(`/horarios/${id}`, { method: 'DELETE' }),
 
   // ===== VALORACIONES =====
+  // NOTE: Valoraciones are documented in API docs under "Entidades relacionadas"
   
   /**
    * Listar valoraciones - GET /valoraciones
+   * @note Referenced in API v1 documentation
    */
   getValoraciones: () => apiRequest<Valoracion[]>('/valoraciones'),
 
   /**
    * Crear valoración - POST /valoraciones
+   * tipo_objetivo: 'club' | 'cancha' | 'usuario'
+   * id_objetivo: UUID of the target entity
    */
   createValoracion: (data: {
-    usuarioId: string;
-    canchaId: string;
+    tipo_objetivo: 'club' | 'cancha' | 'usuario';
+    id_objetivo: string; // UUID
     puntaje: number; // 1-5
     comentario?: string;
   }) =>
