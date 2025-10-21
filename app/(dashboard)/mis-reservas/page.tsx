@@ -66,8 +66,8 @@ function ReservationCard({ reserva, onCancel, onConfirm }: {
         return <CheckCircle className="h-5 w-5 text-green-500" />
       case 'pendiente':
         return <AlertCircle className="h-5 w-5 text-blue-500" />
-      case 'liberada':
-        return <XCircle className="h-5 w-5 text-blue-500" />
+      case 'cancelada':
+        return <XCircle className="h-5 w-5 text-red-500" />
       case 'completada':
         return <CheckCircle className="h-5 w-5 text-blue-500" />
       default:
@@ -81,8 +81,8 @@ function ReservationCard({ reserva, onCancel, onConfirm }: {
         return 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-200 dark:border-green-800'
       case 'pendiente':
         return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-200 dark:border-blue-800'
-      case 'liberada':
-        return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-200 dark:border-blue-800'
+      case 'cancelada':
+        return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-200 dark:border-red-800'
       case 'completada':
         return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-200 dark:border-blue-800'
       default:
@@ -127,7 +127,7 @@ function ReservationCard({ reserva, onCancel, onConfirm }: {
 
   const canCancel = reserva.estado.toLowerCase() === 'pendiente' || reserva.estado.toLowerCase() === 'confirmada'
   const canConfirm = reserva.estado.toLowerCase() === 'pendiente'
-  const reservationDate = new Date(`${reserva.fecha}T${reserva.hora}`)
+  const reservationDate = new Date(reserva.fechaHora)
   const isUpcoming = reservationDate > new Date()
   
   // Tiempo límite para confirmación (2 horas antes del partido)
@@ -146,7 +146,7 @@ function ReservationCard({ reserva, onCancel, onConfirm }: {
             <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
               <Image
                 src="/cancha.jpeg"
-                alt={reserva.cancha?.nombre || 'Cancha'}
+                alt={reserva.disponibilidad?.cancha?.nombre || 'Cancha'}
                 fill
                 className="object-cover"
               />
@@ -158,10 +158,10 @@ function ReservationCard({ reserva, onCancel, onConfirm }: {
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="font-bold text-lg text-gray-900 dark:text-white">
-                    {reserva.cancha?.nombre}
+                    {reserva.disponibilidad?.cancha?.nombre}
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    {reserva.cancha?.club?.nombre}
+                    {reserva.disponibilidad?.cancha?.deporte?.nombre}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -177,7 +177,7 @@ function ReservationCard({ reserva, onCancel, onConfirm }: {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem asChild>
-                        <Link href={`/cancha/${reserva.canchaId}`}>
+                        <Link href={`/cancha/${reserva.disponibilidad?.cancha?.id}`}>
                           Ver cancha
                         </Link>
                       </DropdownMenuItem>
@@ -201,20 +201,21 @@ function ReservationCard({ reserva, onCancel, onConfirm }: {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
                   <Calendar className="h-4 w-4 mr-2 text-primary" />
-                  <span>{new Date(reserva.fecha).toLocaleDateString()}</span>
+                  <span>{reservationDate.toLocaleDateString()}</span>
                 </div>
                 <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
                   <Clock className="h-4 w-4 mr-2 text-primary" />
-                  <span>{reserva.hora}</span>
+                  <span>{reservationDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
                 <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
                   <MapPin className="h-4 w-4 mr-2 text-primary" />
-                  <span>{reserva.cancha?.ubicacion}</span>
+                  <span>{reserva.disponibilidad?.cancha?.nombre || 'Cancha'}</span>
                 </div>
-                {reserva.monto && (
+                {/* monto field not available in new API structure */}
+                {false && (
                   <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
                     <CreditCard className="h-4 w-4 mr-2 text-primary" />
-                    <span>${reserva.monto.toLocaleString()}</span>
+                    <span>$0</span>
                   </div>
                 )}
               </div>
@@ -392,16 +393,16 @@ export default function MisReservasPage() {
     switch (filter) {
       case 'upcoming':
         return reservas.filter(r => {
-          const reservationDate = new Date(`${r.fecha}T${r.hora}`)
+          const reservationDate = new Date(r.fechaHora)
           return reservationDate > now && (r.estado === 'confirmada' || r.estado === 'pendiente')
         })
       case 'past':
         return reservas.filter(r => {
-          const reservationDate = new Date(`${r.fecha}T${r.hora}`)
+          const reservationDate = new Date(r.fechaHora)
           return reservationDate <= now
         })
       case 'cancelled':
-        return reservas.filter(r => r.estado === 'liberada')
+        return reservas.filter(r => r.estado === 'cancelada')
       default:
         return reservas
     }
@@ -468,7 +469,7 @@ export default function MisReservasPage() {
           <Card>
             <CardContent className="p-6 text-center">
               <div className="text-2xl font-bold text-red-600 mb-1">
-                {reservas.filter(r => r.estado === 'liberada').length}
+                {reservas.filter(r => r.estado === 'cancelada').length}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-300">Canceladas</div>
             </CardContent>

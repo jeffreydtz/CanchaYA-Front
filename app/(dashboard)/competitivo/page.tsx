@@ -177,7 +177,7 @@ function ActiveChallenges() {
       try {
         const response = await apiClient.getDesafios()
         if (response.data) {
-          setDesafios(response.data.filter(d => d.estado === 'PENDIENTE' || d.estado === 'ACEPTADO'))
+          setDesafios(response.data.filter(d => d.estado === 'pendiente' || d.estado === 'aceptado'))
         }
       } catch (error) {
         console.error('Error fetching challenges:', error)
@@ -252,33 +252,30 @@ function ActiveChallenges() {
               <div key={desafio.id} className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-200/50 dark:border-blue-700/30">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-semibold text-blue-900 dark:text-blue-100">
-                    {desafio.equipoRetador?.nombre} vs {desafio.equipoRival?.nombre || 'Esperando rival'}
+                    {desafio.creador?.nombre} vs {desafio.jugadoresDesafiados?.length > 0 ? desafio.jugadoresDesafiados.map(j => j.nombre).join(', ') : 'Esperando rival'}
                   </h3>
-                  <Badge 
-                    variant={desafio.estado === 'ACEPTADO' ? 'default' : 'secondary'}
+                  <Badge
+                    variant={desafio.estado === 'aceptado' ? 'default' : 'secondary'}
                     className="text-xs"
                   >
                     {desafio.estado}
                   </Badge>
                 </div>
-                
+
                 <div className="space-y-2 text-sm text-blue-800 dark:text-blue-200">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    <span>{new Date(desafio.fecha).toLocaleDateString()}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
-                    <span>{desafio.hora}</span>
-                  </div>
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
                     <span>{desafio.deporte?.nombre}</span>
                   </div>
+                  {desafio.golesCreador !== null && desafio.golesDesafiado !== null && (
+                    <div className="flex items-center gap-2">
+                      <span>Resultado: {desafio.golesCreador} - {desafio.golesDesafiado}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex gap-2 mt-4">
-                  {desafio.estado === 'PENDIENTE' && (
+                  {desafio.estado === 'pendiente' && (
                     <>
                       <Button size="sm" variant="outline">
                         Aceptar
@@ -288,7 +285,7 @@ function ActiveChallenges() {
                       </Button>
                     </>
                   )}
-                  {desafio.estado === 'ACEPTADO' && (
+                  {desafio.estado === 'aceptado' && (
                     <Button size="sm">
                       Ver Detalles
                     </Button>

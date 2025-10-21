@@ -28,8 +28,8 @@ export default function AdminReservationsPage() {
   }, [])
 
   const filteredReservations = reservations.filter(reservation =>
-    (reservation.cancha?.nombre?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-    (reservation.usuario?.nombre?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+    (reservation.disponibilidad?.cancha?.nombre?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (reservation.persona?.nombre?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   )
 
   const getStatusBadge = (estado: Reserva['estado']) => {
@@ -38,12 +38,24 @@ export default function AdminReservationsPage() {
         return <Badge variant="default" className="bg-green-100 text-green-800">Confirmada</Badge>
       case 'pendiente':
         return <Badge variant="secondary" className="bg-gray-100 text-gray-800">Pendiente</Badge>
-      case 'liberada':
-        return <Badge variant="destructive" className="bg-red-100 text-red-800">Liberada</Badge>
+      case 'cancelada':
+        return <Badge variant="destructive" className="bg-red-100 text-red-800">Cancelada</Badge>
       case 'completada':
         return <Badge variant="outline" className="bg-blue-100 text-blue-800">Completada</Badge>
       default:
         return <Badge variant="outline">Desconocido</Badge>
+    }
+  }
+
+  const formatDateTime = (fechaHora: string) => {
+    try {
+      const date = new Date(fechaHora)
+      return {
+        fecha: date.toLocaleDateString('es-ES'),
+        hora: date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+      }
+    } catch {
+      return { fecha: '-', hora: '-' }
     }
   }
 
@@ -96,16 +108,19 @@ export default function AdminReservationsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredReservations.map((reservation) => (
-                <TableRow key={reservation.id}>
-                  <TableCell className="font-medium">{reservation.cancha?.nombre}</TableCell>
-                  <TableCell>{reservation.usuario?.nombre}</TableCell>
-                  <TableCell>{reservation.fecha}</TableCell>
-                  <TableCell>{reservation.hora}</TableCell>
-                  <TableCell>{getStatusBadge(reservation.estado)}</TableCell>
-                  <TableCell>{reservation.monto !== undefined ? `$${reservation.monto.toLocaleString()}` : '-'}</TableCell>
-                </TableRow>
-              ))}
+              {filteredReservations.map((reservation) => {
+                const { fecha, hora } = formatDateTime(reservation.fechaHora)
+                return (
+                  <TableRow key={reservation.id}>
+                    <TableCell className="font-medium">{reservation.disponibilidad?.cancha?.nombre || '-'}</TableCell>
+                    <TableCell>{reservation.persona?.nombre || '-'}</TableCell>
+                    <TableCell>{fecha}</TableCell>
+                    <TableCell>{hora}</TableCell>
+                    <TableCell>{getStatusBadge(reservation.estado)}</TableCell>
+                    <TableCell>-</TableCell>
+                  </TableRow>
+                )
+              })}
             </TableBody>
           </Table>
         </CardContent>

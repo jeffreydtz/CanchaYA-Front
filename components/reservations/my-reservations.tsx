@@ -109,11 +109,11 @@ export default function MyReservations() {
             Pendiente
           </Badge>
         )
-      case 'liberada':
+      case 'cancelada':
         return (
           <Badge variant="destructive" className="bg-red-100 text-red-800">
             <XCircle className="w-3 h-3 mr-1" />
-            Liberada
+            Cancelada
           </Badge>
         )
       case 'completada':

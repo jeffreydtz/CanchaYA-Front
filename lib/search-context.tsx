@@ -60,7 +60,7 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
 
     // If no filters are applied, show all available courts
     if (!hasActiveFilters) {
-      const availableCourts = allCourts.filter(court => court.disponible)
+      const availableCourts = allCourts.filter(court => court.activa)
       setFilteredCourts(availableCourts)
       setIsLoading(false)
       return
@@ -81,12 +81,12 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
 
     // Filter by sport
     if (filters.deporte !== 'all') {
-      filtered = filtered.filter(court => court.deporteId === filters.deporte)
+      filtered = filtered.filter(court => court.deporte?.id === filters.deporte)
     }
 
     // Filter by club
     if (filters.club !== 'all') {
-      filtered = filtered.filter(court => court.clubId === filters.club)
+      filtered = filtered.filter(court => court.club?.id === filters.club)
     }
 
     // Filter by price range (only if not default range)
@@ -104,7 +104,7 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Filter by availability status
-    filtered = filtered.filter(court => court.disponible)
+    filtered = filtered.filter(court => court.activa)
 
     setFilteredCourts(filtered)
     setIsLoading(false)

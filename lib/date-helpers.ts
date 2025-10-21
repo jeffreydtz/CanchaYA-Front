@@ -85,13 +85,13 @@ export function formatDisplayDate(
 ): string {
   const d = typeof date === 'string' ? new Date(date) : date
 
-  const options: Intl.DateTimeFormatOptions = {
+  const optionsMap: Record<typeof format, Intl.DateTimeFormatOptions> = {
     short: { month: 'numeric', day: 'numeric', year: '2-digit' },
     long: { month: 'long', day: 'numeric', year: 'numeric' },
     full: { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }
-  }[format]
+  }
 
-  return new Intl.DateTimeFormat('es-AR', options).format(d)
+  return new Intl.DateTimeFormat('es-AR', optionsMap[format]).format(d)
 }
 
 /**

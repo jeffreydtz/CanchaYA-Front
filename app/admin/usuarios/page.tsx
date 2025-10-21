@@ -36,9 +36,9 @@ export default function AdminUsersPage() {
   }, [])
 
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email?.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesRole = roleFilter === "all" || user.rol === roleFilter
+    const matchesSearch = user.persona?.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         user.persona?.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesRole = roleFilter === "all" || user.rol?.nombre === roleFilter
     const matchesStatus = statusFilter === "all" || (statusFilter === "activo" ? user.activo : !user.activo)
     return matchesSearch && matchesRole && matchesStatus
   })
@@ -51,14 +51,22 @@ export default function AdminUsersPage() {
     }
   }
 
-  const getRoleBadge = (role: string) => {
+  const getRoleBadge = (role: 'usuario' | 'admin') => {
     switch (role) {
-      case 'ADMINISTRADOR':
+      case 'admin':
         return <Badge variant="default" className="bg-purple-100 text-purple-800">Administrador</Badge>
-      case 'USUARIO':
+      case 'usuario':
         return <Badge variant="secondary" className="bg-blue-100 text-blue-800">Usuario</Badge>
       default:
         return <Badge variant="outline">{role}</Badge>
+    }
+  }
+
+  const formatDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleDateString('es-ES')
+    } catch {
+      return '-'
     }
   }
 
@@ -97,8 +105,8 @@ export default function AdminUsersPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los roles</SelectItem>
-                <SelectItem value="ADMINISTRADOR">Administrador</SelectItem>
-                <SelectItem value="USUARIO">Usuario</SelectItem>
+                <SelectItem value="admin">Administrador</SelectItem>
+                <SelectItem value="usuario">Usuario</SelectItem>
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -129,12 +137,14 @@ export default function AdminUsersPage() {
             <TableBody>
               {filteredUsers.map((user) => (
                 <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.nombre}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{getRoleBadge(user.rol)}</TableCell>
+                  <TableCell className="font-medium">
+                    {user.persona?.nombre} {user.persona?.apellido}
+                  </TableCell>
+                  <TableCell>{user.persona?.email}</TableCell>
+                  <TableCell>{getRoleBadge(user.rol?.nombre)}</TableCell>
                   <TableCell>{getStatusBadge(user.activo)}</TableCell>
-                  <TableCell>{user.fechaCreacion || '-'}</TableCell>
-                  <TableCell>-</TableCell>
+                  <TableCell>{formatDate(user.createdAt)}</TableCell>
+                  <TableCell>{formatDate(user.updatedAt)}</TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
                       <Button variant="outline" size="sm">

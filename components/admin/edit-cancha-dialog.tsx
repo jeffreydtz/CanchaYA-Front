@@ -33,7 +33,7 @@ export function EditCanchaDialog({ cancha, open, onOpenChange, onSuccess }: Edit
     ubicacion: '',
     tipoSuperficie: '',
     precioPorHora: 0,
-    disponible: true,
+    activa: true,
     deporteId: '',
     clubId: '',
   })
@@ -64,9 +64,9 @@ export function EditCanchaDialog({ cancha, open, onOpenChange, onSuccess }: Edit
         ubicacion: cancha.ubicacion || '',
         tipoSuperficie: cancha.tipoSuperficie || '',
         precioPorHora: cancha.precioPorHora || 0,
-        disponible: cancha.disponible ?? true,
-        deporteId: cancha.deporteId || '',
-        clubId: cancha.clubId || '',
+        activa: cancha.activa ?? true,
+        deporteId: cancha.deporte?.id || '',
+        clubId: cancha.club?.id || '',
       })
     }
   }, [cancha])
@@ -253,7 +253,7 @@ export function EditCanchaDialog({ cancha, open, onOpenChange, onSuccess }: Edit
           {/* Disponibilidad */}
           <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
             <div className="space-y-0.5">
-              <Label htmlFor="disponible" className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+              <Label htmlFor="activa" className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                 Cancha Disponible
               </Label>
               <p className="text-xs text-gray-600 dark:text-gray-400">
@@ -261,9 +261,9 @@ export function EditCanchaDialog({ cancha, open, onOpenChange, onSuccess }: Edit
               </p>
             </div>
             <Switch
-              id="disponible"
-              checked={formData.disponible}
-              onCheckedChange={(checked) => setFormData({ ...formData, disponible: checked })}
+              id="activa"
+              checked={formData.activa}
+              onCheckedChange={(checked) => setFormData({ ...formData, activa: checked })}
             />
           </div>
 

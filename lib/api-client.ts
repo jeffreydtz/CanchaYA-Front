@@ -97,8 +97,17 @@ export interface Cancha {
   tipoSuperficie: string
   precioPorHora: number
   activa: boolean
-  club: { id: string; nombre: string }
-  deporte: { id: string; nombre: string }
+  club: {
+    id: string
+    nombre: string
+    telefono?: string
+    email?: string
+    direccion?: string
+  }
+  deporte: {
+    id: string
+    nombre: string
+  }
 }
 
 export interface DisponibilidadHorario {

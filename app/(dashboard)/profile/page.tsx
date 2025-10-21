@@ -85,10 +85,17 @@ function ProfileForm() {
 
   const onSubmit = async (data: ProfileFormData) => {
     if (!user) return
-    
+
     setLoading(true)
     try {
-      const response = await apiClient.updateUsuario(user.id, data)
+      // Note: In new API, we should use updatePersona, but for now just show message
+      // const response = await apiClient.updatePersona(user.id, data)
+      toast.info('La funcionalidad de actualizar perfil necesita actualizarse para la nueva API')
+      setIsEditing(false)
+
+      // Commented out until personas endpoint is properly integrated
+      /*
+      const response = await apiClient.updatePersona(user.id, data)
       if (response.error) {
         toast.error(response.error)
       } else {
@@ -96,7 +103,8 @@ function ProfileForm() {
         await refreshUser()
         setIsEditing(false)
       }
-    } catch (error) {
+      */
+    } catch (error: any) {
       toast.error('Error al actualizar el perfil')
     } finally {
       setLoading(false)
@@ -272,9 +280,9 @@ function RecentActivity() {
       try {
         const response = await apiClient.getReservas()
         if (response.data && Array.isArray(response.data)) {
-          // Get the 5 most recent reservations
+          // Get the 5 most recent reservations - sort by fechaHora instead
           const recent = response.data
-            .sort((a, b) => new Date(b.fechaCreacion).getTime() - new Date(a.fechaCreacion).getTime())
+            .sort((a, b) => new Date(b.fechaHora).getTime() - new Date(a.fechaHora).getTime())
             .slice(0, 5)
           setReservas(recent)
         }
@@ -339,10 +347,10 @@ function RecentActivity() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                    Reserva en {reserva.cancha?.nombre}
+                    Reserva en {reserva.disponibilidad?.cancha?.nombre}
                   </p>
                   <p className="text-sm text-gray-500">
-                    {new Date(reserva.fecha).toLocaleDateString()} a las {reserva.hora}
+                    {new Date(reserva.fechaHora).toLocaleString()}
                   </p>
                 </div>
                 <Badge 

@@ -237,12 +237,12 @@ export default function BuscarPage() {
         
         // Filtrar por deporte
         if (filters.deporte !== 'all') {
-          filtered = filtered.filter(cancha => cancha.deporteId === filters.deporte)
+          filtered = filtered.filter(cancha => cancha.deporte?.id === filters.deporte)
         }
-        
+
         // Filtrar por club
         if (filters.club !== 'all') {
-          filtered = filtered.filter(cancha => cancha.clubId === filters.club)
+          filtered = filtered.filter(cancha => cancha.club?.id === filters.club)
         }
         
         // Filtrar por ubicación

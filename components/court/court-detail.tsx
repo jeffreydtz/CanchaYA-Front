@@ -31,7 +31,7 @@ export default function CourtDetail() {
       if (!courtId) return
 
       try {
-        const response = await apiClient.getCancha(courtId)
+        const response = await apiClient.getCanchaById(courtId)
         if (response.error) {
           toast.error(response.error)
           return
@@ -112,12 +112,21 @@ export default function CourtDetail() {
 
     setReserving(true)
     try {
-      const dateString = formatDateForInput(selectedDate)
+      // TODO: Fetch disponibilidades for this cancha and selected date/time
+      // For now, show a message that this needs to be implemented with the new API
+      
+      toast.error('La funcionalidad de reservas necesita actualizarse para usar disponibilidades. Por favor, contacte al administrador.')
+      
+      // New API structure requires:
+      // 1. Fetch disponibilidades for this cancha
+      // 2. Find the matching disponibilidad for selected date/time
+      // 3. Create ISO 8601 fechaHora from selectedDate + selectedTime
+      // 4. Call createReserva with { disponibilidadId, fechaHora }
+      
+      /*
       const response = await apiClient.createReserva({
-        usuarioId: user.id,
-        canchaId: court.id,
-        fecha: dateString,
-        hora: selectedTime,
+        disponibilidadId: 'uuid-from-disponibilidad',
+        fechaHora: new Date(selectedDate.toISOString().split('T')[0] + 'T' + selectedTime + ':00-03:00').toISOString()
       })
 
       if (response.error) {
@@ -130,6 +139,7 @@ export default function CourtDetail() {
         setSelectedDate(getNextAvailableDate())
         setSelectedTime('')
       }
+      */
     } catch (error) {
       console.error('Error creating reservation:', error)
       toast.error('No se pudo crear la reserva')
@@ -186,8 +196,8 @@ export default function CourtDetail() {
           <div>
             <div className="flex items-center justify-between mb-2">
               <h1 className="text-3xl font-bold text-gray-900">{court.nombre}</h1>
-              <Badge variant={court.disponible ? "default" : "destructive"}>
-                {court.disponible ? "Disponible" : "No disponible"}
+              <Badge variant={court.activa ? "default" : "destructive"}>
+                {court.activa ? "Activa" : "Inactiva"}
               </Badge>
             </div>
             
@@ -220,7 +230,7 @@ export default function CourtDetail() {
           </div>
 
           {/* Reservation Section */}
-          {court.disponible && (
+          {court.activa && (
             <Card>
               <CardHeader>
                 <CardTitle>Hacer Reserva</CardTitle>

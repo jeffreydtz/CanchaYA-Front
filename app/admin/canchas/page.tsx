@@ -97,7 +97,7 @@ export default function AdminCourtsPage() {
     setActionLoading(court.id)
     try {
       const response = await apiClient.updateCancha(court.id, {
-        disponible: !court.disponible
+        activa: !court.activa
       })
 
       if (response.error) {
@@ -109,11 +109,11 @@ export default function AdminCourtsPage() {
 
       setCourts(prev => prev.map(c => 
         c.id === court.id 
-          ? { ...c, disponible: !c.disponible }
+          ? { ...c, activa: !c.activa }
           : c
       ))
       toast.success('Estado actualizado', {
-        description: `La cancha "${court.nombre}" ha sido ${court.disponible ? 'desactivada' : 'activada'}.`
+        description: `La cancha "${court.nombre}" ha sido ${court.activa ? 'desactivada' : 'activada'}.`
       })
     } catch (error) {
       toast.error('Error', {
@@ -231,13 +231,13 @@ export default function AdminCourtsPage() {
                             disabled={actionLoading === court.id}
                             className="cursor-pointer transition-transform hover:scale-105"
                           >
-                            {court.disponible ? (
+                            {court.activa ? (
                               <Badge className="bg-green-100 text-green-700 border-green-200 hover:bg-green-200 dark:bg-green-950 dark:text-green-400 dark:border-green-800">
-                                ✓ Disponible
+                                ✓ Activa
                               </Badge>
                             ) : (
                               <Badge className="bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">
-                                ✕ No disponible
+                                ✕ Inactiva
                               </Badge>
                             )}
                           </button>

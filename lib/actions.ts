@@ -42,10 +42,10 @@ export async function loginAction(
       }
     }
 
-    if (response.data?.token && response.data?.user) {
+    if (response.data?.accessToken) {
       // Set HTTP-only cookie for security
       const cookieStore = await cookies()
-      cookieStore.set('token', response.data.token, {
+      cookieStore.set('token', response.data.accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
@@ -53,13 +53,9 @@ export async function loginAction(
         path: '/',
       })
 
-      // Redirect based on user role
-      const userRole = response.data.user.rol
-      if (userRole === 'admin') {
-        redirect('/admin')
-      } else {
-        redirect('/')
-      }
+      // TODO: Get user info to redirect based on role
+      // For now, redirect to home
+      redirect('/')
     }
 
     return {
@@ -151,14 +147,19 @@ export async function createReservationAction(
   prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
+  // TODO: Update to use new API structure with disponibilidadId and fechaHora
+  return {
+    error: 'La funcionalidad de reservas necesita actualizarse para usar disponibilidades.',
+    success: false,
+  }
+  
+  /*
   const reservationData = {
-    usuarioId: formData.get('usuarioId') as string,
-    canchaId: formData.get('canchaId') as string,
-    fecha: formData.get('fecha') as string,
-    hora: formData.get('hora') as string,
+    disponibilidadId: formData.get('disponibilidadId') as string,
+    fechaHora: formData.get('fechaHora') as string, // ISO 8601 format
   }
 
-  if (!reservationData.usuarioId || !reservationData.canchaId || !reservationData.fecha || !reservationData.hora) {
+  if (!reservationData.disponibilidadId || !reservationData.fechaHora) {
     return {
       error: 'Todos los campos son requeridos',
       success: false,
@@ -193,6 +194,7 @@ export async function createReservationAction(
       success: false,
     }
   }
+  */
 }
 
 export async function cancelReservationAction(
