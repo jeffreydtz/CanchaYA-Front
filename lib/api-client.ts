@@ -162,8 +162,9 @@ export interface Reserva {
 }
 
 export interface CreateReservaData {
-  disponibilidadId: string
-  fechaHora: string // ISO 8601 e.g., "2025-10-21T18:00:00-03:00"
+  personaId: string // UUID - Required by backend
+  disponibilidadId: string // UUID
+  fechaHora: string // ISO 8601 format (e.g., "2025-10-21T18:00:00Z")
 }
 
 export interface Equipo {
@@ -177,16 +178,20 @@ export interface Equipo {
 }
 
 export interface Desafio {
-  id: string
+  id: string // UUID
   reserva: { id: string }
   deporte: { nombre: string }
-  creador: { nombre: string }
-  jugadoresCreador: { nombre: string }[]
-  invitadosDesafiados: { nombre: string }[]
-  jugadoresDesafiados: { nombre: string }[]
-  estado: 'pendiente' | 'aceptado' | 'rechazado' | 'finalizado'
+  creador: { nombre: string; apellido?: string; id?: string }
+  jugadoresCreador: Persona[]
+  invitadosDesafiados: Persona[]
+  jugadoresDesafiados: Persona[]
+  estado: 'pendiente' | 'aceptado' | 'cancelado' | 'finalizado'
+  ganador: 'creador' | 'desafiado' | null
   golesCreador: number | null
   golesDesafiado: number | null
+  valoracionCreador: number | null  // 1-5
+  valoracionDesafiado: number | null  // 1-5
+  creadoEl: string // ISO Date
 }
 
 export interface Deuda {
@@ -200,16 +205,15 @@ export interface Deuda {
   }
 }
 
-export interface DisponibilidadJugador {
+export interface DisponibilidadPersona {
   id: string // UUID
-  usuarioId: string // UUID
-  fechaDesde: string // YYYY-MM-DD
-  fechaHasta: string // YYYY-MM-DD
-  horaDesde: string // HH:MM
-  horaHasta: string // HH:MM
-  clubesIds: string[] // UUIDs
-  usuario?: User
-  fechaCreacion: string
+  fechaDesde: string // ISO8601 Date
+  fechaHasta: string // ISO8601 Date
+  horaDesde: string // HH:mm format
+  horaHasta: string // HH:mm format
+  persona: Persona
+  clubes: Club[]
+  deporte: Deporte
 }
 
 export interface Horario {
@@ -470,13 +474,11 @@ const apiClient = {
   getCanchaById: (id: string) => apiRequest<Cancha>(`/canchas/${id}`),
 
   /**
-   * Obtener disponibilidades de una cancha - GET /canchas/{id}/disponibilidades
-   * NOTE: This endpoint may not be documented but is needed for reservation system
-   * DisponibilidadHorario entities exist in backend (see seed scripts)
-   * Alternative: Could be retrieved via /horarios and filtered by cancha
+   * Obtener disponibilidades de una cancha - GET /disponibilidad-cancha/{canchaId}
+   * CORRECTED: Backend uses /disponibilidad-cancha endpoint, not /canchas/{id}/disponibilidades
    */
   getDisponibilidadesByCancha: (canchaId: string) =>
-    apiRequest<DisponibilidadHorario[]>(`/canchas/${canchaId}/disponibilidades`),
+    apiRequest<DisponibilidadHorario[]>(`/disponibilidad-cancha/${canchaId}`),
 
   /**
    * Crear cancha - POST /canchas (admin only)
@@ -703,12 +705,13 @@ const apiClient = {
 
   /**
    * Crear desafío - POST /desafios
+   * CORRECTED: Backend uses reserva-based challenges, not team-based
    */
   createDesafio: (data: {
-    equipoRetadorId: string;
-    deporteId: string;
-    fecha: string; // YYYY-MM-DD
-    hora: string;  // HH:MM
+    reservaId: string; // UUID - Must be a future reservation
+    deporteId: string; // UUID
+    invitadosDesafiadosIds: string[]; // Array of Persona UUIDs (min 1)
+    jugadoresCreadorIds?: string[]; // Optional teammates for creator
   }) =>
     apiRequest<Desafio>('/desafios', {
       method: 'POST',
@@ -717,20 +720,39 @@ const apiClient = {
 
   /**
    * Aceptar desafío - PATCH /desafios/{id}/aceptar
+   * CORRECTED: Backend requires personaId, not equipoRivalId
    */
-  aceptarDesafio: (id: string, equipoRivalId: string) =>
+  aceptarDesafio: (id: string, personaId: string) =>
     apiRequest<Desafio>(`/desafios/${id}/aceptar`, {
       method: 'PATCH',
-      body: JSON.stringify({ equipoRivalId }),
+      body: JSON.stringify({ personaId }),
+    }),
+
+  /**
+   * Agregar jugadores a un desafío - PATCH /desafios/{id}/agregar-jugadores
+   * Add more players to either team
+   */
+  agregarJugadoresDesafio: (id: string, data: {
+    lado: 'creador' | 'desafiado';
+    jugadoresIds: string[]; // Array of Persona UUIDs
+  }) =>
+    apiRequest<Desafio>(`/desafios/${id}/agregar-jugadores`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
     }),
 
   /**
    * Finalizar desafío - PATCH /desafios/{id}/finalizar
+   * CORRECTED: Backend requires ganadorLado and optional result/valoracion
    */
-  finalizarDesafio: (id: string, resultado: string) =>
+  finalizarDesafio: (id: string, data: {
+    ganadorLado: 'creador' | 'desafiado';
+    resultado?: string; // e.g., "3-2"
+    valoracion?: number; // 1-5
+  }) =>
     apiRequest<Desafio>(`/desafios/${id}/finalizar`, {
       method: 'PATCH',
-      body: JSON.stringify({ resultado }),
+      body: JSON.stringify(data),
     }),
 
   // ===== DEUDAS =====
@@ -777,36 +799,34 @@ const apiClient = {
   deleteDeuda: (id: string) =>
     apiRequest<void>(`/deudas/${id}`, { method: 'DELETE' }),
 
-  // ===== DISPONIBILIDAD DE JUGADORES =====
-  // NOTE: These endpoints are NOT available in the current API
-  // DisponibilidadJugador feature is not implemented in backend
-  // Keeping interface for future implementation
+  // ===== DISPONIBILIDADES PERSONALES =====
+  // Personal availability for matching players (DisponibilidadPersona)
   
   /**
-   * Listar disponibilidades - GET /disponibilidades
-   * @deprecated NOT IMPLEMENTED IN BACKEND API
+   * Listar disponibilidades personales - GET /disponibilidades
+   * Returns current user's personal availability
    */
-  getDisponibilidades: () => apiRequest<DisponibilidadJugador[]>('/disponibilidades'),
+  getDisponibilidades: () => apiRequest<DisponibilidadPersona[]>('/disponibilidades'),
 
   /**
-   * Crear disponibilidad - POST /disponibilidades
-   * @deprecated NOT IMPLEMENTED IN BACKEND API
+   * Crear disponibilidad personal - POST /disponibilidades
+   * Set when/where you want to play
    */
   createDisponibilidad: (data: {
-    fechaDesde: string; // YYYY-MM-DD
-    fechaHasta: string; // YYYY-MM-DD
-    horaDesde: string;  // HH:MM
-    horaHasta: string;  // HH:MM
-    clubesIds: string[]; // UUIDs
+    fechaDesde: string; // ISO8601
+    fechaHasta: string; // ISO8601
+    horaDesde: string;  // HH:mm
+    horaHasta: string;  // HH:mm
+    deporteId: string;  // UUID
+    clubesIds: string[]; // Array of club UUIDs
   }) =>
-    apiRequest<DisponibilidadJugador>('/disponibilidades', {
+    apiRequest<DisponibilidadPersona>('/disponibilidades', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
   /**
-   * Eliminar disponibilidad - DELETE /disponibilidades/{id}
-   * @deprecated NOT IMPLEMENTED IN BACKEND API
+   * Eliminar disponibilidad personal - DELETE /disponibilidades/{id}
    */
   deleteDisponibilidad: (id: string) =>
     apiRequest<void>(`/disponibilidades/${id}`, { method: 'DELETE' }),
@@ -959,9 +979,13 @@ const apiClient = {
 
   /**
    * Rechazar desafío - PATCH /desafios/{id}/rechazar
+   * Reject challenge invitation
    */
-  rechazarDesafio: (id: string) =>
-    apiRequest<Desafio>(`/desafios/${id}/rechazar`, { method: 'PATCH' }),
+  rechazarDesafio: (id: string, personaId?: string) =>
+    apiRequest<Desafio>(`/desafios/${id}/rechazar`, { 
+      method: 'PATCH',
+      body: personaId ? JSON.stringify({ personaId }) : undefined
+    }),
 
 
   /**

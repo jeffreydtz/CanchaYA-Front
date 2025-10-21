@@ -30,7 +30,7 @@ import {
   Clock,
   MapPin
 } from 'lucide-react'
-import apiClient, { Desafio, PerfilCompetitivo, Equipo } from '@/lib/api-client'
+import apiClient, { Desafio, PerfilCompetitivo, Reserva, Persona, Deporte } from '@/lib/api-client'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
@@ -171,23 +171,62 @@ function LeaderBoard() {
 function ActiveChallenges() {
   const [desafios, setDesafios] = useState<Desafio[]>([])
   const [loading, setLoading] = useState(true)
+  const { personaId } = useAuth()
+
+  const fetchDesafios = async () => {
+    try {
+      const response = await apiClient.getDesafios()
+      if (response.data) {
+        setDesafios(response.data.filter(d => d.estado === 'pendiente' || d.estado === 'aceptado'))
+      }
+    } catch (error) {
+      console.error('Error fetching challenges:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    const fetchDesafios = async () => {
-      try {
-        const response = await apiClient.getDesafios()
-        if (response.data) {
-          setDesafios(response.data.filter(d => d.estado === 'pendiente' || d.estado === 'aceptado'))
-        }
-      } catch (error) {
-        console.error('Error fetching challenges:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchDesafios()
   }, [])
+  
+  const handleAceptar = async (desafioId: string) => {
+    if (!personaId) {
+      toast.error('Debes iniciar sesión')
+      return
+    }
+    
+    try {
+      const response = await apiClient.aceptarDesafio(desafioId, personaId)
+      if (response.error) {
+        toast.error(response.error)
+      } else {
+        toast.success('¡Desafío aceptado!')
+        fetchDesafios() // Reload
+      }
+    } catch (error) {
+      toast.error('Error al aceptar el desafío')
+    }
+  }
+  
+  const handleRechazar = async (desafioId: string) => {
+    if (!personaId) {
+      toast.error('Debes iniciar sesión')
+      return
+    }
+    
+    try {
+      const response = await apiClient.rechazarDesafio(desafioId, personaId)
+      if (response.error) {
+        toast.error(response.error)
+      } else {
+        toast.success('Desafío rechazado')
+        fetchDesafios() // Reload
+      }
+    } catch (error) {
+      toast.error('Error al rechazar el desafío')
+    }
+  }
 
   if (loading) {
     return (
@@ -275,20 +314,23 @@ function ActiveChallenges() {
                 </div>
 
                 <div className="flex gap-2 mt-4">
-                  {desafio.estado === 'pendiente' && (
+                  {desafio.estado === 'pendiente' && personaId && desafio.invitadosDesafiados.some(inv => inv.id === personaId) && (
                     <>
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" onClick={() => handleAceptar(desafio.id)}>
                         Aceptar
                       </Button>
-                      <Button size="sm" variant="ghost">
+                      <Button size="sm" variant="ghost" onClick={() => handleRechazar(desafio.id)}>
                         Rechazar
                       </Button>
                     </>
                   )}
                   {desafio.estado === 'aceptado' && (
-                    <Button size="sm">
-                      Ver Detalles
+                    <Button size="sm" disabled>
+                      Pendiente de jugar
                     </Button>
+                  )}
+                  {desafio.estado === 'pendiente' && (!personaId || !desafio.invitadosDesafiados.some(inv => inv.id === personaId)) && (
+                    <Badge variant="secondary">Esperando respuesta</Badge>
                   )}
                 </div>
               </div>
@@ -302,86 +344,201 @@ function ActiveChallenges() {
 
 function CreateChallengeForm() {
   const [loading, setLoading] = useState(false)
-  const [equipos, setEquipos] = useState<Equipo[]>([])
+  const [reservas, setReservas] = useState<Reserva[]>([])
+  const [deportes, setDeportes] = useState<Deporte[]>([])
+  const [personas, setPersonas] = useState<Persona[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedReservaId, setSelectedReservaId] = useState('')
+  const [selectedDeporteId, setSelectedDeporteId] = useState('')
+  const [selectedInvitados, setSelectedInvitados] = useState<string[]>([])
   
   useEffect(() => {
-    const fetchEquipos = async () => {
+    const fetchData = async () => {
       try {
-        const response = await apiClient.getEquipos()
-        if (response.data) {
-          setEquipos(response.data)
+        // Fetch user's future reservations (confirmed ones)
+        const reservasResponse = await apiClient.getReservas()
+        if (reservasResponse.data) {
+          // Filter for future confirmed reservations without challenges
+          const futureReservas = reservasResponse.data.filter(r => {
+            const reservaDate = new Date(r.fechaHora)
+            return reservaDate > new Date() && r.estado === 'confirmada'
+          })
+          setReservas(futureReservas)
+        }
+        
+        // Fetch sports
+        const deportesResponse = await apiClient.getDeportes()
+        if (deportesResponse.data) {
+          setDeportes(deportesResponse.data)
         }
       } catch (error) {
-        console.error('Error fetching teams:', error)
+        console.error('Error fetching data:', error)
       }
     }
     
-    fetchEquipos()
+    fetchData()
   }, [])
+  
+  // Search for personas to invite
+  useEffect(() => {
+    const searchPersonas = async () => {
+      if (searchQuery.length >= 2) {
+        try {
+          const response = await apiClient.searchPersonas(searchQuery)
+          if (response.data) {
+            setPersonas(response.data)
+          }
+        } catch (error) {
+          console.error('Error searching personas:', error)
+        }
+      } else {
+        setPersonas([])
+      }
+    }
+    
+    const debounce = setTimeout(searchPersonas, 300)
+    return () => clearTimeout(debounce)
+  }, [searchQuery])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     
     try {
-      // Implementar creación de desafío
-      toast.success('Desafío creado exitosamente')
+      if (!selectedReservaId) {
+        toast.error('Debes seleccionar una reserva')
+        return
+      }
+      
+      if (!selectedDeporteId) {
+        toast.error('Debes seleccionar un deporte')
+        return
+      }
+      
+      if (selectedInvitados.length === 0) {
+        toast.error('Debes invitar al menos a una persona')
+        return
+      }
+      
+      const response = await apiClient.createDesafio({
+        reservaId: selectedReservaId,
+        deporteId: selectedDeporteId,
+        invitadosDesafiadosIds: selectedInvitados
+      })
+      
+      if (response.error) {
+        toast.error(response.error)
+      } else {
+        toast.success('¡Desafío creado exitosamente! Se enviaron invitaciones.')
+        // Reload page to show new challenge
+        window.location.reload()
+      }
     } catch (error) {
       toast.error('Error al crear el desafío')
     } finally {
       setLoading(false)
     }
   }
+  
+  const toggleInvitado = (personaId: string) => {
+    setSelectedInvitados(prev => 
+      prev.includes(personaId) 
+        ? prev.filter(id => id !== personaId)
+        : [...prev, personaId]
+    )
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="equipoDesafiado">Equipo a desafiar</Label>
+        <Label htmlFor="reserva">Reserva Confirmada</Label>
         <select 
-          id="equipoDesafiado"
-          className="w-full p-2 border rounded-lg bg-white dark:bg-white text-black font-bold"
+          id="reserva"
+          value={selectedReservaId}
+          onChange={(e) => setSelectedReservaId(e.target.value)}
+          className="w-full p-2 border rounded-lg bg-white dark:bg-gray-800 dark:text-white"
           required
         >
-          <option value="">Selecciona un equipo</option>
-          {equipos.map((equipo) => (
-            <option key={equipo.id} value={equipo.id}>
-              {equipo.nombre}
+          <option value="">Selecciona una reserva</option>
+          {reservas.map((reserva) => (
+            <option key={reserva.id} value={reserva.id}>
+              {reserva.disponibilidad?.cancha?.nombre || 'Cancha'} - {new Date(reserva.fechaHora).toLocaleString('es-ES')}
+            </option>
+          ))}
+        </select>
+        {reservas.length === 0 && (
+          <p className="text-sm text-yellow-600 dark:text-yellow-400">
+            ⚠️ Necesitas una reserva confirmada para crear un desafío. <Link href="/buscar" className="underline">Crear reserva</Link>
+          </p>
+        )}
+      </div>
+      
+      <div className="space-y-2">
+        <Label htmlFor="deporte">Deporte</Label>
+        <select 
+          id="deporte"
+          value={selectedDeporteId}
+          onChange={(e) => setSelectedDeporteId(e.target.value)}
+          className="w-full p-2 border rounded-lg bg-white dark:bg-gray-800 dark:text-white"
+          required
+        >
+          <option value="">Selecciona un deporte</option>
+          {deportes.map((deporte) => (
+            <option key={deporte.id} value={deporte.id}>
+              {deporte.nombre}
             </option>
           ))}
         </select>
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="fecha">Fecha propuesta</Label>
+        <Label htmlFor="buscar">Buscar jugadores para invitar</Label>
         <Input 
-          id="fecha"
-          type="date"
-          required
-          className="bg-white dark:bg-white text-black font-bold"
+          id="buscar"
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Busca por nombre o email..."
+          className="bg-white dark:bg-gray-800 dark:text-white"
         />
+        {personas.length > 0 && (
+          <div className="border rounded-lg p-2 max-h-48 overflow-y-auto bg-white dark:bg-gray-800">
+            {personas.map((persona) => (
+              <div 
+                key={persona.id}
+                onClick={() => toggleInvitado(persona.id)}
+                className={`p-2 cursor-pointer rounded hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                  selectedInvitados.includes(persona.id) ? 'bg-blue-100 dark:bg-blue-900' : ''
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="dark:text-white">{persona.nombre} {persona.apellido}</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">{persona.email}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       
-      <div className="space-y-2">
-        <Label htmlFor="hora">Hora propuesta</Label>
-        <Input 
-          id="hora"
-          type="time"
-          required
-          className="bg-white dark:bg-white text-black font-bold"
-        />
-      </div>
+      {selectedInvitados.length > 0 && (
+        <div className="space-y-2">
+          <Label>Invitados seleccionados ({selectedInvitados.length})</Label>
+          <div className="flex flex-wrap gap-2">
+            {selectedInvitados.map(id => {
+              const persona = personas.find(p => p.id === id)
+              return persona ? (
+                <Badge key={id} variant="secondary" className="cursor-pointer" onClick={() => toggleInvitado(id)}>
+                  {persona.nombre} {persona.apellido} ×
+                </Badge>
+              ) : null
+            })}
+          </div>
+        </div>
+      )}
       
-      <div className="space-y-2">
-        <Label htmlFor="mensaje">Mensaje (opcional)</Label>
-        <Input 
-          id="mensaje"
-          placeholder="Mensaje para el equipo desafiado..."
-          className="bg-white dark:bg-white text-black font-bold"
-        />
-      </div>
-      
-      <Button type="submit" disabled={loading} className="w-full">
-        {loading ? 'Enviando...' : 'Enviar Desafío'}
+      <Button type="submit" disabled={loading || reservas.length === 0} className="w-full">
+        {loading ? 'Creando...' : 'Crear Desafío'}
       </Button>
     </form>
   )

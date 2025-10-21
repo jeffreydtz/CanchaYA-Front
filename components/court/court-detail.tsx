@@ -16,7 +16,7 @@ import Image from 'next/image'
 
 export default function CourtDetail() {
   const params = useParams()
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, personaId } = useAuth()
   const [court, setCourt] = useState<Cancha | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(getNextAvailableDate())
   const [selectedTime, setSelectedTime] = useState<string>('')
@@ -125,8 +125,14 @@ export default function CourtDetail() {
       const day = String(selectedDate.getDate()).padStart(2, '0')
       const fechaHora = `${year}-${month}-${day}T${selectedTime}:00-03:00`
 
-      // 3. Call createReserva with { disponibilidadId, fechaHora }
+      // 3. Call createReserva with { personaId, disponibilidadId, fechaHora }
+      if (!personaId) {
+        alert('No se encontró tu información de persona. Por favor, vuelve a iniciar sesión.')
+        return
+      }
+
       const response = await apiClient.createReserva({
+        personaId: personaId,
         disponibilidadId: matchingDisponibilidad.id,
         fechaHora: fechaHora
       })

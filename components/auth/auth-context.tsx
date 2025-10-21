@@ -26,6 +26,8 @@ interface AuthContextType {
   isAdmin: boolean
   loading: boolean
   refreshUser: () => Promise<void>
+  personaId: string | null // Added for backend API compatibility
+  userId: string | null     // User ID from JWT
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -35,6 +37,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [initialLoad, setInitialLoad] = useState(true)
+  const [personaId, setPersonaId] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
 
   // Enable automatic token refresh
   useTokenRefresh()
@@ -56,12 +60,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           fechaCreacion: decoded.fechaCreacion ?? new Date().toISOString(),
         }
         setUser(userData)
+        setPersonaId(decoded.personaId || null)
+        setUserId(decoded.id || null)
       } catch (e) {
         setUser(null)
+        setPersonaId(null)
+        setUserId(null)
         deleteCookie('token')
       }
     } else {
       setUser(null)
+      setPersonaId(null)
+      setUserId(null)
     }
     setLoading(false)
     setInitialLoad(false)
@@ -112,6 +122,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
 
           setUser(userData)
+          setPersonaId(decoded.personaId || null)
+          setUserId(decoded.id || null)
           console.log('User set in context successfully:', userData)
 
           return true
@@ -154,6 +166,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     deleteCookie('token')
     deleteCookie('refreshToken')
     setUser(null)
+    setPersonaId(null)
+    setUserId(null)
     toast.success('Sesión cerrada correctamente')
 
     if (typeof window !== 'undefined') {
@@ -207,6 +221,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAdmin,
     loading,
     refreshUser,
+    personaId,
+    userId,
   }
 
   // Only show loading spinner on initial page load, not during navigation

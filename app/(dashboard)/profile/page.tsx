@@ -35,7 +35,7 @@ import {
   BarChart3
 } from 'lucide-react'
 import { useAuth } from '@/components/auth/auth-context'
-import apiClient, { User as UserType, Reserva, DisponibilidadJugador, PerfilCompetitivo } from '@/lib/api-client'
+import apiClient, { User as UserType, Reserva, DisponibilidadPersona, PerfilCompetitivo } from '@/lib/api-client'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useForm } from 'react-hook-form'
