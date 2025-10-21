@@ -22,7 +22,7 @@ export function setCookie(name: string, value: string, days: number = 7): void {
   if (typeof document === 'undefined') {
     return
   }
-  
+
   const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString()
   const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:'
   document.cookie = `${name}=${value}; expires=${expires}; path=/; SameSite=Strict${isSecure ? '; Secure' : ''}`
@@ -32,7 +32,7 @@ export function deleteCookie(name: string): void {
   if (typeof document === 'undefined') {
     return
   }
-  
+
   document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
 }
 
@@ -50,10 +50,26 @@ export function isClientAuthenticated(): boolean {
 export function logoutUser(): void {
   // Clear client-side auth state
   deleteCookie('token')
+  deleteCookie('refreshToken')
   localStorage.removeItem('user')
-  
+
   // Redirect to login
   if (typeof window !== 'undefined') {
     window.location.href = '/login'
   }
+}
+
+/**
+ * Get refresh token from cookies
+ */
+export function getRefreshToken(): string | null {
+  return getCookie('refreshToken')
+}
+
+/**
+ * Set both access and refresh tokens
+ */
+export function setAuthTokens(accessToken: string, refreshToken: string): void {
+  setCookie('token', accessToken, 7) // Access token valid for 7 days
+  setCookie('refreshToken', refreshToken, 30) // Refresh token valid for 30 days
 } 

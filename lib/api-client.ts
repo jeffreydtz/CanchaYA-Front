@@ -31,7 +31,39 @@ export interface RegisterData {
   password: string
 }
 
+export interface AuthTokens {
+  userId: string
+  accessToken: string
+  refreshToken: string
+}
+
+export interface AuthMeResponse {
+  id: string
+  rol: 'usuario' | 'admin'
+  personaId: string
+  email: string
+  iat: number
+  exp: number
+}
+
+export interface Persona {
+  id: string
+  nombre: string
+  apellido: string
+  email: string
+}
+
 export interface User {
+  id: string // UUID
+  activo: boolean
+  rol: { nombre: 'usuario' | 'admin' }
+  persona: Persona
+  createdAt: string
+  updatedAt: string
+}
+
+// Legacy User interface for backward compatibility
+export interface UserLegacy {
   id: string // UUID
   nombre: string
   email: string
@@ -64,27 +96,40 @@ export interface Cancha {
   ubicacion: string
   tipoSuperficie: string
   precioPorHora: number
-  disponible: boolean
-  deporteId: string // UUID
-  clubId: string // UUID
-  deporte?: Deporte
-  club?: Club
-  fechaCreacion: string
+  activa: boolean
+  club: { id: string; nombre: string }
+  deporte: { id: string; nombre: string }
+}
+
+export interface DisponibilidadHorario {
+  id: string
+  diaSemana: number // 0-6 (Sunday-Saturday)
+  horario: {
+    horaInicio: string // HH:MM
+    horaFin: string // HH:MM
+  }
+  cancha: {
+    id: string
+    nombre: string
+    deporte: { nombre: string }
+  }
+  disponible?: boolean
 }
 
 export interface Reserva {
   id: string // UUID
-  usuarioId: string // UUID
-  canchaId: string // UUID
-  fecha: string // YYYY-MM-DD
-  hora: string // HH:MM
-  estado: 'pendiente' | 'confirmada' | 'liberada' | 'completada'
-  monto?: number
-  fechaConfirmacion?: string
-  notificacionesEnviadas?: boolean
-  usuario?: User
-  cancha?: Cancha
-  fechaCreacion: string
+  fechaHora: string // ISO 8601
+  estado: 'pendiente' | 'confirmada' | 'cancelada' | 'completada'
+  persona: {
+    id: string
+    nombre: string
+  }
+  disponibilidad: DisponibilidadHorario
+}
+
+export interface CreateReservaData {
+  disponibilidadId: string
+  fechaHora: string // ISO 8601 e.g., "2025-10-21T18:00:00-03:00"
 }
 
 export interface Equipo {
@@ -98,30 +143,27 @@ export interface Equipo {
 }
 
 export interface Desafio {
-  id: string // UUID
-  equipoRetadorId: string // UUID
-  equipoRivalId?: string // UUID
-  deporteId: string // UUID
-  fecha: string // YYYY-MM-DD
-  hora: string // HH:MM
-  estado: 'PENDIENTE' | 'ACEPTADO' | 'RECHAZADO' | 'FINALIZADO'
-  resultado?: string
-  equipoRetador?: Equipo
-  equipoRival?: Equipo
-  deporte?: Deporte
-  fechaCreacion: string
+  id: string
+  reserva: { id: string }
+  deporte: { nombre: string }
+  creador: { nombre: string }
+  jugadoresCreador: { nombre: string }[]
+  invitadosDesafiados: { nombre: string }[]
+  jugadoresDesafiados: { nombre: string }[]
+  estado: 'pendiente' | 'aceptado' | 'rechazado' | 'finalizado'
+  golesCreador: number | null
+  golesDesafiado: number | null
 }
 
 export interface Deuda {
-  id: string // UUID
-  personaId: string // UUID (actualizado según backend)
+  id: string
   monto: number
-  descripcion: string
-  fechaVencimiento: string // YYYY-MM-DD
   pagada: boolean
-  fechaPago?: string
-  usuario?: User
-  fechaCreacion: string
+  fechaVencimiento?: string
+  persona: {
+    id: string
+    nombre: string
+  }
 }
 
 export interface DisponibilidadJugador {
@@ -147,14 +189,12 @@ export interface Horario {
 }
 
 export interface Valoracion {
-  id: string // UUID
-  usuarioId: string // UUID
-  canchaId: string // UUID
+  id: string
+  tipo_objetivo: 'cancha' | 'club' | 'usuario'
+  id_objetivo: string
   puntaje: number // 1-5
   comentario?: string
-  usuario?: User
-  cancha?: Cancha
-  fechaCreacion: string
+  persona: { nombre: string }
 }
 
 export interface RankingJugador {
@@ -295,29 +335,56 @@ export { apiRequest }
 
 const apiClient = {
   // ===== AUTENTICACIÓN =====
-  
+
   /**
    * Login - POST /auth/login
+   * Returns userId, accessToken, and refreshToken
    */
   login: (credentials: LoginCredentials) =>
-    apiRequest<{ accessToken: string; token?: string; user?: User }>('/auth/login', {
+    apiRequest<AuthTokens>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
     }),
 
   /**
-   * Registro - POST /usuarios/registro  
+   * Registro - POST /auth/register
+   * Returns userId, accessToken, and refreshToken
    */
   register: (data: RegisterData) =>
-    apiRequest<User>('/usuarios/registro', {
+    apiRequest<AuthTokens>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
-  // ===== USUARIOS =====
-  
   /**
-   * Listar usuarios - GET /usuarios
+   * Refresh Token - POST /auth/refresh
+   * Returns new accessToken
+   */
+  refreshToken: (refreshToken: string) =>
+    apiRequest<{ accessToken: string }>('/auth/refresh', {
+      method: 'POST',
+      body: JSON.stringify({ refreshToken }),
+    }),
+
+  /**
+   * Logout - POST /auth/logout
+   * Revokes refreshToken
+   */
+  logoutAuth: (refreshToken: string) =>
+    apiRequest<{ ok: boolean }>('/auth/logout', {
+      method: 'POST',
+      body: JSON.stringify({ refreshToken }),
+    }),
+
+  /**
+   * Get authenticated user info - GET /auth/me
+   */
+  getMe: () => apiRequest<AuthMeResponse>('/auth/me'),
+
+  // ===== USUARIOS =====
+
+  /**
+   * Listar usuarios - GET /usuarios (admin only)
    */
   getUsuarios: () => apiRequest<User[]>('/usuarios'),
 
@@ -330,12 +397,38 @@ const apiClient = {
       body: JSON.stringify(data),
     }),
 
+  // ===== PERSONAS =====
+
+  /**
+   * Buscar personas - GET /personas/search?q=<texto>
+   */
+  searchPersonas: (q: string) => apiRequest<Persona[]>(`/personas/search?q=${encodeURIComponent(q)}`),
+
+  /**
+   * Obtener persona por ID - GET /personas/:id
+   */
+  getPersona: (id: string) => apiRequest<Persona>(`/personas/${id}`),
+
+  /**
+   * Actualizar persona - PATCH /personas/:id
+   */
+  updatePersona: (id: string, data: Partial<Persona>) =>
+    apiRequest<Persona>(`/personas/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
   // ===== CANCHAS =====
-  
+
   /**
    * Listar canchas - GET /canchas
    */
   getCanchas: () => apiRequest<Cancha[]>('/canchas'),
+
+  /**
+   * Obtener canchas por club - GET /canchas/club/:clubId
+   */
+  getCanchasByClub: (clubId: string) => apiRequest<Cancha[]>(`/canchas/club/${clubId}`),
 
   /**
    * Obtener cancha por ID - GET /canchas/{id}
@@ -343,25 +436,20 @@ const apiClient = {
   getCanchaById: (id: string) => apiRequest<Cancha>(`/canchas/${id}`),
 
   /**
-   * Crear cancha - POST /canchas
+   * Crear cancha - POST /canchas (admin only)
    */
   createCancha: (data: {
-    nombre: string;
-    ubicacion: string;
-    tipoSuperficie: string;
-    precioPorHora: number;
-    deporteId: string;
-    clubId: string;
+    nombre: string
+    ubicacion: string
+    tipoSuperficie: string
+    precioPorHora: number
+    deporteId: string
+    clubId: string
   }) =>
     apiRequest<Cancha>('/canchas', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
-
-  /**
-   * Obtener cancha por ID - GET /canchas/{id}
-   */
-  getCancha: (id: string) => apiRequest<Cancha>(`/canchas/${id}`),
 
   /**
    * Actualizar cancha - PATCH /canchas/{id}
@@ -456,21 +544,22 @@ const apiClient = {
     apiRequest<void>(`/deportes/${id}`, { method: 'DELETE' }),
 
   // ===== RESERVAS =====
-  
+
   /**
    * Listar reservas - GET /reservas
+   * Usuarios ven sus propias reservas, admins ven todas
    */
   getReservas: () => apiRequest<Reserva[]>('/reservas'),
 
   /**
    * Crear reserva - POST /reservas
+   * Requiere: disponibilidadId y fechaHora (ISO 8601)
+   * Reglas:
+   * - No puede tener deudas impagas
+   * - No puede existir otra reserva en misma fecha + disponibilidad
+   * - fechaHora debe coincidir con el día y hora de la disponibilidad
    */
-  createReserva: (data: {
-    usuarioId: string;
-    canchaId: string;
-    fecha: string; // YYYY-MM-DD
-    hora: string;  // HH:MM
-  }) =>
+  createReserva: (data: CreateReservaData) =>
     apiRequest<Reserva>('/reservas', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -482,18 +571,21 @@ const apiClient = {
   getReserva: (id: string) => apiRequest<Reserva>(`/reservas/${id}`),
 
   /**
-   * Confirmar reserva - PATCH /reservas/{id}/confirmar
+   * Confirmar reserva - PATCH /reservas/:id/confirmar
+   * Solo admin o dueño de la reserva
+   * Genera auditoría + mail + recordatorios automáticos
    */
   confirmarReserva: (id: string) =>
-    apiRequest<Reserva>(`/reservas/${id}/confirmar`, { 
+    apiRequest<Reserva>(`/reservas/${id}/confirmar`, {
       method: 'PATCH'
     }),
 
   /**
    * Cancelar reserva - DELETE /reservas/{id}
+   * Cambia estado a "cancelada"
    */
   cancelReserva: (id: string) =>
-    apiRequest<void>(`/reservas/${id}`, { method: 'DELETE' }),
+    apiRequest<Reserva>(`/reservas/${id}`, { method: 'DELETE' }),
 
 
   // ===== EQUIPOS =====

@@ -9,15 +9,18 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { getCookie, setCookie, deleteCookie } from '@/lib/auth'
-import apiClient, { User } from '@/lib/api-client'
+import { getCookie, setCookie, deleteCookie, setAuthTokens, getRefreshToken } from '@/lib/auth'
+import apiClient, { UserLegacy, AuthMeResponse } from '@/lib/api-client'
 import { toast } from 'sonner'
 import { jwtDecode } from 'jwt-decode'
+
+// Use UserLegacy for backward compatibility with existing components
+type User = UserLegacy
 
 interface AuthContextType {
   user: User | null
   login: (email: string, password: string) => Promise<boolean>
-  logout: () => void
+  logout: () => Promise<void>
   isAuthenticated: boolean
   isAdmin: boolean
   loading: boolean
@@ -64,71 +67,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true)
       console.log('Attempting login for:', email)
-      
+
       const response = await apiClient.login({ email, password })
       console.log('Login response:', response)
-      
+
       if (response.error) {
         console.error('Login error from API:', response.error)
         toast.error(response.error)
         return false
       }
-      
-      // Check for both token and accessToken fields
-      const authToken = response.data?.token || response.data?.accessToken
-      
-      if (authToken) {
-        console.log('Token received, saving...')
-        
-        // Clear any existing cookie first
-        deleteCookie('token')
-        
-        // Set cookie using the utility function
-        setCookie('token', authToken, 7)
-        
-        console.log('Cookie set, decoding token...')
-        
+
+      // New API returns: { userId, accessToken, refreshToken }
+      const { accessToken, refreshToken } = response.data || {}
+
+      if (accessToken && refreshToken) {
+        console.log('Tokens received, saving...')
+
+        // Save both tokens
+        setAuthTokens(accessToken, refreshToken)
+
+        console.log('Tokens saved, decoding access token...')
+
         try {
-          const decoded: any = jwtDecode(authToken)
+          const decoded: any = jwtDecode(accessToken)
           console.log('Token decoded successfully:', decoded)
-          console.log('Token fields - id:', decoded.id, 'nombre:', decoded.nombre, 'email:', decoded.email, 'rol:', decoded.rol)
-          
-          // Validate that required fields exist (nombre is optional, can use email as fallback)
+
+          // Validate that required fields exist
           if (!decoded.id || !decoded.email) {
             console.error('Missing required fields in token:', decoded)
             throw new Error('Token missing required fields')
           }
-          
+
           const userData: User = {
             id: decoded.id,
             nombre: decoded.nombre || decoded.email.split('@')[0] || 'Usuario',
             email: decoded.email,
-            rol: decoded.rol === 'ADMINISTRADOR' || decoded.rol === 'admin' ? 'admin' : 'usuario',
+            rol: decoded.rol === 'admin' ? 'admin' : 'usuario',
             activo: decoded.activo ?? true,
-            fechaCreacion: decoded.fechaCreacion ?? new Date().toISOString(),
+            fechaCreacion: decoded.iat ? new Date(decoded.iat * 1000).toISOString() : new Date().toISOString(),
           }
-          
+
           setUser(userData)
           console.log('User set in context successfully:', userData)
-          
-          // Verify cookie was saved
-          setTimeout(() => {
-            const savedToken = getCookie('token')
-            console.log('Cookie verification - token saved:', savedToken ? 'YES' : 'NO')
-          }, 100)
-          
+
           return true
         } catch (e) {
           console.error('Error decoding token:', e)
-          console.error('Token that failed to decode:', authToken)
+          console.error('Token that failed to decode:', accessToken)
           setUser(null)
           deleteCookie('token')
+          deleteCookie('refreshToken')
           toast.error('Token inválido')
           return false
         }
       }
-      
-      console.error('No token in response')
+
+      console.error('No tokens in response')
       toast.error('Error en la autenticación')
       return false
     } catch (error) {
@@ -140,10 +134,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const logout = () => {
+  const logout = async () => {
+    const refreshToken = getRefreshToken()
+
+    // Call backend to revoke refresh token
+    if (refreshToken) {
+      try {
+        await apiClient.logoutAuth(refreshToken)
+      } catch (error) {
+        console.error('Error revoking refresh token:', error)
+      }
+    }
+
+    // Clear client-side tokens
     deleteCookie('token')
+    deleteCookie('refreshToken')
     setUser(null)
     toast.success('Sesión cerrada correctamente')
+
     if (typeof window !== 'undefined') {
       window.location.href = '/login'
     }
