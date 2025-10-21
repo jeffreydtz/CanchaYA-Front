@@ -427,7 +427,12 @@ export default function CanchaDetailPage() {
                   <Calendar
                     mode="single"
                     selected={selectedDate}
-                    onSelect={(date) => date && setSelectedDate(date)}
+                    onSelect={(date) => {
+                      if (date) {
+                        setSelectedDate(date)
+                        setSelectedTime('') // Reset time selection when date changes
+                      }
+                    }}
                     disabled={(date) => date < new Date()}
                     className="rounded-lg border border-blue-200/50 bg-white dark:bg-gray-800/50 backdrop-blur-sm"
                   />
@@ -459,13 +464,27 @@ export default function CanchaDetailPage() {
                 </div>
 
                 {/* Price Summary */}
-                {cancha.precioPorHora && selectedTime && (
+                {cancha.precioPorHora && selectedDate && selectedTime && (
                   <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-6 rounded-xl border border-green-200/50 dark:border-green-700/30">
                     <h4 className="font-semibold mb-3 text-green-900 dark:text-green-100 flex items-center gap-2">
                       <DollarSign className="h-4 w-4" />
-                      Resumen del precio
+                      Resumen de la Reserva
                     </h4>
                     <div className="space-y-2">
+                      <div className="flex justify-between items-center text-green-800 dark:text-green-200">
+                        <span>Fecha:</span>
+                        <span className="font-semibold">{selectedDate.toLocaleDateString('es-ES', { 
+                          weekday: 'short', 
+                          day: 'numeric', 
+                          month: 'short',
+                          year: 'numeric'
+                        })}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-green-800 dark:text-green-200">
+                        <span>Hora:</span>
+                        <span className="font-semibold">{selectedTime}</span>
+                      </div>
+                      <Separator className="bg-green-200 dark:bg-green-700" />
                       <div className="flex justify-between items-center text-green-800 dark:text-green-200">
                         <span>Precio por hora:</span>
                         <span className="font-semibold">${cancha.precioPorHora}</span>
@@ -474,7 +493,7 @@ export default function CanchaDetailPage() {
                         <span>Duración:</span>
                         <span className="font-semibold">1 hora</span>
                       </div>
-                      <Separator className="bg-blue-200 dark:bg-blue-700" />
+                      <Separator className="bg-green-300 dark:bg-green-600" />
                       <div className="flex justify-between items-center font-bold text-lg text-green-900 dark:text-green-100">
                         <span>Total:</span>
                         <span className="text-2xl">${cancha.precioPorHora}</span>
