@@ -143,30 +143,38 @@ export default function CanchaDetailPage() {
       router.push('/login')
       return
     }
-    
+
     if (!selectedTime) {
       toast.error('Selecciona un horario')
       return
     }
-    
+
     setReserving(true)
     try {
-      // Note: debt validation would be handled by backend during reservation creation
-      // For now, we'll proceed with reservation and let backend handle debt validation
-      
+      // TODO: Fetch disponibilidades for this cancha and selected date/time
+      // For now, show a message that this needs to be implemented with the new API
+
+      toast.error('La funcionalidad de reservas necesita actualizarse para usar disponibilidades. Por favor, contacte al administrador.')
+
+      // New API structure requires:
+      // 1. Fetch disponibilidades for this cancha
+      // 2. Find the matching disponibilidad for selected date/time
+      // 3. Create ISO 8601 fechaHora from selectedDate + selectedTime
+      // 4. Call createReserva with { disponibilidadId, fechaHora }
+
+      /*
       const response = await apiClient.createReserva({
-        canchaId: canchaId,
-        usuarioId: '', // Se manejará en el backend con el token
-        fecha: selectedDate.toISOString().split('T')[0],
-        hora: selectedTime
+        disponibilidadId: 'uuid-from-disponibilidad',
+        fechaHora: new Date(selectedDate.toISOString().split('T')[0] + 'T' + selectedTime + ':00-03:00').toISOString()
       })
-      
+
       if (response.data) {
         toast.success('¡Reserva creada exitosamente! Recuerda confirmarla 2 horas antes del partido.')
         router.push('/mis-reservas')
       } else {
         toast.error(response.error || 'Error al crear la reserva')
       }
+      */
     } catch (error) {
       console.error('Error creating reservation:', error)
       toast.error('Error al crear la reserva')

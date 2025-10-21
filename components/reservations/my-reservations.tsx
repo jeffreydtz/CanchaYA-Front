@@ -12,6 +12,15 @@ import apiClient, { Reserva } from '@/lib/api-client'
 import { formatDate, formatTime } from '@/lib/date-utils'
 import Link from 'next/link'
 
+// Helper to parse fechaHora from ISO 8601
+function parseFechaHora(fechaHora: string) {
+  const date = new Date(fechaHora)
+  return {
+    fecha: date.toISOString().split('T')[0], // YYYY-MM-DD
+    hora: date.toTimeString().substring(0, 5) // HH:MM
+  }
+}
+
 export default function MyReservations() {
   const { user, isAuthenticated } = useAuth()
   const [reservations, setReservations] = useState<Reserva[]>([])
@@ -32,9 +41,9 @@ export default function MyReservations() {
         }
 
         if (response.data) {
-          // Filter reservations for current user
-          const userReservations = response.data.filter(r => r.usuarioId === user.id)
-          setReservations(userReservations)
+          // Backend now filters by user automatically
+          // usuarios ven sus propias reservas, admins ven todas
+          setReservations(response.data)
         }
       } catch (error) {
         console.error('Error loading reservations:', error)
@@ -196,34 +205,39 @@ export default function MyReservations() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {reservations.map((reservation) => (
+                  {reservations.map((reservation) => {
+                    const { fecha, hora } = parseFechaHora(reservation.fechaHora)
+                    const canchaInfo = reservation.disponibilidad?.cancha
+                    const horarioInfo = reservation.disponibilidad?.horario
+
+                    return (
                     <TableRow key={reservation.id}>
                       <TableCell>
                         <div>
-                          <p className="font-medium">{reservation.cancha?.nombre || 'Cancha no especificada'}</p>
+                          <p className="font-medium">{canchaInfo?.nombre || 'Cancha no especificada'}</p>
                           <p className="text-sm text-gray-600 flex items-center">
                             <MapPin className="w-3 h-3 mr-1" />
-                            {reservation.cancha?.ubicacion || 'Ubicación no especificada'}
+                            {canchaInfo?.deporte?.nombre || 'Deporte no especificado'}
                           </p>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center">
                           <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                          {formatDate(reservation.fecha, 'LONG')}
+                          {formatDate(fecha, 'LONG')}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center">
                           <Clock className="w-4 h-4 mr-2 text-gray-400" />
-                          {formatTime(reservation.hora)}
+                          {horarioInfo?.horaInicio || formatTime(hora)} - {horarioInfo?.horaFin || ''}
                         </div>
                       </TableCell>
                       <TableCell>{getStatusBadge(reservation.estado)}</TableCell>
                       <TableCell>
                         <div className="flex items-center">
                           <DollarSign className="w-4 h-4 mr-1 text-green-600" />
-                          {reservation.monto ? `$${reservation.monto}` : 'No especificado'}
+                          No especificado
                         </div>
                       </TableCell>
                       <TableCell>
@@ -260,7 +274,7 @@ export default function MyReservations() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )})}
                 </TableBody>
               </Table>
             </Card>
@@ -268,15 +282,20 @@ export default function MyReservations() {
 
           {/* Mobile Card View */}
           <div className="md:hidden space-y-4">
-            {reservations.map((reservation) => (
+            {reservations.map((reservation) => {
+              const { fecha, hora } = parseFechaHora(reservation.fechaHora)
+              const canchaInfo = reservation.disponibilidad?.cancha
+              const horarioInfo = reservation.disponibilidad?.horario
+
+              return (
               <Card key={reservation.id}>
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
-                      <CardTitle className="text-lg">{reservation.cancha?.nombre || 'Cancha no especificada'}</CardTitle>
+                      <CardTitle className="text-lg">{canchaInfo?.nombre || 'Cancha no especificada'}</CardTitle>
                       <CardDescription className="flex items-center mt-1">
                         <MapPin className="w-3 h-3 mr-1" />
-                        {reservation.cancha?.ubicacion || 'Ubicación no especificada'}
+                        {canchaInfo?.deporte?.nombre || 'Deporte no especificado'}
                       </CardDescription>
                     </div>
                     {getStatusBadge(reservation.estado)}
@@ -286,15 +305,15 @@ export default function MyReservations() {
                   <div className="grid grid-cols-1 gap-4 mb-4">
                     <div className="flex items-center">
                       <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                      <span className="text-sm">{formatDate(reservation.fecha, 'LONG')}</span>
+                      <span className="text-sm">{formatDate(fecha, 'LONG')}</span>
                     </div>
                     <div className="flex items-center">
                       <Clock className="w-4 h-4 mr-2 text-gray-400" />
-                      <span className="text-sm">{formatTime(reservation.hora)}</span>
+                      <span className="text-sm">{horarioInfo?.horaInicio || formatTime(hora)} - {horarioInfo?.horaFin || ''}</span>
                     </div>
                     <div className="flex items-center">
                       <DollarSign className="w-4 h-4 mr-2 text-green-600" />
-                      <span className="text-sm">{reservation.monto ? `$${reservation.monto}` : 'No especificado'}</span>
+                      <span className="text-sm">No especificado</span>
                     </div>
                   </div>
 
@@ -331,7 +350,7 @@ export default function MyReservations() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+            )})}
           </div>
         </div>
       )}

@@ -56,15 +56,15 @@ function CourtCard({ court, index }: CourtCardProps) {
         
         {/* Status badge */}
         <div className="absolute top-4 left-4">
-          <Badge 
-            variant={court.disponible ? "default" : "secondary"}
+          <Badge
+            variant={court.activa ? "default" : "secondary"}
             className={`${
-              court.disponible 
-                ? "bg-success text-white shadow-lg" 
+              court.activa
+                ? "bg-success text-white shadow-lg"
                 : "bg-gray-500 text-white shadow-lg"
             } px-3 py-1 font-semibold`}
           >
-            {court.disponible ? "✓ Disponible" : "● Ocupada"}
+            {court.activa ? "✓ Disponible" : "● Inactiva"}
           </Badge>
         </div>
 
@@ -86,11 +86,11 @@ function CourtCard({ court, index }: CourtCardProps) {
           isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
         }`}>
           <Link href={`/cancha/${court.id}`}>
-            <Button 
+            <Button
               className="w-full bg-white/90 hover:bg-white text-gray-900 font-semibold backdrop-blur-sm"
-              disabled={!court.disponible}
+              disabled={!court.activa}
             >
-              {court.disponible ? "Reservar Ahora" : "Ver Detalles"}
+              {court.activa ? "Reservar Ahora" : "Ver Detalles"}
             </Button>
           </Link>
         </div>
@@ -154,12 +154,12 @@ function CourtCard({ court, index }: CourtCardProps) {
           </div>
           
           <Link href={`/cancha/${court.id}`}>
-            <Button 
-              size="sm" 
-              disabled={!court.disponible}
+            <Button
+              size="sm"
+              disabled={!court.activa}
               className="font-semibold"
             >
-              {court.disponible ? "Ver Más" : "No disponible"}
+              {court.activa ? "Ver Más" : "No disponible"}
             </Button>
           </Link>
         </div>
@@ -209,9 +209,9 @@ export default function FeaturedCourts() {
         const response = await apiClient.getCanchas()
         if (response.data) {
           setAllCourts(response.data)
-          // Initially show all available courts
-          const availableCourts = response.data.filter(court => court.disponible)
-          setFilteredCourts(availableCourts)
+          // Initially show all active courts
+          const activeCourts = response.data.filter(court => court.activa)
+          setFilteredCourts(activeCourts)
         } else {
           setError('No se pudieron cargar las canchas')
           setAllCourts([])

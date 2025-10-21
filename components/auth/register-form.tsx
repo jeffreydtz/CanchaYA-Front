@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
 import apiClient from '@/lib/api-client'
+import { setAuthTokens } from '@/lib/auth'
 import Link from 'next/link'
 
 const registerSchema = z.object({
@@ -91,8 +92,18 @@ export function RegisterForm() {
       }
 
       if (response.data) {
-        toast.success('¡Registro exitoso! Por favor inicia sesión.')
-        router.push('/login')
+        // New API returns { userId, accessToken, refreshToken }
+        const { accessToken, refreshToken } = response.data
+        if (accessToken && refreshToken) {
+          // Save tokens and redirect to home (user is now logged in)
+          setAuthTokens(accessToken, refreshToken)
+          toast.success('¡Registro exitoso! Bienvenido a CanchaYA.')
+          router.push('/')
+        } else {
+          // Fallback: redirect to login if tokens aren't provided
+          toast.success('¡Registro exitoso! Por favor inicia sesión.')
+          router.push('/login')
+        }
       } else {
         toast.error('Error en el registro')
       }

@@ -13,6 +13,7 @@ import { getCookie, setCookie, deleteCookie, setAuthTokens, getRefreshToken } fr
 import apiClient, { UserLegacy, AuthMeResponse } from '@/lib/api-client'
 import { toast } from 'sonner'
 import { jwtDecode } from 'jwt-decode'
+import { useTokenRefresh } from '@/hooks/use-token-refresh'
 
 // Use UserLegacy for backward compatibility with existing components
 type User = UserLegacy
@@ -34,6 +35,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [initialLoad, setInitialLoad] = useState(true)
+
+  // Enable automatic token refresh
+  useTokenRefresh()
 
   // Inicializa el estado de autenticación leyendo el token y decodificando el usuario
   useEffect(() => {
