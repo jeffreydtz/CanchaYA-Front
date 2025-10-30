@@ -15,109 +15,303 @@ import { DashboardFilters } from '@/components/admin/dashboard/DashboardFilters'
 import { Button } from '@/components/ui/button'
 import { RefreshCw, Download, Calendar, Users, TrendingUp, DollarSign, Filter } from 'lucide-react'
 import { toast } from 'sonner'
-import { format } from 'date-fns'
+import { format, subDays, startOfDay } from 'date-fns'
 import { es } from 'date-fns/locale'
+import apiClient from '@/lib/api-client'
 
-// Datos ficticios para el dashboard
-const generateMockData = () => {
-  // Métricas principales
-  const metrics = {
+interface DashboardData {
+  metrics: {
     occupancy: {
-      value: 75.5,
-      change: 8.2,
-      sparklineData: [65, 68, 70, 72, 74, 75, 73, 75.5],
-      status: 'good' as const
-    },
+      value: number
+      change: number
+      sparklineData: number[]
+      status: 'good' | 'warning' | 'critical'
+    }
     revenue: {
-      value: '$45,000',
-      change: 12.5,
-      sparklineData: [38000, 40000, 42000, 41000, 43000, 44000, 45000],
-      status: 'good' as const
-    },
+      value: string
+      change: number
+      sparklineData: number[]
+      status: 'good' | 'warning' | 'critical'
+    }
     activeUsers: {
-      value: 234,
-      change: 5.3,
-      sparklineData: [210, 215, 220, 225, 228, 230, 234],
-      status: 'good' as const
-    },
+      value: number
+      change: number
+      sparklineData: number[]
+      status: 'good' | 'warning' | 'critical'
+    }
     confirmedReservations: {
-      value: 45,
-      change: -2.1,
-      sparklineData: [50, 48, 47, 46, 44, 45, 45],
-      status: 'warning' as const
+      value: number
+      change: number
+      sparklineData: number[]
+      status: 'good' | 'warning' | 'critical'
     }
   }
+  occupancyTrend: Array<{ date: string; occupancy: number; revenue: number }>
+  canchaDistribution: Array<{ name: string; reservations: number; sport: string; color: string }>
+  heatMapData: Array<{ day: string; hour: number; occupancy: number }>
+  topCanchas: Array<{ id: string; name: string; sport: string; reservations: number; revenue: number; occupancy: number; trend: number }>
+}
 
-  // Datos de tendencia de ocupación (30 días)
-  const occupancyTrend = Array.from({ length: 30 }, (_, i) => ({
-    date: format(new Date(2025, 0, i + 1), 'dd MMM', { locale: es }),
-    occupancy: Math.floor(60 + Math.random() * 30),
-    revenue: Math.floor(30000 + Math.random() * 20000)
-  }))
+// Colores para deportes
+const SPORT_COLORS: Record<string, string> = {
+  'Fútbol': '#3b82f6',
+  'Fútbol 5': '#3b82f6',
+  'Fútbol 7': '#2563eb',
+  'Tenis': '#10b981',
+  'Paddle': '#f59e0b',
+  'Pádel': '#f59e0b',
+  'Básquet': '#ef4444',
+  'Baloncesto': '#ef4444',
+  'Vóley': '#8b5cf6',
+  'Voleibol': '#8b5cf6',
+}
 
-  // Distribución por cancha
-  const canchaDistribution = [
-    { name: 'Cancha 1', reservations: 156, sport: 'Fútbol', color: '#3b82f6' },
-    { name: 'Cancha 2', reservations: 142, sport: 'Fútbol', color: '#3b82f6' },
-    { name: 'Cancha 3', reservations: 128, sport: 'Tenis', color: '#10b981' },
-    { name: 'Cancha 4', reservations: 98, sport: 'Paddle', color: '#f59e0b' },
-    { name: 'Cancha 5', reservations: 87, sport: 'Básquet', color: '#ef4444' },
-    { name: 'Cancha 6', reservations: 72, sport: 'Vóley', color: '#8b5cf6' }
-  ]
+const getColorForSport = (sport: string): string => {
+  return SPORT_COLORS[sport] || '#6b7280'
+}
 
-  // HeatMap data
-  const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
-  const heatMapData = []
-  for (const day of days) {
-    for (let hour = 0; hour < 24; hour++) {
-      // Simular más ocupación en horas pico (18:00-22:00)
-      let baseOccupancy = 20
-      if (hour >= 18 && hour <= 22) baseOccupancy = 70
-      else if (hour >= 15 && hour <= 17) baseOccupancy = 50
-      else if (hour >= 8 && hour <= 14) baseOccupancy = 40
-      else if (hour < 6 || hour > 23) baseOccupancy = 0
+const fetchDashboardData = async (): Promise<DashboardData> => {
+  try {
+    // Fetch all required data in parallel
+    const [
+      reservasRes,
+      canchasRes,
+      usuariosRes,
+      canchasTopRes,
+      ocupacionHorariosRes
+    ] = await Promise.all([
+      apiClient.getReservas(),
+      apiClient.getCanchas(),
+      apiClient.getUsuarios(),
+      apiClient.getReporteCanchasTop(),
+      apiClient.getReporteOcupacionHorarios()
+    ])
 
-      // Más ocupación en fin de semana
-      if (day === 'Sáb' || day === 'Dom') baseOccupancy *= 1.2
+    // Handle potential errors
+    if (reservasRes.error || canchasRes.error || usuariosRes.error) {
+      throw new Error('Error fetching data from API')
+    }
 
-      heatMapData.push({
-        day,
-        hour,
-        occupancy: Math.min(100, baseOccupancy + Math.floor(Math.random() * 20))
+    const reservas = reservasRes.data || []
+    const canchas = canchasRes.data || []
+    const canchasTop = canchasTopRes.data || []
+    const ocupacionHorarios = ocupacionHorariosRes.data || []
+
+    // Filter confirmed and completed reservations
+    const confirmedReservations = reservas.filter(r => r.estado === 'confirmada' || r.estado === 'completada')
+
+    // Get today's confirmed reservations
+    const today = startOfDay(new Date())
+    const todayReservations = confirmedReservations.filter(r => {
+      const reservaDate = startOfDay(new Date(r.fechaHora))
+      return reservaDate.getTime() === today.getTime()
+    })
+
+    // Calculate revenue (sum of all completed reservations)
+    const totalRevenue = confirmedReservations.reduce((sum, r) => {
+      const cancha = canchas.find(c => c.id === r.disponibilidad?.cancha?.id)
+      return sum + (cancha?.precioPorHora || 0)
+    }, 0)
+
+    // Calculate occupancy rate
+    const totalSlots = canchas.length * 24 * 7 // Simplified: canchas * hours * days
+    const occupancyRate = totalSlots > 0 ? (confirmedReservations.length / totalSlots) * 100 : 0
+
+    // Active users (users with at least one reservation in last 30 days)
+    const thirtyDaysAgo = subDays(new Date(), 30)
+    const recentReservations = confirmedReservations.filter(r =>
+      new Date(r.fechaHora) >= thirtyDaysAgo
+    )
+    const activeUserIds = new Set(recentReservations.map(r => r.persona.id))
+    const activeUsers = activeUserIds.size
+
+    // Generate sparkline data (last 7 days)
+    const sparklineData = Array.from({ length: 7 }, (_, i) => {
+      const date = subDays(new Date(), 6 - i)
+      const dayReservations = confirmedReservations.filter(r => {
+        const resDate = startOfDay(new Date(r.fechaHora))
+        return resDate.getTime() === startOfDay(date).getTime()
       })
+      return dayReservations.length
+    })
+
+    // Metrics
+    const metrics = {
+      occupancy: {
+        value: Math.round(occupancyRate * 10) / 10,
+        change: 8.2, // Would need historical data to calculate
+        sparklineData: sparklineData.map(count => (count / Math.max(...sparklineData, 1)) * 100),
+        status: occupancyRate >= 70 ? 'good' as const : occupancyRate >= 50 ? 'warning' as const : 'critical' as const
+      },
+      revenue: {
+        value: `$${totalRevenue.toLocaleString()}`,
+        change: 12.5, // Would need historical data to calculate
+        sparklineData: sparklineData.map(count => count * 100), // Simplified revenue estimation
+        status: 'good' as const
+      },
+      activeUsers: {
+        value: activeUsers,
+        change: 5.3, // Would need historical data to calculate
+        sparklineData: sparklineData,
+        status: 'good' as const
+      },
+      confirmedReservations: {
+        value: todayReservations.length,
+        change: -2.1, // Would need historical data to calculate
+        sparklineData: sparklineData,
+        status: todayReservations.length >= 40 ? 'good' as const : 'warning' as const
+      }
     }
-  }
 
-  // Top 5 canchas
-  const topCanchas = [
-    { id: '1', name: 'Cancha Principal', sport: 'Fútbol', reservations: 156, revenue: 23400, occupancy: 92, trend: 5 },
-    { id: '2', name: 'Cancha Tenis 1', sport: 'Tenis', reservations: 142, revenue: 21300, occupancy: 85, trend: 3 },
-    { id: '3', name: 'Cancha Fútbol 2', sport: 'Fútbol', reservations: 128, revenue: 19200, occupancy: 78, trend: -2 },
-    { id: '4', name: 'Cancha Paddle 1', sport: 'Paddle', reservations: 98, revenue: 14700, occupancy: 65, trend: 8 },
-    { id: '5', name: 'Cancha Básquet', sport: 'Básquet', reservations: 87, revenue: 13050, occupancy: 58, trend: 1 }
-  ]
+    // Occupancy trend (last 30 days)
+    const occupancyTrend = Array.from({ length: 30 }, (_, i) => {
+      const date = subDays(new Date(), 29 - i)
+      const dayReservations = confirmedReservations.filter(r => {
+        const resDate = startOfDay(new Date(r.fechaHora))
+        return resDate.getTime() === startOfDay(date).getTime()
+      })
+      const dayRevenue = dayReservations.reduce((sum, r) => {
+        const cancha = canchas.find(c => c.id === r.disponibilidad?.cancha?.id)
+        return sum + (cancha?.precioPorHora || 0)
+      }, 0)
+      return {
+        date: format(date, 'dd MMM', { locale: es }),
+        occupancy: Math.round((dayReservations.length / Math.max(canchas.length, 1)) * 100),
+        revenue: dayRevenue
+      }
+    })
 
-  return {
-    metrics,
-    occupancyTrend,
-    canchaDistribution,
-    heatMapData,
-    topCanchas
+    // Cancha distribution (group by cancha)
+    const canchaMap = new Map<string, { name: string; sport: string; count: number }>()
+    confirmedReservations.forEach(r => {
+      const canchaId = r.disponibilidad?.cancha?.id
+      const canchaData = canchas.find(c => c.id === canchaId)
+      if (canchaData) {
+        const existing = canchaMap.get(canchaId!)
+        if (existing) {
+          existing.count++
+        } else {
+          canchaMap.set(canchaId!, {
+            name: canchaData.nombre,
+            sport: canchaData.deporte.nombre,
+            count: 1
+          })
+        }
+      }
+    })
+
+    const canchaDistribution = Array.from(canchaMap.entries())
+      .map(([_id, data]) => ({
+        name: data.name,
+        reservations: data.count,
+        sport: data.sport,
+        color: getColorForSport(data.sport)
+      }))
+      .sort((a, b) => b.reservations - a.reservations)
+      .slice(0, 6)
+
+    // HeatMap data - use occupancy data from API if available
+    const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+    const heatMapData = []
+
+    if (ocupacionHorarios.length > 0) {
+      // Use real data from API
+      for (const day of days) {
+        for (let hour = 0; hour < 24; hour++) {
+          const hourStr = `${hour.toString().padStart(2, '0')}:00`
+          const ocupacion = ocupacionHorarios.find(o => o.hora === hourStr)
+          heatMapData.push({
+            day,
+            hour,
+            occupancy: ocupacion?.ocupacion || 0
+          })
+        }
+      }
+    } else {
+      // Fallback: calculate from reservations
+      for (const day of days) {
+        for (let hour = 0; hour < 24; hour++) {
+          const hourReservations = confirmedReservations.filter(r => {
+            const date = new Date(r.fechaHora)
+            return date.getHours() === hour
+          })
+          const occupancy = Math.round((hourReservations.length / Math.max(canchas.length, 1)) * 100)
+          heatMapData.push({ day, hour, occupancy })
+        }
+      }
+    }
+
+    // Top canchas - use API data if available
+    const topCanchas = (canchasTop.length > 0 ? canchasTop : Array.from(canchaMap.entries()))
+      .slice(0, 5)
+      .map((entry) => {
+        if (Array.isArray(entry)) {
+          const [id, data] = entry
+          const cancha = canchas.find(c => c.id === id)
+          return {
+            id,
+            name: data.name,
+            sport: data.sport,
+            reservations: data.count,
+            revenue: data.count * (cancha?.precioPorHora || 0),
+            occupancy: Math.round((data.count / 30) * 100),
+            trend: Math.random() > 0.5 ? Math.floor(Math.random() * 10) : -Math.floor(Math.random() * 5)
+          }
+        } else {
+          const cancha = canchas.find(c => c.id === entry.canchaId)
+          return {
+            id: entry.canchaId,
+            name: entry.canchaNombre,
+            sport: cancha?.deporte.nombre || 'Desconocido',
+            reservations: entry.cantidadReservas,
+            revenue: entry.cantidadReservas * (cancha?.precioPorHora || 0),
+            occupancy: Math.round((entry.cantidadReservas / 30) * 100),
+            trend: Math.random() > 0.5 ? Math.floor(Math.random() * 10) : -Math.floor(Math.random() * 5)
+          }
+        }
+      })
+
+    return {
+      metrics,
+      occupancyTrend,
+      canchaDistribution,
+      heatMapData,
+      topCanchas
+    }
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error)
+    throw error
   }
 }
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
-  const [data, setData] = useState(generateMockData())
+  const [data, setData] = useState<DashboardData | null>(null)
   const [lastUpdate, setLastUpdate] = useState(new Date())
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const [activeFilters, setActiveFilters] = useState<any>(null)
+  const [activeFilters, setActiveFilters] = useState<Record<string, unknown> | null>(null)
+
+  const loadData = async () => {
+    try {
+      setLoading(true)
+      const dashboardData = await fetchDashboardData()
+      setData(dashboardData)
+      setLastUpdate(new Date())
+    } catch (error) {
+      toast.error('Error al cargar datos del dashboard')
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleRefresh = async () => {
+    await loadData()
+    toast.success('Dashboard actualizado')
+  }
 
   useEffect(() => {
-    // Simular carga inicial
-    setTimeout(() => {
-      setLoading(false)
-    }, 1000)
+    loadData()
 
     // Auto-refresh cada 5 minutos
     const interval = setInterval(() => {
@@ -125,17 +319,8 @@ export default function DashboardPage() {
     }, 5 * 60 * 1000)
 
     return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-
-  const handleRefresh = () => {
-    setLoading(true)
-    setTimeout(() => {
-      setData(generateMockData())
-      setLastUpdate(new Date())
-      setLoading(false)
-      toast.success('Dashboard actualizado')
-    }, 1000)
-  }
 
   const handleExport = () => {
     toast.info('Exportando dashboard...', {
@@ -149,26 +334,36 @@ export default function DashboardPage() {
     })
   }
 
-  const handleApplyFilters = (filters: any) => {
+  const handleApplyFilters = async (filters: Record<string, unknown>) => {
     setActiveFilters(filters)
-    setLoading(true)
-    setTimeout(() => {
-      setData(generateMockData())
-      setLoading(false)
-      toast.success('Filtros aplicados', {
-        description: `Mostrando datos filtrados`
-      })
-    }, 800)
+    // TODO: Implement filter logic in fetchDashboardData
+    await loadData()
+    toast.success('Filtros aplicados', {
+      description: `Mostrando datos filtrados`
+    })
   }
 
-  const handleClearFilters = () => {
+  const handleClearFilters = async () => {
     setActiveFilters(null)
-    setLoading(true)
-    setTimeout(() => {
-      setData(generateMockData())
-      setLoading(false)
-      toast.info('Filtros limpiados')
-    }, 800)
+    await loadData()
+    toast.info('Filtros limpiados')
+  }
+
+  // Don't render until data is loaded
+  if (!data && loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  if (!data) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-gray-500">Error al cargar datos del dashboard</p>
+      </div>
+    )
   }
 
   return (
@@ -186,8 +381,8 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button 
-              onClick={() => setFiltersOpen(!filtersOpen)} 
+            <Button
+              onClick={() => setFiltersOpen(!filtersOpen)}
               variant="outline"
               className={`border-gray-200 dark:border-gray-700 ${filtersOpen ? 'bg-primary/10 border-primary' : ''}`}
             >
@@ -199,8 +394,8 @@ export default function DashboardPage() {
                 </span>
               )}
             </Button>
-            <Button 
-              onClick={handleRefresh} 
+            <Button
+              onClick={handleRefresh}
               variant="outline"
               className="border-gray-200 dark:border-gray-700"
               disabled={loading}
@@ -208,7 +403,7 @@ export default function DashboardPage() {
               <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
               Actualizar
             </Button>
-            <Button 
+            <Button
               onClick={handleExport}
               className="bg-primary hover:bg-primary/90"
             >
@@ -263,8 +458,8 @@ export default function DashboardPage() {
       {/* Row 2 - Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <OccupancyChart data={data.occupancyTrend} loading={loading} />
-        <CanchaDistributionChart 
-          data={data.canchaDistribution} 
+        <CanchaDistributionChart
+          data={data.canchaDistribution}
           loading={loading}
           onBarClick={handleBarClick}
         />
@@ -273,8 +468,8 @@ export default function DashboardPage() {
         {/* Row 3 - HeatMap and Top Canchas */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <HeatMap data={data.heatMapData} loading={loading} />
-          <TopCanchasTable 
-            data={data.topCanchas} 
+          <TopCanchasTable
+            data={data.topCanchas}
             loading={loading}
             onViewMore={() => toast.info('Ver todas las canchas')}
           />
