@@ -25,25 +25,25 @@ interface DashboardData {
       value: number
       change: number
       sparklineData: number[]
-      status: 'good' | 'warning' | 'critical'
+      status: 'good' | 'warning' | 'danger' | 'neutral'
     }
     revenue: {
       value: string
       change: number
       sparklineData: number[]
-      status: 'good' | 'warning' | 'critical'
+      status: 'good' | 'warning' | 'danger' | 'neutral'
     }
     activeUsers: {
       value: number
       change: number
       sparklineData: number[]
-      status: 'good' | 'warning' | 'critical'
+      status: 'good' | 'warning' | 'danger' | 'neutral'
     }
     confirmedReservations: {
       value: number
       change: number
       sparklineData: number[]
-      status: 'good' | 'warning' | 'critical'
+      status: 'good' | 'warning' | 'danger' | 'neutral'
     }
   }
   occupancyTrend: Array<{ date: string; occupancy: number; revenue: number }>
@@ -141,7 +141,7 @@ const fetchDashboardData = async (): Promise<DashboardData> => {
         value: Math.round(occupancyRate * 10) / 10,
         change: 8.2, // Would need historical data to calculate
         sparklineData: sparklineData.map(count => (count / Math.max(...sparklineData, 1)) * 100),
-        status: occupancyRate >= 70 ? 'good' as const : occupancyRate >= 50 ? 'warning' as const : 'critical' as const
+        status: occupancyRate >= 70 ? 'good' as const : occupancyRate >= 50 ? 'warning' as const : 'danger' as const
       },
       revenue: {
         value: `$${totalRevenue.toLocaleString()}`,
