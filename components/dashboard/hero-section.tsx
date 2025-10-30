@@ -62,21 +62,36 @@ export default function HeroSection() {
 
   useEffect(() => {
     setMounted(true)
-    
+
     // Fetch real stats from backend
     const fetchStats = async () => {
       try {
-        const [canchasResponse, reservasResponse] = await Promise.all([
+        const [canchasResponse, reservasResponse, usuariosResponse, valoracionesResponse] = await Promise.all([
           apiClient.getCanchas(),
-          apiClient.getReservas()
+          apiClient.getReservas(),
+          apiClient.getUsuarios(),
+          apiClient.getValoraciones()
         ])
+
+        // Calculate average rating from valoraciones
+        let averageRating = 4.9
+        if (valoracionesResponse.data && valoracionesResponse.data.length > 0) {
+          const totalRating = valoracionesResponse.data.reduce((sum, val) => sum + val.puntaje, 0)
+          averageRating = Number((totalRating / valoracionesResponse.data.length).toFixed(1))
+        }
+
+        // Format user count
+        const userCount = usuariosResponse.data?.length || 0
+        const userDisplay = userCount >= 1000
+          ? `${Math.floor(userCount / 1000)}K+`
+          : `${userCount}+`
 
         if (canchasResponse.data && reservasResponse.data) {
           setStats({
             courts: `${canchasResponse.data.length}+`,
-            users: '10K+', // This would need a users count endpoint
+            users: userDisplay,
             bookings: `${reservasResponse.data.length}+`,
-            rating: '4.9⭐' // This would need a ratings average endpoint
+            rating: `${averageRating}⭐`
           })
         }
       } catch (error) {

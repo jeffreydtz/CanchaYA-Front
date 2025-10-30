@@ -19,9 +19,10 @@ import { useSearch } from '@/lib/search-context'
 interface CourtCardProps {
   court: Cancha
   index: number
+  rating?: number
 }
 
-function CourtCard({ court, index }: CourtCardProps) {
+function CourtCard({ court, index, rating = 4.5 }: CourtCardProps) {
   const [isFavorite, setIsFavorite] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
 
@@ -104,7 +105,7 @@ function CourtCard({ court, index }: CourtCardProps) {
           </h3>
           <div className="flex items-center bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg ml-2">
             <Star className="h-4 w-4 text-blue-500 fill-current" />
-            <span className="text-sm font-bold text-blue-700 dark:text-blue-400 ml-1">4.8</span>
+            <span className="text-sm font-bold text-blue-700 dark:text-blue-400 ml-1">{rating.toFixed(1)}</span>
           </div>
         </div>
 
@@ -200,18 +201,41 @@ export default function FeaturedCourts() {
   const { filteredCourts, allCourts, setAllCourts, setFilteredCourts, isLoading: searchLoading } = useSearch()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [courtRatings, setCourtRatings] = useState<Record<string, number>>({})
 
   useEffect(() => {
     const fetchCourts = async () => {
       setLoading(true)
       setError(null)
       try {
-        const response = await apiClient.getCanchas()
-        if (response.data) {
-          setAllCourts(response.data)
+        const [canchasResponse, valoracionesResponse] = await Promise.all([
+          apiClient.getCanchas(),
+          apiClient.getValoraciones()
+        ])
+
+        if (canchasResponse.data) {
+          setAllCourts(canchasResponse.data)
           // Initially show all active courts
-          const activeCourts = response.data.filter(court => court.activa)
+          const activeCourts = canchasResponse.data.filter(court => court.activa)
           setFilteredCourts(activeCourts)
+
+          // Calculate ratings per court
+          if (valoracionesResponse.data && valoracionesResponse.data.length > 0) {
+            const ratings: Record<string, number> = {}
+            const valoraciones = valoracionesResponse.data
+            canchasResponse.data.forEach(court => {
+              const courtVals = valoraciones.filter(
+                v => v.tipo_objetivo === 'cancha' && v.id_objetivo === court.id
+              )
+              if (courtVals.length > 0) {
+                const avg = courtVals.reduce((sum, v) => sum + v.puntaje, 0) / courtVals.length
+                ratings[court.id] = avg
+              } else {
+                ratings[court.id] = 4.5 // Default rating
+              }
+            })
+            setCourtRatings(ratings)
+          }
         } else {
           setError('No se pudieron cargar las canchas')
           setAllCourts([])
@@ -226,6 +250,7 @@ export default function FeaturedCourts() {
       }
     }
     fetchCourts()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
@@ -296,7 +321,12 @@ export default function FeaturedCourts() {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
               {filteredCourts.map((court, index) => (
-                <CourtCard key={court.id} court={court} index={index} />
+                <CourtCard
+                  key={court.id}
+                  court={court}
+                  index={index}
+                  rating={courtRatings[court.id] || 4.5}
+                />
               ))}
             </div>
 
