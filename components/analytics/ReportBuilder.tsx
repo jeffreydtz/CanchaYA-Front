@@ -325,20 +325,14 @@ export function ReportBuilder({ onGenerate, onCancel }: ReportBuilderProps) {
 
 // Report History Item Component
 interface ReportHistoryItemProps {
-  report: {
-    id: string;
-    name: string;
-    type: ReportType;
-    format: ReportFormat;
-    generatedAt: Date;
-    downloadUrl?: string;
-  };
+  report: import('@/lib/analytics/types').Report;
   onDownload: () => void;
   onDelete: () => void;
 }
 
 export function ReportHistoryItem({ report, onDownload, onDelete }: ReportHistoryItemProps) {
   const typeConfig = REPORT_TYPES.find(t => t.value === report.type);
+  const format = report.config.format;
 
   return (
     <Card>
@@ -348,7 +342,7 @@ export function ReportHistoryItem({ report, onDownload, onDelete }: ReportHistor
             <div className="flex items-center gap-2 mb-1">
               <h3 className="font-medium text-gray-900">{report.name}</h3>
               <span className="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
-                {report.format}
+                {format}
               </span>
             </div>
             <div className="flex items-center gap-3 text-xs text-gray-500">

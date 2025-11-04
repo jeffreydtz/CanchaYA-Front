@@ -128,7 +128,7 @@ async function fetchUsers() {
 }
 
 async function fetchTopCourts() {
-  const response = await apiClient.getTopCanchas();
+  const response = await apiClient.getReporteCanchasTop();
 
   if (response.error || !response.data) {
     return [];
@@ -138,7 +138,7 @@ async function fetchTopCourts() {
 }
 
 async function fetchOccupancyHourly() {
-  const response = await apiClient.getOccupancyByHour();
+  const response = await apiClient.getReporteOcupacionHorarios();
 
   if (response.error || !response.data) {
     return [];

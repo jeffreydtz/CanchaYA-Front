@@ -342,7 +342,7 @@ export interface DrillDownData {
 // ============================================================================
 
 export interface ExportOptions {
-  format: 'CSV' | 'EXCEL' | 'PDF' | 'JSON';
+  format?: 'CSV' | 'EXCEL' | 'PDF' | 'JSON';
   filename?: string;
   includeHeaders?: boolean;
   includeMetadata?: boolean;

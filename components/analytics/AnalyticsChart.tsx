@@ -97,10 +97,10 @@ export function AnalyticsChart({
         )}
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="pt-6">
         <div id={chartId} className="w-full">
-          <ResponsiveContainer width="100%" height={height}>
-            {type === 'line' && (
+          {type === 'line' && (
+            <ResponsiveContainer width="100%" height={height}>
               <LineChart data={data}>
                 {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />}
                 <XAxis
@@ -132,9 +132,11 @@ export function AnalyticsChart({
                   />
                 ))}
               </LineChart>
-            )}
+            </ResponsiveContainer>
+          )}
 
-            {type === 'bar' && (
+          {type === 'bar' && (
+            <ResponsiveContainer width="100%" height={height}>
               <BarChart data={data}>
                 {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />}
                 <XAxis
@@ -163,9 +165,11 @@ export function AnalyticsChart({
                   />
                 ))}
               </BarChart>
-            )}
+            </ResponsiveContainer>
+          )}
 
-            {type === 'area' && (
+          {type === 'area' && (
+            <ResponsiveContainer width="100%" height={height}>
               <AreaChart data={data}>
                 {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />}
                 <XAxis
@@ -197,9 +201,11 @@ export function AnalyticsChart({
                   />
                 ))}
               </AreaChart>
-            )}
+            </ResponsiveContainer>
+          )}
 
-            {type === 'pie' && (
+          {type === 'pie' && (
+            <ResponsiveContainer width="100%" height={height}>
               <PieChart>
                 <Pie
                   data={data}
@@ -217,8 +223,8 @@ export function AnalyticsChart({
                 <Tooltip content={<CustomTooltip />} />
                 {showLegend && <Legend />}
               </PieChart>
-            )}
-          </ResponsiveContainer>
+            </ResponsiveContainer>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -226,7 +232,8 @@ export function AnalyticsChart({
 }
 
 // Custom Tooltip Component
-function CustomTooltip({ active, payload, label }: TooltipProps<number, string>) {
+function CustomTooltip(props: any) {
+  const { active, payload, label } = props;
   if (!active || !payload || payload.length === 0) return null;
 
   return (
@@ -234,7 +241,7 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
       {label && (
         <p className="text-sm font-medium text-gray-900 mb-2">{label}</p>
       )}
-      {payload.map((entry, index) => (
+      {payload.map((entry: any, index: number) => (
         <div key={index} className="flex items-center gap-2">
           <div
             className="w-3 h-3 rounded-full"

@@ -75,8 +75,8 @@ export function AlertConfig({ alert, onSave, onCancel }: AlertConfigProps) {
   };
 
   const handleSubmit = () => {
-    const parsedThreshold = condition === 'between'
-      ? threshold.split(',').map(Number)
+    const parsedThreshold: number | [number, number] = condition === 'between'
+      ? threshold.split(',').map(Number).slice(0, 2) as [number, number]
       : Number(threshold);
 
     onSave({

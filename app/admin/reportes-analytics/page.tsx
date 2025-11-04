@@ -6,7 +6,7 @@ import { Plus, FileText, Download } from 'lucide-react';
 import { ReportBuilder, ReportHistoryItem } from '@/components/analytics/ReportBuilder';
 import type { ReportConfig, Report } from '@/lib/analytics/types';
 import { toast } from 'sonner';
-import { downloadCSV, downloadJSON, downloadExcel, generateFilename } from '@/lib/analytics/export';
+import { downloadCSV, downloadExcel, generateFilename } from '@/lib/analytics/export';
 import { fetchDashboardData } from '@/lib/analytics/data-aggregator';
 
 export default function ReportesAnalyticsPage() {
@@ -103,18 +103,23 @@ export default function ReportesAnalyticsPage() {
           result = downloadExcel(excelData, filename, 'Reporte Analytics');
           break;
 
-        case 'JSON':
-          result = downloadJSON(reportData, filename);
-          break;
-
         case 'PDF':
         case 'HTML':
           // For PDF/HTML, we'd need a more complex implementation
-          // For now, download as JSON
+          // For now, download as CSV as fallback
           toast.info('Formato no implementado aún', {
-            description: `El formato ${config.format} estará disponible próximamente. Descargando como JSON...`
+            description: `El formato ${config.format} estará disponible próximamente. Descargando como CSV...`
           });
-          result = downloadJSON(reportData, filename.replace(`.${config.format.toLowerCase()}`, '.json'));
+          const fallbackData = reportData.data.kpis.map(kpi => ({
+            'Métrica': kpi.name,
+            'Valor Actual': kpi.value,
+            'Valor Anterior': kpi.previousValue || 'N/A',
+            'Cambio': kpi.change,
+            'Cambio %': kpi.changePercent,
+            'Tendencia': kpi.trend,
+            'Estado': kpi.status
+          }));
+          result = downloadCSV(fallbackData, filename.replace(`.${config.format.toLowerCase()}`, '.csv'));
           break;
 
         default:

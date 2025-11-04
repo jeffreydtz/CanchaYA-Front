@@ -189,6 +189,8 @@ export function getTrendColor(trend: TrendDirection, inversePositive: boolean = 
       return 'text-red-600';
     case 'neutral':
       return 'text-gray-600';
+    default:
+      return 'text-gray-600';
   }
 }
 
