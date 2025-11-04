@@ -1,13 +1,10 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import { AuthProvider } from '@/components/auth/auth-context'
 import { NotificationProvider } from '@/components/notifications/notification-provider'
 import { LanguageProvider } from '@/lib/language-context'
 import { Toaster } from '@/components/ui/sonner'
-
-const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'CanchaYA - Reserva de Canchas Deportivas',
@@ -24,7 +21,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className="font-sans">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
