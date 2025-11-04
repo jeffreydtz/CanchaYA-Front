@@ -1,11 +1,11 @@
 'use client'
 
-import { Suspense, useRef, useState } from 'react'
+import { Suspense, useRef, useState, useEffect } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls, PerspectiveCamera, Text, Html } from '@react-three/drei'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { MapPin, Navigation } from 'lucide-react'
+import { MapPin, Navigation, AlertTriangle } from 'lucide-react'
 import * as THREE from 'three'
 
 interface Location {
@@ -189,6 +189,54 @@ function Scene({ locations, onLocationClick }: {
 }
 
 export function LocationMap3D({ locations, onLocationClick, className = '' }: LocationMap3DProps) {
+  const [hasError, setHasError] = useState(false)
+  const [isWebGLSupported, setIsWebGLSupported] = useState(true)
+
+  useEffect(() => {
+    // Check WebGL support
+    try {
+      const canvas = document.createElement('canvas')
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
+      if (!gl) {
+        setIsWebGLSupported(false)
+      }
+    } catch (e) {
+      setIsWebGLSupported(false)
+    }
+
+    // Handle WebGL context loss
+    const handleContextLost = (event: Event) => {
+      event.preventDefault()
+      console.warn('WebGL context lost. 3D map disabled.')
+      setHasError(true)
+    }
+
+    window.addEventListener('webglcontextlost', handleContextLost)
+    return () => {
+      window.removeEventListener('webglcontextlost', handleContextLost)
+    }
+  }, [])
+
+  if (!isWebGLSupported || hasError) {
+    return (
+      <Card className={`overflow-hidden bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 border-gray-700 ${className}`}>
+        <div className="relative h-[500px] md:h-[600px] flex items-center justify-center">
+          <div className="text-center p-8">
+            <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+            <h3 className="text-white font-semibold text-lg mb-2">
+              Mapa 3D no disponible
+            </h3>
+            <p className="text-white/60 text-sm max-w-md">
+              {!isWebGLSupported
+                ? 'Tu navegador no soporta WebGL o está deshabilitado. Por favor, usa la vista de lista o mapa 2D.'
+                : 'Hubo un problema al cargar el mapa 3D. Por favor, recarga la página o usa la vista de lista.'}
+            </p>
+          </div>
+        </div>
+      </Card>
+    )
+  }
+
   return (
     <Card className={`overflow-hidden bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 border-gray-700 ${className}`}>
       <div className="relative">
@@ -212,7 +260,15 @@ export function LocationMap3D({ locations, onLocationClick, className = '' }: Lo
 
         {/* Canvas 3D */}
         <div className="w-full h-[500px] md:h-[600px]">
-          <Canvas shadows>
+          <Canvas
+            shadows
+            onCreated={({ gl }) => {
+              gl.domElement.addEventListener('webglcontextlost', (e) => {
+                e.preventDefault()
+                setHasError(true)
+              })
+            }}
+          >
             <Suspense fallback={null}>
               <Scene locations={locations} onLocationClick={onLocationClick} />
             </Suspense>

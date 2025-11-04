@@ -128,23 +128,35 @@ async function fetchUsers() {
 }
 
 async function fetchTopCourts() {
-  const response = await apiClient.getReporteCanchasTop();
+  try {
+    const response = await apiClient.getReporteCanchasTop();
 
-  if (response.error || !response.data) {
+    if (response.error || !response.data) {
+      return [];
+    }
+
+    return response.data;
+  } catch (error) {
+    // Endpoint not available, return empty array to continue
+    console.warn('Top courts endpoint not available:', error);
     return [];
   }
-
-  return response.data;
 }
 
 async function fetchOccupancyHourly() {
-  const response = await apiClient.getReporteOcupacionHorarios();
+  try {
+    const response = await apiClient.getReporteOcupacionHorarios();
 
-  if (response.error || !response.data) {
+    if (response.error || !response.data) {
+      return [];
+    }
+
+    return response.data;
+  } catch (error) {
+    // Endpoint not available, return empty array to continue
+    console.warn('Occupancy hourly endpoint not available:', error);
     return [];
   }
-
-  return response.data;
 }
 
 // ============================================================================
