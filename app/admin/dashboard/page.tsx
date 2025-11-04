@@ -18,6 +18,7 @@ import { toast } from 'sonner'
 import { format, subDays, startOfDay } from 'date-fns'
 import { es } from 'date-fns/locale'
 import apiClient from '@/lib/api-client'
+import { downloadCSV, downloadExcel, generateFilename } from '@/lib/analytics/export'
 
 interface DashboardData {
   metrics: {
@@ -83,8 +84,8 @@ const fetchDashboardData = async (): Promise<DashboardData> => {
       apiClient.getReservas(),
       apiClient.getCanchas(),
       apiClient.getUsuarios(),
-      apiClient.getReporteCanchasTop(),
-      apiClient.getReporteOcupacionHorarios()
+      apiClient.getReporteCanchasTop().catch(() => ({ data: [], error: 'Not available' })),
+      apiClient.getReporteOcupacionHorarios().catch(() => ({ data: [], error: 'Not available' }))
     ])
 
     // Handle potential errors
@@ -323,9 +324,67 @@ export default function DashboardPage() {
   }, [])
 
   const handleExport = () => {
-    toast.info('Exportando dashboard...', {
-      description: 'La funcionalidad de exportación estará disponible pronto'
-    })
+    if (!data) {
+      toast.error('No hay datos para exportar')
+      return
+    }
+
+    try {
+      // Prepare data for export
+      const exportData = [
+        {
+          'Métrica': 'Tasa de Ocupación',
+          'Valor': `${data.metrics.occupancy.value}%`,
+          'Cambio': `${data.metrics.occupancy.change > 0 ? '+' : ''}${data.metrics.occupancy.change}%`,
+          'Estado': data.metrics.occupancy.status
+        },
+        {
+          'Métrica': 'Ingresos del Mes',
+          'Valor': data.metrics.revenue.value,
+          'Cambio': `${data.metrics.revenue.change > 0 ? '+' : ''}${data.metrics.revenue.change}%`,
+          'Estado': data.metrics.revenue.status
+        },
+        {
+          'Métrica': 'Usuarios Activos',
+          'Valor': data.metrics.activeUsers.value.toString(),
+          'Cambio': `${data.metrics.activeUsers.change > 0 ? '+' : ''}${data.metrics.activeUsers.change}%`,
+          'Estado': data.metrics.activeUsers.status
+        },
+        {
+          'Métrica': 'Reservas Confirmadas (hoy)',
+          'Valor': data.metrics.confirmedReservations.value.toString(),
+          'Cambio': `${data.metrics.confirmedReservations.change > 0 ? '+' : ''}${data.metrics.confirmedReservations.change}%`,
+          'Estado': data.metrics.confirmedReservations.status
+        }
+      ]
+
+      // Add top canchas data
+      const topCanchasData = data.topCanchas.map(cancha => ({
+        'Cancha': cancha.name,
+        'Deporte': cancha.sport,
+        'Reservas': cancha.reservations.toString(),
+        'Ingresos': `$${cancha.revenue}`,
+        'Ocupación': `${cancha.occupancy}%`,
+        'Tendencia': `${cancha.trend > 0 ? '+' : ''}${cancha.trend}%`
+      }))
+
+      // Export as Excel
+      const filename = generateFilename('dashboard-analytics', 'xlsx')
+      const result = downloadExcel([...exportData, ...topCanchasData], filename, 'Dashboard Analytics')
+
+      if (result.success) {
+        toast.success('Dashboard exportado', {
+          description: 'Los datos se han descargado correctamente'
+        })
+      } else {
+        throw new Error(result.error || 'Error al exportar')
+      }
+    } catch (error) {
+      console.error('Error exporting dashboard:', error)
+      toast.error('Error al exportar', {
+        description: error instanceof Error ? error.message : 'Error desconocido'
+      })
+    }
   }
 
   const handleBarClick = (cancha: any) => {

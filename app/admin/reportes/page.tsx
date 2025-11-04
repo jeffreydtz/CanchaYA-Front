@@ -25,6 +25,7 @@ import apiClient from '@/lib/api-client'
 import { toast } from 'sonner'
 import { format, subMonths, startOfMonth, endOfMonth, subDays, startOfDay } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { downloadCSV, downloadExcel, generateFilename } from '@/lib/analytics/export'
 
 interface ReportData {
   monthlyRevenueData: Array<{ month: string; revenue: number; reservations: number; profit: number; expenses: number }>
@@ -91,8 +92,8 @@ const fetchReportData = async (period: string): Promise<ReportData> => {
     ] = await Promise.all([
       apiClient.getReservas(),
       apiClient.getCanchas(),
-      apiClient.getReporteIngresos(desde, hasta),
-      apiClient.getReporteOcupacionHorarios(),
+      apiClient.getReporteIngresos(desde, hasta).catch(() => ({ data: [], error: 'Not available' })),
+      apiClient.getReporteOcupacionHorarios().catch(() => ({ data: [], error: 'Not available' })),
       apiClient.getClubes()
     ])
 
@@ -371,9 +372,65 @@ export default function AdminReportsPage() {
   ]
 
   const exportReport = () => {
-    toast.info('Exportando reporte...', {
-      description: 'La funcionalidad de exportación estará disponible pronto'
-    })
+    if (!data) {
+      toast.error('No hay datos para exportar')
+      return
+    }
+
+    try {
+      // Prepare comprehensive report data
+      const reportData = [
+        // Overview metrics
+        { 'Sección': 'Resumen', 'Métrica': 'Ingresos Totales', 'Valor': `$${totalRevenue.toLocaleString()}` },
+        { 'Sección': 'Resumen', 'Métrica': 'Reservas Totales', 'Valor': totalReservations.toString() },
+        { 'Sección': 'Resumen', 'Métrica': 'Ocupación Promedio', 'Valor': `${occupancyRate}%` },
+        { 'Sección': 'Resumen', 'Métrica': 'Margen de Ganancia', 'Valor': `${profitMargin}%` },
+        { 'Sección': '', 'Métrica': '', 'Valor': '' }, // Empty row
+
+        // Monthly revenue
+        { 'Sección': 'Ingresos Mensuales', 'Métrica': 'Mes', 'Valor': 'Ingresos' },
+        ...monthlyRevenueData.map(d => ({
+          'Sección': '',
+          'Métrica': d.month,
+          'Valor': `$${d.revenue.toLocaleString()}`
+        })),
+        { 'Sección': '', 'Métrica': '', 'Valor': '' }, // Empty row
+
+        // Sport distribution
+        { 'Sección': 'Deportes', 'Métrica': 'Deporte', 'Valor': 'Ingresos' },
+        ...sportData.map(d => ({
+          'Sección': '',
+          'Métrica': d.name,
+          'Valor': `$${d.revenue.toLocaleString()}`
+        })),
+        { 'Sección': '', 'Métrica': '', 'Valor': '' }, // Empty row
+
+        // Location data
+        { 'Sección': 'Ubicaciones', 'Métrica': 'Ubicación', 'Valor': 'Ingresos' },
+        ...locationData.map(d => ({
+          'Sección': '',
+          'Métrica': d.location,
+          'Valor': `$${d.revenue.toLocaleString()}`
+        }))
+      ]
+
+      // Export as Excel
+      const filename = generateFilename(`reporte-${selectedPeriod}`, 'xlsx')
+      const result = downloadExcel(reportData, filename, 'Reporte Analytics')
+
+      if (result.success) {
+        toast.success('Reporte exportado', {
+          description: 'El reporte se ha descargado correctamente'
+        })
+      } else {
+        throw new Error(result.error || 'Error al exportar')
+      }
+    } catch (error) {
+      console.error('Error exporting report:', error)
+      toast.error('Error al exportar', {
+        description: error instanceof Error ? error.message : 'Error desconocido'
+      })
+    }
   }
 
   return (
