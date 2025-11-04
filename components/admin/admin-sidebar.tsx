@@ -127,7 +127,7 @@ export default function AdminSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="p-4">
-        <SidebarMenu className="space-y-1">
+        <SidebarMenu className="space-y-3">
           {menuItems.map((item) => {
             const hasSubmenu = 'submenu' in item && item.submenu
             const isExpanded = expandedItems.includes(item.title)
@@ -136,7 +136,7 @@ export default function AdminSidebar() {
             return (
               <SidebarMenuItem key={item.title}>
                 {hasSubmenu ? (
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     <SidebarMenuButton
                       onClick={() => toggleExpand(item.title)}
                       className={cn(
@@ -165,7 +165,7 @@ export default function AdminSidebar() {
                     </SidebarMenuButton>
 
                     {isExpanded && item.submenu && (
-                      <div className="ml-4 pl-4 border-l-2 border-gray-200 dark:border-gray-700 space-y-1">
+                      <div className="ml-4 pl-4 border-l-2 border-gray-200 dark:border-gray-700 space-y-2 mt-2">
                         {item.submenu.map((subItem) => {
                           const isSubActive = pathname === subItem.url
                           return (
