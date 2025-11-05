@@ -113,15 +113,18 @@ export default function AdminSidebar() {
   }
 
   return (
-    <Sidebar className="border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950">
-      <SidebarHeader className="border-b border-gray-200 dark:border-gray-800 p-6">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg">
-            <Settings className="h-5 w-5 text-white" />
+    <Sidebar className="border-r-2 border-gold/20 glass-luxury shadow-luxury-lg">
+      <SidebarHeader className="border-b-2 border-gold/30 p-6 gradient-overlay">
+        <div className="flex items-center gap-3 relative z-10">
+          <div className="relative group">
+            <div className="h-12 w-12 rounded-xl metallic-gold flex items-center justify-center shadow-glow-gold group-hover:shadow-glow-gold-lg transition-all duration-500">
+              <Settings className="h-6 w-6 text-black animate-rotate-slow" />
+            </div>
+            <div className="absolute inset-0 bg-gradient-gold rounded-xl blur-md opacity-60 group-hover:opacity-100 transition-opacity duration-500 -z-10" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Panel Admin</h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400">CanchaYA</p>
+            <h2 className="text-xl font-display font-black text-gradient-luxury">Panel Admin</h2>
+            <p className="text-xs text-gray-600 dark:text-gray-400 font-luxury font-semibold tracking-wider">CANCHAYA</p>
           </div>
         </div>
       </SidebarHeader>
@@ -140,48 +143,59 @@ export default function AdminSidebar() {
                     <SidebarMenuButton
                       onClick={() => toggleExpand(item.title)}
                       className={cn(
-                        "w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 group",
+                        "w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-500 group relative overflow-hidden",
                         isActive
-                          ? "bg-primary/10 text-primary"
-                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                          ? "bg-gradient-to-r from-gold/20 via-secondary/20 to-gold/20 text-gold shadow-glow-gold border border-gold/30"
+                          : "text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-gold/10 hover:to-transparent hover:shadow-glow border border-transparent hover:border-gold/20"
                       )}
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 relative z-10">
                         <item.icon className={cn(
-                          "h-5 w-5 transition-transform group-hover:scale-110",
-                          isActive ? "text-primary" : "text-gray-500 dark:text-gray-400"
+                          "h-5 w-5 transition-all duration-500 group-hover:scale-125 group-hover:rotate-12",
+                          isActive ? "text-gold animate-glow-pulse" : "text-gray-500 dark:text-gray-400 group-hover:text-gold"
                         )} />
                         <div className="flex flex-col items-start">
-                          <span className="font-semibold text-sm">{item.title}</span>
+                          <span className="font-luxury font-bold text-sm tracking-wide">{item.title}</span>
                           <span className="text-xs text-gray-500 dark:text-gray-400 hidden xl:block">
                             {item.description}
                           </span>
                         </div>
                       </div>
                       <ChevronDown className={cn(
-                        "h-4 w-4 transition-transform",
-                        isExpanded ? "rotate-180" : ""
+                        "h-4 w-4 transition-all duration-500 relative z-10",
+                        isExpanded ? "rotate-180 text-gold" : "",
+                        isActive && "text-gold"
                       )} />
+                      {isActive && (
+                        <div className="absolute inset-0 shimmer-gold opacity-50" />
+                      )}
                     </SidebarMenuButton>
 
                     {isExpanded && item.submenu && (
-                      <div className="ml-4 pl-4 border-l-2 border-gray-200 dark:border-gray-700 space-y-2 mt-2">
+                      <div className="ml-4 pl-4 border-l-2 border-gold/40 space-y-2 mt-2 relative">
+                        <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-gold via-secondary to-transparent" />
                         {item.submenu.map((subItem) => {
                           const isSubActive = pathname === subItem.url
                           return (
                             <Link key={subItem.url} href={subItem.url}>
                               <SidebarMenuButton
                                 className={cn(
-                                  "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 text-sm",
+                                  "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-500 text-sm group relative overflow-hidden",
                                   isSubActive
-                                    ? "bg-primary text-primary-foreground shadow-sm"
-                                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                    ? "metallic-gold text-black shadow-glow-gold border border-gold/50 font-black"
+                                    : "text-gray-600 dark:text-gray-400 hover:bg-gold/10 hover:text-gold hover:shadow-glow border border-transparent hover:border-gold/20"
                                 )}
                               >
-                                <subItem.icon className="h-4 w-4" />
-                                <span>{subItem.title}</span>
+                                <subItem.icon className={cn(
+                                  "h-4 w-4 transition-all duration-500",
+                                  isSubActive ? "animate-glow-pulse" : "group-hover:scale-110"
+                                )} />
+                                <span className="font-luxury font-semibold">{subItem.title}</span>
                                 {isSubActive && (
-                                  <ChevronRight className="h-3 w-3 ml-auto" />
+                                  <ChevronRight className="h-3 w-3 ml-auto animate-pulse" />
+                                )}
+                                {isSubActive && (
+                                  <div className="absolute inset-0 shimmer-effect opacity-30" />
                                 )}
                               </SidebarMenuButton>
                             </Link>
@@ -194,19 +208,19 @@ export default function AdminSidebar() {
                   <Link href={item.url!}>
                     <SidebarMenuButton
                       className={cn(
-                        "w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 group",
+                        "w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-500 group relative overflow-hidden",
                         isActive
-                          ? "bg-primary text-primary-foreground shadow-md"
-                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                          ? "metallic-gold text-black shadow-glow-gold-lg border-2 border-gold/50"
+                          : "text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-gold/10 hover:to-transparent hover:shadow-glow border border-transparent hover:border-gold/20"
                       )}
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 relative z-10">
                         <item.icon className={cn(
-                          "h-5 w-5 transition-transform group-hover:scale-110",
-                          isActive ? "text-primary-foreground" : "text-gray-500 dark:text-gray-400"
+                          "h-5 w-5 transition-all duration-500 group-hover:scale-125 group-hover:rotate-12",
+                          isActive ? "text-black animate-glow-pulse" : "text-gray-500 dark:text-gray-400 group-hover:text-gold"
                         )} />
                         <div className="flex flex-col items-start">
-                          <span className="font-semibold text-sm">{item.title}</span>
+                          <span className="font-luxury font-bold text-sm tracking-wide">{item.title}</span>
                           {!isActive && (
                             <span className="text-xs text-gray-500 dark:text-gray-400 hidden xl:block">
                               {item.description}
@@ -215,7 +229,10 @@ export default function AdminSidebar() {
                         </div>
                       </div>
                       {isActive && (
-                        <ChevronRight className="h-4 w-4 text-primary-foreground" />
+                        <>
+                          <ChevronRight className="h-4 w-4 text-black relative z-10 animate-pulse" />
+                          <div className="absolute inset-0 shimmer-effect opacity-40" />
+                        </>
                       )}
                     </SidebarMenuButton>
                   </Link>
@@ -226,13 +243,14 @@ export default function AdminSidebar() {
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-gray-200 dark:border-gray-800 p-4">
+      <SidebarFooter className="border-t-2 border-gold/30 p-4 gradient-overlay">
         <SidebarMenuButton
           onClick={() => clientLogout(router)}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-200 font-semibold"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-gradient-to-r hover:from-red-500/20 hover:to-red-600/20 hover:text-red-700 dark:hover:text-red-300 hover:shadow-glow-rose transition-all duration-500 font-luxury font-bold group relative overflow-hidden border border-transparent hover:border-red-500/30"
         >
-          <LogOut className="h-5 w-5" />
-          Cerrar sesión
+          <LogOut className="h-5 w-5 relative z-10 group-hover:scale-110 transition-transform duration-500" />
+          <span className="relative z-10">Cerrar sesión</span>
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         </SidebarMenuButton>
       </SidebarFooter>
     </Sidebar>
