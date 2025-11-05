@@ -77,29 +77,34 @@ export function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center gradient-luxury relative overflow-hidden p-4">
+      {/* Glamorous Background Effects */}
+      <div className="fixed inset-0 bg-grid opacity-20" />
+      <div className="fixed inset-0 bg-gradient-to-br from-gold/10 via-transparent to-secondary/10" />
+
+      <div className="w-full max-w-md relative z-10">
         {/* Header */}
-        <div className="text-center mb-8 animate-fade-in-up">
-          <div className="flex items-center justify-center mb-6">
-            <div className="relative">
-              <div className="h-16 w-16 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center shadow-lg">
-                <Shield className="h-8 w-8 text-white" />
+        <div className="text-center mb-10 animate-fade-up">
+          <div className="flex items-center justify-center mb-8">
+            <div className="relative group">
+              <div className="h-20 w-20 metallic-gold rounded-2xl flex items-center justify-center shadow-glow-gold-lg group-hover:shadow-glow-gold-lg transition-all duration-500 animate-float-smooth">
+                <Shield className="h-10 w-10 text-black" />
               </div>
-              <div className="absolute -top-1 -right-1">
-                <Sparkles className="h-6 w-6 text-accent animate-pulse" />
+              <div className="absolute inset-0 bg-gradient-gold rounded-2xl blur-xl opacity-70 group-hover:opacity-100 transition-opacity duration-500 -z-10 animate-pulse-gold" />
+              <div className="absolute -top-2 -right-2">
+                <Sparkles className="h-8 w-8 text-gold animate-glow-pulse" />
               </div>
             </div>
           </div>
-          <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-2">
+          <h1 className="text-4xl font-display font-black text-gradient-luxury mb-3 animate-scale-in">
             ¡Bienvenido de vuelta!
           </h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            Inicia sesión para continuar con CanchaYA
+          <p className="text-gray-700 dark:text-gray-300 font-luxury text-lg">
+            Inicia sesión para continuar con <span className="text-gold font-bold">CanchaYA</span>
           </p>
         </div>
 
-        <Card className="border-0 shadow-2xl bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl animate-scale-in">
+        <Card className="border-2 border-gold/30 shadow-luxury-lg glass-luxury animate-scale-in hover:shadow-glow-gold-lg transition-all duration-500">
           <CardHeader className="space-y-1 pb-6">
             <CardTitle className="text-2xl font-bold text-center text-gray-900 dark:text-white">
               Iniciar Sesión
@@ -201,23 +206,22 @@ export function LoginForm() {
               </div>
 
               {/* Submit Button */}
-              <Button 
-                type="submit" 
-                className="w-full h-12 text-base font-semibold rounded-xl relative overflow-hidden group" 
+              <Button
+                type="submit"
+                className="btn-luxury w-full h-14 text-base font-luxury font-black rounded-xl shadow-glow-gold hover:shadow-glow-gold-lg tracking-wider relative overflow-hidden group"
                 disabled={isLoading}
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                    Iniciando sesión...
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin relative z-10" />
+                    <span className="relative z-10">Iniciando sesión...</span>
                   </>
                 ) : (
                   <>
-                    Iniciar Sesión
-                    <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                    <span className="relative z-10">Iniciar Sesión</span>
+                    <ArrowRight className="h-5 w-5 ml-2 group-hover:translate-x-2 transition-all duration-500 relative z-10" />
                   </>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
               </Button>
             </form>
 

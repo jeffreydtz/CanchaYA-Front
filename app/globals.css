@@ -1,4 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,107 +8,123 @@
 
 @layer base {
   :root {
-    /* Backgrounds - Tonos neutros claros y limpios */
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
-    
-    /* Cards - Blanco puro con sombras suaves */
+    /* Glamorous Light Theme - Luxury & Elegance */
+    --background: 0 0% 98%;
+    --foreground: 0 0% 5%;
+
+    /* Cards - Pearl white with premium feel */
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    
-    /* Popovers - Consistente con cards */
+    --card-foreground: 0 0% 5%;
+
+    /* Popovers */
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    
-    /* Primary - Azul vibrante deportivo */
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
-    
-    /* Secondary - Verde deportivo energético */
-    --secondary: 142 71% 45%;
+    --popover-foreground: 0 0% 5%;
+
+    /* Primary - Rich Gold */
+    --primary: 45 100% 51%;
+    --primary-foreground: 0 0% 0%;
+
+    /* Secondary - Deep Purple/Violet */
+    --secondary: 270 70% 50%;
     --secondary-foreground: 0 0% 100%;
-    
-    /* Muted - Grises suaves para elementos secundarios */
-    --muted: 220 13% 96%;
-    --muted-foreground: 215 16% 47%;
-    
-    /* Accent - Cyan/Turquesa vibrante */
-    --accent: 199 89% 48%;
+
+    /* Muted - Champagne tones */
+    --muted: 45 20% 95%;
+    --muted-foreground: 0 0% 40%;
+
+    /* Accent - Rose Gold */
+    --accent: 340 65% 65%;
     --accent-foreground: 0 0% 100%;
-    
-    /* Destructive - Rojo suave pero visible */
-    --destructive: 0 84% 60%;
+
+    /* Destructive - Elegant Red */
+    --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 100%;
-    
-    /* Borders - Grises muy suaves */
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 217 91% 60%;
-    
-    /* Success - Verde claro */
-    --success: 142 71% 45%;
+
+    /* Borders - Subtle gold tint */
+    --border: 45 30% 90%;
+    --input: 45 30% 90%;
+    --ring: 45 100% 51%;
+
+    /* Success - Emerald */
+    --success: 150 70% 45%;
     --success-foreground: 0 0% 100%;
-    
-    /* Warning - Amarillo/Naranja */
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-    
-    /* Info - Azul claro */
-    --info: 199 89% 48%;
+
+    /* Warning - Amber */
+    --warning: 35 90% 55%;
+    --warning-foreground: 0 0% 0%;
+
+    /* Info - Sapphire */
+    --info: 220 90% 55%;
     --info-foreground: 0 0% 100%;
-    
-    --radius: 0.75rem;
+
+    /* Glamorous additions */
+    --gold: 45 100% 51%;
+    --gold-light: 45 100% 65%;
+    --gold-dark: 45 100% 35%;
+    --platinum: 0 0% 75%;
+    --onyx: 0 0% 10%;
+    --diamond: 0 0% 95%;
+
+    --radius: 0.875rem;
   }
 
   .dark {
-    /* Backgrounds - Tonos oscuros profesionales */
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-    
-    /* Cards - Gris oscuro con contraste sutil */
-    --card: 217 33% 17%;
-    --card-foreground: 210 40% 98%;
-    
+    /* Glamorous Dark Theme - Edgy & Luxurious */
+    --background: 0 0% 8%;
+    --foreground: 0 0% 98%;
+
+    /* Cards - Deep black with subtle shine */
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 98%;
+
     /* Popovers */
-    --popover: 217 33% 17%;
-    --popover-foreground: 210 40% 98%;
-    
-    /* Primary - Azul más brillante para dark mode */
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
-    
-    /* Secondary - Verde brillante */
-    --secondary: 142 71% 45%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 98%;
+
+    /* Primary - Brilliant Gold */
+    --primary: 45 100% 55%;
+    --primary-foreground: 0 0% 0%;
+
+    /* Secondary - Electric Purple */
+    --secondary: 270 80% 60%;
     --secondary-foreground: 0 0% 100%;
-    
-    /* Muted - Grises medios */
-    --muted: 217 33% 22%;
-    --muted-foreground: 215 20% 65%;
-    
-    /* Accent - Cyan brillante */
-    --accent: 199 89% 48%;
-    --accent-foreground: 0 0% 100%;
-    
-    /* Destructive */
-    --destructive: 0 84% 60%;
+
+    /* Muted - Charcoal with gold tint */
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 65%;
+
+    /* Accent - Neon Rose */
+    --accent: 340 75% 65%;
+    --accent-foreground: 0 0% 0%;
+
+    /* Destructive - Hot Red */
+    --destructive: 0 80% 55%;
     --destructive-foreground: 0 0% 100%;
-    
-    /* Borders - Grises oscuros con buen contraste */
-    --border: 217 33% 22%;
-    --input: 217 33% 22%;
-    --ring: 217 91% 60%;
-    
-    /* Success */
-    --success: 142 71% 45%;
-    --success-foreground: 0 0% 100%;
-    
-    /* Warning */
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-    
-    /* Info */
-    --info: 199 89% 48%;
+
+    /* Borders - Gold shimmer */
+    --border: 45 20% 25%;
+    --input: 0 0% 20%;
+    --ring: 45 100% 55%;
+
+    /* Success - Neon Green */
+    --success: 150 80% 50%;
+    --success-foreground: 0 0% 0%;
+
+    /* Warning - Electric Amber */
+    --warning: 35 100% 60%;
+    --warning-foreground: 0 0% 0%;
+
+    /* Info - Neon Blue */
+    --info: 220 100% 60%;
     --info-foreground: 0 0% 100%;
+
+    /* Glamorous additions */
+    --gold: 45 100% 55%;
+    --gold-light: 45 100% 70%;
+    --gold-dark: 45 100% 40%;
+    --platinum: 0 0% 80%;
+    --onyx: 0 0% 5%;
+    --diamond: 0 0% 100%;
   }
 }
 
@@ -134,36 +152,109 @@
 }
 
 @layer components {
+  /* Glamorous Gradient Backgrounds */
   .gradient-bg {
-    background: linear-gradient(135deg, 
-      hsl(var(--primary)) 0%, 
-      hsl(var(--secondary)) 50%, 
+    background: linear-gradient(135deg,
+      hsl(var(--primary)) 0%,
+      hsl(var(--secondary)) 50%,
       hsl(var(--accent)) 100%);
   }
-  
-  .gradient-primary {
-    background: linear-gradient(135deg, 
-      hsl(var(--primary)) 0%, 
-      hsl(var(--accent)) 100%);
+
+  .gradient-gold {
+    background: linear-gradient(135deg,
+      hsl(var(--gold-dark)) 0%,
+      hsl(var(--gold)) 50%,
+      hsl(var(--gold-light)) 100%);
   }
-  
+
+  .gradient-luxury {
+    background: linear-gradient(135deg,
+      hsl(var(--primary)) 0%,
+      hsl(var(--secondary)) 50%,
+      hsl(var(--accent)) 100%);
+    background-size: 200% 200%;
+    animation: gradient-shift 8s ease infinite;
+  }
+
+  .gradient-overlay {
+    position: relative;
+  }
+
+  .gradient-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg,
+      rgba(255, 215, 0, 0.1) 0%,
+      rgba(186, 85, 211, 0.1) 50%,
+      rgba(255, 105, 180, 0.1) 100%);
+    pointer-events: none;
+  }
+
+  /* Premium Glass Effects */
   .glass-effect {
-    @apply bg-white/95 backdrop-blur-lg border border-white/20 shadow-xl;
+    @apply backdrop-blur-xl bg-white/80 border border-white/30 shadow-2xl;
   }
-  
+
   .dark .glass-effect {
-    @apply bg-gray-900/95 backdrop-blur-lg border border-gray-700/50 shadow-xl;
+    @apply backdrop-blur-xl bg-black/60 border border-white/10 shadow-2xl;
   }
-  
+
+  .glass-luxury {
+    @apply backdrop-blur-2xl bg-gradient-to-br from-white/90 to-white/70 border border-gold/20 shadow-2xl;
+  }
+
+  .dark .glass-luxury {
+    @apply backdrop-blur-2xl bg-gradient-to-br from-black/80 to-black/60 border border-gold/30 shadow-2xl;
+  }
+
+  /* Metallic Effects */
+  .metallic-gold {
+    background: linear-gradient(145deg, #FFD700 0%, #FFA500 50%, #FFD700 100%);
+    background-size: 200% 100%;
+    animation: metallic-shine 3s linear infinite;
+  }
+
+  .text-metallic-gold {
+    background: linear-gradient(145deg, #FFD700 0%, #FFA500 25%, #FFD700 50%, #FFA500 75%, #FFD700 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: metallic-shine 3s linear infinite;
+  }
+
+  /* Card Hover Effects */
   .card-hover {
-    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+    @apply transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 hover:scale-[1.02];
   }
-  
+
+  .card-luxury {
+    @apply relative overflow-hidden transition-all duration-500 hover:shadow-[0_0_40px_rgba(255,215,0,0.3)] hover:-translate-y-2;
+  }
+
+  .card-luxury::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255, 215, 0, 0.1), transparent);
+    transform: rotate(45deg);
+    transition: all 0.6s;
+  }
+
+  .card-luxury:hover::after {
+    animation: card-shine 1.5s ease-in-out;
+  }
+
+  /* Shimmer & Shine Effects */
   .shimmer-effect {
     position: relative;
     overflow: hidden;
   }
-  
+
   .shimmer-effect::after {
     content: '';
     position: absolute;
@@ -174,30 +265,96 @@
     background: linear-gradient(
       90deg,
       transparent,
-      rgba(255, 255, 255, 0.3),
+      rgba(255, 215, 0, 0.4),
       transparent
     );
     transform: translateX(-100%);
-    animation: shimmer 2s infinite;
+    animation: shimmer 3s infinite;
   }
-  
+
+  .shimmer-gold {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .shimmer-gold::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      45deg,
+      transparent 30%,
+      rgba(255, 215, 0, 0.3) 50%,
+      transparent 70%
+    );
+    animation: diagonal-shimmer 3s infinite;
+  }
+
+  /* Text Effects */
   .text-gradient {
-    background: linear-gradient(135deg, 
-      hsl(var(--primary)), 
+    background: linear-gradient(135deg,
+      hsl(var(--primary)),
       hsl(var(--accent)));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-  
-  .btn-primary {
-    @apply bg-gradient-to-r from-primary to-accent text-white font-semibold py-3 px-6 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 active:scale-95;
+
+  .text-gradient-luxury {
+    background: linear-gradient(135deg,
+      hsl(var(--gold)) 0%,
+      hsl(var(--secondary)) 50%,
+      hsl(var(--accent)) 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradient-shift 5s ease infinite;
   }
-  
+
+  .text-glow {
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.6),
+                 0 0 40px rgba(255, 215, 0, 0.4),
+                 0 0 60px rgba(255, 215, 0, 0.2);
+  }
+
+  .dark .text-glow {
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.8),
+                 0 0 40px rgba(255, 215, 0, 0.6),
+                 0 0 60px rgba(255, 215, 0, 0.4);
+  }
+
+  /* Premium Buttons */
+  .btn-primary {
+    @apply bg-gradient-to-r from-primary to-accent text-black font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105 active:scale-95;
+  }
+
+  .btn-luxury {
+    @apply relative overflow-hidden bg-gradient-to-r from-gold via-gold-light to-gold text-black font-bold py-3 px-8 rounded-lg shadow-2xl transition-all duration-300 hover:shadow-[0_0_40px_rgba(255,215,0,0.6)] hover:scale-105 active:scale-95;
+  }
+
+  .btn-luxury::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: left 0.5s;
+  }
+
+  .btn-luxury:hover::before {
+    left: 100%;
+  }
+
   .btn-glow {
     @apply relative overflow-hidden;
   }
-  
+
   .btn-glow::before {
     content: '';
     position: absolute;
@@ -205,25 +362,78 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
     transform: translateX(-100%);
     transition: transform 0.6s;
   }
-  
+
   .btn-glow:hover::before {
     transform: translateX(100%);
   }
-  
+
+  /* Glow Effects */
+  .glow-gold {
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3),
+                0 0 40px rgba(255, 215, 0, 0.2),
+                0 0 60px rgba(255, 215, 0, 0.1);
+  }
+
+  .glow-gold:hover {
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.5),
+                0 0 60px rgba(255, 215, 0, 0.3),
+                0 0 90px rgba(255, 215, 0, 0.2);
+  }
+
+  .glow-purple {
+    box-shadow: 0 0 20px rgba(186, 85, 211, 0.3),
+                0 0 40px rgba(186, 85, 211, 0.2);
+  }
+
+  .glow-purple:hover {
+    box-shadow: 0 0 30px rgba(186, 85, 211, 0.5),
+                0 0 60px rgba(186, 85, 211, 0.3);
+  }
+
+  /* Animation Classes */
   .floating {
-    animation: bounce-subtle 3s ease-in-out infinite;
+    animation: float-smooth 6s ease-in-out infinite;
   }
-  
+
   .fade-in-up {
-    animation: fade-up 0.6s ease-out;
+    animation: fade-up 0.8s ease-out;
   }
-  
+
   .scale-in {
-    animation: scale-in 0.3s ease-out;
+    animation: scale-in 0.4s ease-out;
+  }
+
+  .pulse-glow-gold {
+    animation: pulse-gold 2s ease-in-out infinite;
+  }
+
+  /* Luxury Borders */
+  .border-gradient {
+    border: 2px solid;
+    border-image: linear-gradient(135deg, hsl(var(--gold)), hsl(var(--secondary))) 1;
+  }
+
+  .border-glow {
+    position: relative;
+  }
+
+  .border-glow::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(135deg, hsl(var(--gold)), hsl(var(--secondary)), hsl(var(--accent)));
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: -1;
+  }
+
+  .border-glow:hover::before {
+    opacity: 1;
   }
 }
 
@@ -362,5 +572,84 @@
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+/* Glamorous Animations */
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes metallic-shine {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+@keyframes card-shine {
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
+}
+
+@keyframes diagonal-shimmer {
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
+}
+
+@keyframes float-smooth {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  33% {
+    transform: translateY(-10px) scale(1.01);
+  }
+  66% {
+    transform: translateY(-5px) scale(1.005);
+  }
+}
+
+@keyframes pulse-gold {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3),
+                0 0 40px rgba(255, 215, 0, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.6),
+                0 0 60px rgba(255, 215, 0, 0.4),
+                0 0 90px rgba(255, 215, 0, 0.2);
+  }
+}
+
+@keyframes rotate-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    filter: brightness(1) drop-shadow(0 0 5px currentColor);
+  }
+  50% {
+    filter: brightness(1.2) drop-shadow(0 0 20px currentColor);
   }
 }

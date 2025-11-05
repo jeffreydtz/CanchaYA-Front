@@ -35,44 +35,47 @@ export default function Navbar() {
   ]
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      isScrolled 
-        ? 'bg-white/98 dark:bg-gray-950/98 backdrop-blur-lg shadow-xl border-b border-gray-200 dark:border-gray-800' 
-        : 'bg-black/10 dark:bg-black/20 backdrop-blur-sm'
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+      isScrolled
+        ? 'glass-luxury shadow-luxury border-b border-gold/20'
+        : 'bg-gradient-to-r from-black/30 via-black/20 to-black/30 backdrop-blur-md'
     }`}>
       <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-20 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3 group">
             <div className="relative">
-              <div className="h-10 w-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                <span className="text-white font-black text-lg">CY</span>
+              <div className="h-12 w-12 metallic-gold rounded-xl flex items-center justify-center group-hover:scale-110 transition-all duration-500 shadow-glow-gold">
+                <span className="text-black font-black text-xl drop-shadow-lg">CY</span>
               </div>
-              <div className="absolute inset-0 bg-gradient-to-br from-primary to-secondary rounded-xl blur opacity-50 group-hover:opacity-75 transition-opacity duration-300 -z-10" />
+              <div className="absolute inset-0 bg-gradient-gold rounded-xl blur-md opacity-60 group-hover:opacity-100 transition-opacity duration-500 -z-10 animate-pulse-gold" />
             </div>
-            <span className={`font-black text-2xl transition-colors duration-300 ${
-              isScrolled ? 'text-gray-900 dark:text-white' : 'text-white'
+            <span className={`font-display font-black text-3xl transition-all duration-500 ${
+              isScrolled
+                ? 'text-transparent bg-clip-text bg-gradient-to-r from-gold via-gold-light to-gold animate-gradient-shift'
+                : 'text-white drop-shadow-[0_0_20px_rgba(255,215,0,0.5)]'
             }`}>
               CanchaYA
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center space-x-2">
             {navigationItems.map((item) => {
               const Icon = item.icon
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center space-x-2 text-sm font-semibold antialiased transition-all duration-300 hover:scale-105 px-3 py-2 rounded-lg ${
-                    isScrolled 
-                      ? 'text-gray-700 dark:text-gray-100 hover:text-primary dark:hover:text-primary hover:bg-primary/10' 
-                      : 'text-white/90 hover:text-white hover:bg-white/10'
+                  className={`relative flex items-center space-x-2 text-sm font-luxury font-bold antialiased transition-all duration-500 hover:scale-110 px-4 py-2.5 rounded-lg group overflow-hidden ${
+                    isScrolled
+                      ? 'text-gray-800 dark:text-gray-100 hover:text-gold hover:shadow-glow-gold'
+                      : 'text-white/95 hover:text-gold-light hover:shadow-glow'
                   }`}
                 >
-                  <Icon className="h-4 w-4" />
-                  <span>{item.label}</span>
+                  <div className="absolute inset-0 bg-gradient-to-r from-gold/0 via-gold/10 to-gold/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <Icon className="h-5 w-5 relative z-10 group-hover:animate-float-smooth" />
+                  <span className="relative z-10 tracking-wide">{item.label}</span>
                 </Link>
               )
             })}
@@ -85,13 +88,14 @@ export default function Navbar() {
                 <NotificationBell />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:scale-105 transition-transform">
-                      <Avatar className="h-10 w-10 ring-2 ring-primary/20 hover:ring-primary/40 transition-all">
+                    <Button variant="ghost" className="relative h-12 w-12 rounded-full hover:scale-110 transition-all duration-500 group">
+                      <Avatar className="h-12 w-12 ring-2 ring-gold/30 hover:ring-gold hover:shadow-glow-gold transition-all duration-500">
                         <AvatarImage src={'/placeholder-user.png'} alt={user?.nombre || 'Usuario'} />
-                        <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white font-bold">
+                        <AvatarFallback className="metallic-gold text-black font-black text-lg">
                           {user?.nombre?.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
+                      <div className="absolute inset-0 bg-gradient-gold rounded-full blur opacity-0 group-hover:opacity-50 transition-opacity duration-500 -z-10" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-64 p-2" align="end" forceMount>
@@ -158,20 +162,20 @@ export default function Navbar() {
             ) : (
               <div className="flex items-center space-x-3">
                 <Link href="/login">
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     size="sm"
-                    className={`font-semibold transition-all duration-300 ${
-                      isScrolled 
-                        ? 'text-gray-700 dark:text-gray-200 hover:text-primary' 
-                        : 'text-white/90 hover:text-white hover:bg-white/10'
+                    className={`font-luxury font-bold transition-all duration-500 hover:scale-110 ${
+                      isScrolled
+                        ? 'text-gray-800 dark:text-gray-200 hover:text-gold hover:shadow-glow-gold'
+                        : 'text-white/95 hover:text-gold-light hover:shadow-glow'
                     }`}
                   >
                     {t('nav.login')}
                   </Button>
                 </Link>
                 <Link href="/register">
-                  <Button size="sm" className="btn-glow shadow-lg">
+                  <Button size="sm" className="btn-luxury shadow-glow-gold hover:shadow-glow-gold-lg font-luxury tracking-wide">
                     {t('nav.register')}
                   </Button>
                 </Link>
