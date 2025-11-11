@@ -598,11 +598,11 @@ const apiClient = {
     }),
 
   /**
-   * Actualizar cancha - PATCH /canchas/{id}
+   * Actualizar cancha - PUT /canchas/{id}
    */
   updateCancha: (id: string, data: Partial<Cancha>) =>
     apiRequest<Cancha>(`/canchas/${id}`, {
-      method: 'PATCH',
+      method: 'PUT',
       body: JSON.stringify(data),
     }),
 
