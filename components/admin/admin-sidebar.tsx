@@ -154,12 +154,7 @@ export default function AdminSidebar() {
                           "h-5 w-5 transition-all duration-500 group-hover:scale-125 group-hover:rotate-12",
                           isActive ? "text-gold animate-glow-pulse" : "text-gray-500 dark:text-gray-400 group-hover:text-gold"
                         )} />
-                        <div className="flex flex-col items-start">
-                          <span className="font-luxury font-bold text-sm tracking-wide">{item.title}</span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400 hidden xl:block">
-                            {item.description}
-                          </span>
-                        </div>
+                        <span className="font-luxury font-bold text-sm tracking-wide">{item.title}</span>
                       </div>
                       <ChevronDown className={cn(
                         "h-4 w-4 transition-all duration-500 relative z-10",
@@ -219,14 +214,7 @@ export default function AdminSidebar() {
                           "h-5 w-5 transition-all duration-500 group-hover:scale-125 group-hover:rotate-12",
                           isActive ? "text-black animate-glow-pulse" : "text-gray-500 dark:text-gray-400 group-hover:text-gold"
                         )} />
-                        <div className="flex flex-col items-start">
-                          <span className="font-luxury font-bold text-sm tracking-wide">{item.title}</span>
-                          {!isActive && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400 hidden xl:block">
-                              {item.description}
-                            </span>
-                          )}
-                        </div>
+                        <span className="font-luxury font-bold text-sm tracking-wide">{item.title}</span>
                       </div>
                       {isActive && (
                         <>
