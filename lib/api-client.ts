@@ -323,6 +323,107 @@ export interface ReporteOcupacionHorario {
   ocupacion: number
 }
 
+// ===== ADMIN DASHBOARD INTERFACES =====
+
+/**
+ * Resumen general del dashboard administrativo
+ * GET /admin/resumen
+ */
+export interface AdminResumen {
+  totalUsuarios: number
+  totalReservas: number
+  totalCanchas: number
+  deudaTotalPendiente: number
+}
+
+/**
+ * Top jugadores por ranking
+ * GET /admin/top-jugadores
+ */
+export interface TopJugador {
+  personaId: string
+  nombre: string
+  email: string
+  ranking: number
+}
+
+/**
+ * Canchas más usadas
+ * GET /admin/canchas-mas-usadas
+ */
+export interface CanchaMasUsada {
+  canchaId: string
+  nombre: string
+  totalReservas: number
+}
+
+/**
+ * Personas con deuda pendiente
+ * GET /admin/personas-con-deuda
+ */
+export interface PersonaConDeuda {
+  personaId: string
+  nombre: string
+  email: string
+  totalDeuda: number
+}
+
+/**
+ * Agregación de reservas por período
+ * GET /admin/reservas/aggregate
+ */
+export interface ReservasAggregate {
+  bucket: string // Fecha del período (YYYY-MM-DD)
+  total: number
+  confirmadas: number
+  canceladas: number
+  pendientes: number
+}
+
+/**
+ * Drilldown de reservas por niveles
+ * GET /admin/reservas/drilldown
+ */
+export interface ReservasDrilldownClub {
+  id: string
+  nombre: string
+  reservas: number
+}
+
+export interface ReservasDrilldownCancha {
+  id: string
+  nombre: string
+  reservas: number
+}
+
+export interface ReservasDrilldownDetalle {
+  fecha: string
+  reservas: number
+}
+
+/**
+ * Ocupación con semaforización
+ * GET /admin/ocupacion
+ */
+export interface OcupacionSemaforo {
+  id: string
+  nombre: string
+  slots: number
+  reservas: number
+  ocupacion: number // 0.0 - 1.0
+  semaforo: 'verde' | 'amarillo' | 'rojo'
+}
+
+/**
+ * Heatmap de reservas por día y hora
+ * GET /admin/reservas/heatmap
+ */
+export interface ReservasHeatmap {
+  dow: number // 0-6 (0=domingo, 1=lunes, etc.)
+  hora: string // "HH:MM"
+  reservas: number
+}
+
 // --- Utilidad centralizada para requests ---
 
 async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
@@ -1008,6 +1109,158 @@ const apiClient = {
    * Verificar si el usuario puede hacer reservas - Validación personalizada
    */
   canUserReserve: () => apiRequest<{ canReserve: boolean; reason?: string }>('/usuarios/can-reserve'),
+
+  // ===== ADMIN DASHBOARD =====
+  // Endpoints específicos para el dashboard administrativo
+  // Base URL: /admin
+  // Todos requieren rol admin y token JWT
+
+  /**
+   * Resumen general del dashboard - GET /admin/resumen
+   * @returns Métricas globales del sistema
+   */
+  getAdminResumen: () =>
+    apiRequest<AdminResumen>('/admin/resumen'),
+
+  /**
+   * Top jugadores por ranking - GET /admin/top-jugadores
+   * @param from Fecha desde (YYYY-MM-DD)
+   * @param to Fecha hasta (YYYY-MM-DD)
+   * @returns Top 10 jugadores según ranking
+   */
+  getAdminTopJugadores: (from?: string, to?: string) => {
+    const params = new URLSearchParams()
+    if (from) params.append('from', from)
+    if (to) params.append('to', to)
+    const query = params.toString() ? `?${params.toString()}` : ''
+    return apiRequest<TopJugador[]>(`/admin/top-jugadores${query}`)
+  },
+
+  /**
+   * Canchas más usadas - GET /admin/canchas-mas-usadas
+   * @param from Fecha desde (YYYY-MM-DD)
+   * @param to Fecha hasta (YYYY-MM-DD)
+   * @param tz Zona horaria (e.g., America/Argentina/Cordoba)
+   * @returns Canchas con mayor cantidad de reservas confirmadas
+   */
+  getAdminCanchasMasUsadas: (from?: string, to?: string, tz?: string) => {
+    const params = new URLSearchParams()
+    if (from) params.append('from', from)
+    if (to) params.append('to', to)
+    if (tz) params.append('tz', tz)
+    const query = params.toString() ? `?${params.toString()}` : ''
+    return apiRequest<CanchaMasUsada[]>(`/admin/canchas-mas-usadas${query}`)
+  },
+
+  /**
+   * Personas con deuda pendiente - GET /admin/personas-con-deuda
+   * @returns Lista de personas con deuda pendiente
+   */
+  getAdminPersonasConDeuda: () =>
+    apiRequest<PersonaConDeuda[]>('/admin/personas-con-deuda'),
+
+  /**
+   * Agregación de reservas - GET /admin/reservas/aggregate
+   * @param granularity Granularidad: 'day' | 'week' | 'month'
+   * @param from Fecha desde (YYYY-MM-DD)
+   * @param to Fecha hasta (YYYY-MM-DD)
+   * @param tz Zona horaria (e.g., America/Argentina/Cordoba)
+   * @returns Evolución de reservas agrupadas por período
+   */
+  getAdminReservasAggregate: (
+    granularity: 'day' | 'week' | 'month',
+    from: string,
+    to: string,
+    tz?: string
+  ) => {
+    const params = new URLSearchParams()
+    params.append('granularity', granularity)
+    params.append('from', from)
+    params.append('to', to)
+    if (tz) params.append('tz', tz)
+    return apiRequest<ReservasAggregate[]>(`/admin/reservas/aggregate?${params.toString()}`)
+  },
+
+  /**
+   * Drilldown de reservas por club - GET /admin/reservas/drilldown?level=club
+   * @param from Fecha desde (YYYY-MM-DD)
+   * @param to Fecha hasta (YYYY-MM-DD)
+   * @returns Totales de reservas por club
+   */
+  getAdminReservasDrilldownClub: (from?: string, to?: string) => {
+    const params = new URLSearchParams()
+    params.append('level', 'club')
+    if (from) params.append('from', from)
+    if (to) params.append('to', to)
+    return apiRequest<ReservasDrilldownClub[]>(`/admin/reservas/drilldown?${params.toString()}`)
+  },
+
+  /**
+   * Drilldown de reservas por cancha - GET /admin/reservas/drilldown?level=cancha
+   * @param clubId ID del club
+   * @param from Fecha desde (YYYY-MM-DD)
+   * @param to Fecha hasta (YYYY-MM-DD)
+   * @returns Totales de reservas por cancha dentro del club
+   */
+  getAdminReservasDrilldownCancha: (clubId: string, from?: string, to?: string) => {
+    const params = new URLSearchParams()
+    params.append('level', 'cancha')
+    params.append('clubId', clubId)
+    if (from) params.append('from', from)
+    if (to) params.append('to', to)
+    return apiRequest<ReservasDrilldownCancha[]>(`/admin/reservas/drilldown?${params.toString()}`)
+  },
+
+  /**
+   * Drilldown de reservas por detalle - GET /admin/reservas/drilldown?level=detalle
+   * @param canchaId ID de la cancha
+   * @param from Fecha desde (YYYY-MM-DD)
+   * @param to Fecha hasta (YYYY-MM-DD)
+   * @returns Detalle diario de reservas dentro de la cancha
+   */
+  getAdminReservasDrilldownDetalle: (canchaId: string, from?: string, to?: string) => {
+    const params = new URLSearchParams()
+    params.append('level', 'detalle')
+    params.append('canchaId', canchaId)
+    if (from) params.append('from', from)
+    if (to) params.append('to', to)
+    return apiRequest<ReservasDrilldownDetalle[]>(`/admin/reservas/drilldown?${params.toString()}`)
+  },
+
+  /**
+   * Ocupación con semaforización - GET /admin/ocupacion
+   * @param by Agrupar por: 'club' | 'cancha'
+   * @param from Fecha desde (YYYY-MM-DD)
+   * @param to Fecha hasta (YYYY-MM-DD)
+   * @param tz Zona horaria (e.g., America/Argentina/Cordoba)
+   * @returns Porcentaje de ocupación con semáforo visual
+   */
+  getAdminOcupacion: (by: 'club' | 'cancha', from?: string, to?: string, tz?: string) => {
+    const params = new URLSearchParams()
+    params.append('by', by)
+    if (from) params.append('from', from)
+    if (to) params.append('to', to)
+    if (tz) params.append('tz', tz)
+    return apiRequest<OcupacionSemaforo[]>(`/admin/ocupacion?${params.toString()}`)
+  },
+
+  /**
+   * Heatmap de reservas - GET /admin/reservas/heatmap
+   * @param clubId ID del club (opcional)
+   * @param from Fecha desde (YYYY-MM-DD)
+   * @param to Fecha hasta (YYYY-MM-DD)
+   * @param tz Zona horaria (e.g., America/Argentina/Cordoba)
+   * @returns Cantidad de reservas por día de la semana y hora
+   */
+  getAdminReservasHeatmap: (clubId?: string, from?: string, to?: string, tz?: string) => {
+    const params = new URLSearchParams()
+    if (clubId) params.append('clubId', clubId)
+    if (from) params.append('from', from)
+    if (to) params.append('to', to)
+    if (tz) params.append('tz', tz)
+    const query = params.toString() ? `?${params.toString()}` : ''
+    return apiRequest<ReservasHeatmap[]>(`/admin/reservas/heatmap${query}`)
+  },
 }
 
 export default apiClient 
