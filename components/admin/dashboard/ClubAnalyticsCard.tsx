@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -37,23 +37,21 @@ interface ClubAnalyticsCardProps {
   loading?: boolean
   onClubClick?: (clubId: string, clubName: string) => void
   onCanchaClick?: (canchaId: string, canchaName: string) => void
+  filters?: Record<string, any> | null
 }
 
 export function ClubAnalyticsCard({
   loading: externalLoading = false,
   onClubClick,
-  onCanchaClick
+  onCanchaClick,
+  filters
 }: ClubAnalyticsCardProps) {
   const [loading, setLoading] = useState(true)
   const [clubStats, setClubStats] = useState<ClubStats[]>([])
   const [expandedClub, setExpandedClub] = useState<string | null>(null)
   const [clubCanchas, setClubCanchas] = useState<Record<string, Cancha[]>>({})
 
-  useEffect(() => {
-    loadClubAnalytics()
-  }, [])
-
-  const loadClubAnalytics = async () => {
+  const loadClubAnalytics = useCallback(async () => {
     try {
       setLoading(true)
 
@@ -69,8 +67,63 @@ export function ClubAnalyticsCard({
       }
 
       const clubs: Club[] = clubsRes.data || []
-      const canchas: Cancha[] = canchasRes.data || []
-      const reservas: Reserva[] = reservasRes.data || []
+      let canchas: Cancha[] = canchasRes.data || []
+      let reservas: Reserva[] = reservasRes.data || []
+
+      // Apply filters if provided
+      if (filters) {
+        // Filter by cancha
+        if (filters.cancha && filters.cancha !== 'all') {
+          canchas = canchas.filter(c => c.id === filters.cancha)
+          const canchaIds = canchas.map(c => c.id)
+          reservas = reservas.filter(r => canchaIds.includes(r.disponibilidad?.cancha?.id))
+        }
+
+        // Filter by deporte
+        if (filters.deporte && filters.deporte !== 'all') {
+          canchas = canchas.filter(c => c.deporte.nombre.toLowerCase() === filters.deporte.toLowerCase())
+          const canchaIds = canchas.map(c => c.id)
+          reservas = reservas.filter(r => canchaIds.includes(r.disponibilidad?.cancha?.id))
+        }
+
+        // Filter by date range
+        if (filters.dateRange && filters.dateRange.from) {
+          const fromDate = new Date(filters.dateRange.from)
+          const toDate = filters.dateRange.to ? new Date(filters.dateRange.to) : new Date()
+          reservas = reservas.filter(r => {
+            const reservaDate = new Date(r.fechaHora)
+            return reservaDate >= fromDate && reservaDate <= toDate
+          })
+        } else if (filters.periodo && filters.periodo !== 'month') {
+          // Apply periodo filter
+          const today = new Date()
+          let fromDate: Date
+
+          switch (filters.periodo) {
+            case 'today':
+              fromDate = new Date(today)
+              fromDate.setHours(0, 0, 0, 0)
+              break
+            case 'week':
+              fromDate = new Date(today)
+              fromDate.setDate(fromDate.getDate() - 7)
+              break
+            case 'quarter':
+              fromDate = new Date(today)
+              fromDate.setDate(fromDate.getDate() - 90)
+              break
+            case 'year':
+              fromDate = new Date(today)
+              fromDate.setDate(fromDate.getDate() - 365)
+              break
+            default:
+              fromDate = new Date(today)
+              fromDate.setDate(fromDate.getDate() - 30) // month
+          }
+
+          reservas = reservas.filter(r => new Date(r.fechaHora) >= fromDate)
+        }
+      }
 
       // Calculate stats for each club
       const stats: ClubStats[] = clubs.map((club: Club) => {
@@ -120,7 +173,11 @@ export function ClubAnalyticsCard({
     } finally {
       setLoading(false)
     }
-  }
+  }, [filters])
+
+  useEffect(() => {
+    loadClubAnalytics()
+  }, [loadClubAnalytics])
 
   const handleClubClick = (club: ClubStats) => {
     onClubClick?.(club.id, club.nombre)
