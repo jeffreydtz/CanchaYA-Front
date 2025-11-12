@@ -680,6 +680,7 @@ export default function DashboardPage() {
             loading={loading}
             onClubClick={handleClubClick}
             onCanchaClick={handleCanchaClick}
+            filters={activeFilters}
           />
         </div>
       </div>
