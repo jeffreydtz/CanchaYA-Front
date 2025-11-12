@@ -21,6 +21,7 @@ import {
 import apiClient from '@/lib/api-client'
 import { toast } from 'sonner'
 import type { Club, Cancha, Reserva } from '@/lib/api-client'
+import { formatCompactNumber } from '@/lib/analytics/formatters'
 
 interface ClubStats {
   id: string
@@ -283,7 +284,7 @@ export function ClubAnalyticsCard({
                         <div>
                           <p className="text-xs text-gray-500">Ingresos</p>
                           <p className="text-lg font-bold text-green-600">
-                            ${club.ingresos.toLocaleString()}
+                            ${formatCompactNumber(club.ingresos)}
                           </p>
                         </div>
                       </div>
@@ -362,7 +363,7 @@ export function ClubAnalyticsCard({
                                 {cancha.deporte.nombre}
                               </Badge>
                               <span className="text-xs text-gray-500">
-                                ${cancha.precioPorHora}/hora
+                                ${formatCompactNumber(cancha.precioPorHora)}/h
                               </span>
                             </div>
                           </div>
