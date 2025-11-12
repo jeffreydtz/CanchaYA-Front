@@ -12,13 +12,16 @@ import { CanchaDistributionChart } from '@/components/admin/dashboard/CanchaDist
 import { HeatMap } from '@/components/admin/dashboard/HeatMap'
 import { TopCanchasTable } from '@/components/admin/dashboard/TopCanchasTable'
 import { DashboardFilters } from '@/components/admin/dashboard/DashboardFilters'
+import { DrillDownModal, type DrillDownData } from '@/components/admin/dashboard/DrillDownModal'
+import { ClubAnalyticsCard } from '@/components/admin/dashboard/ClubAnalyticsCard'
 import { Button } from '@/components/ui/button'
 import { RefreshCw, Download, Calendar, Users, TrendingUp, DollarSign, Filter } from 'lucide-react'
 import { toast } from 'sonner'
 import { format, subDays, startOfDay } from 'date-fns'
 import { es } from 'date-fns/locale'
 import apiClient from '@/lib/api-client'
-import { downloadCSV, downloadExcel, generateFilename } from '@/lib/analytics/export'
+import { downloadExcel, generateFilename } from '@/lib/analytics/export'
+import { formatCompactNumber } from '@/lib/analytics/formatters'
 
 interface DashboardData {
   metrics: {
@@ -48,7 +51,7 @@ interface DashboardData {
     }
   }
   occupancyTrend: Array<{ date: string; occupancy: number; revenue: number }>
-  canchaDistribution: Array<{ name: string; reservations: number; sport: string; color: string }>
+  canchaDistribution: Array<{ id?: string; name: string; reservations: number; sport: string; color: string }>
   heatMapData: Array<{ day: string; hour: number; occupancy: number }>
   topCanchas: Array<{ id: string; name: string; sport: string; reservations: number; revenue: number; occupancy: number; trend: number }>
 }
@@ -111,8 +114,12 @@ const fetchDashboardData = async (): Promise<DashboardData> => {
     // Calculate revenue (sum of all completed reservations)
     const totalRevenue = confirmedReservations.reduce((sum, r) => {
       const cancha = canchas.find(c => c.id === r.disponibilidad?.cancha?.id)
-      return sum + (cancha?.precioPorHora || 0)
+      const price = cancha?.precioPorHora || 0
+      return sum + (isNaN(price) ? 0 : price)
     }, 0)
+
+    // Ensure totalRevenue is a valid number
+    const validRevenue = isNaN(totalRevenue) || !isFinite(totalRevenue) ? 0 : totalRevenue
 
     // Calculate occupancy rate
     const totalSlots = canchas.length * 24 * 7 // Simplified: canchas * hours * days
@@ -145,7 +152,7 @@ const fetchDashboardData = async (): Promise<DashboardData> => {
         status: occupancyRate >= 70 ? 'good' as const : occupancyRate >= 50 ? 'warning' as const : 'danger' as const
       },
       revenue: {
-        value: `$${totalRevenue.toLocaleString()}`,
+        value: validRevenue >= 10000 ? `$${formatCompactNumber(validRevenue)}` : `$${validRevenue.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
         change: 12.5, // Would need historical data to calculate
         sparklineData: sparklineData.map(count => count * 100), // Simplified revenue estimation
         status: 'good' as const
@@ -202,7 +209,8 @@ const fetchDashboardData = async (): Promise<DashboardData> => {
     })
 
     const canchaDistribution = Array.from(canchaMap.entries())
-      .map(([_id, data]) => ({
+      .map(([id, data]) => ({
+        id,
         name: data.name,
         reservations: data.count,
         sport: data.sport,
@@ -291,6 +299,10 @@ export default function DashboardPage() {
   const [lastUpdate, setLastUpdate] = useState(new Date())
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [activeFilters, setActiveFilters] = useState<Record<string, unknown> | null>(null)
+
+  // Drill-down modal state
+  const [drillDownOpen, setDrillDownOpen] = useState(false)
+  const [drillDownData, setDrillDownData] = useState<DrillDownData | null>(null)
 
   const loadData = async () => {
     try {
@@ -387,10 +399,73 @@ export default function DashboardPage() {
     }
   }
 
-  const handleBarClick = (cancha: any) => {
-    toast.info(`Detalles de ${cancha.name}`, {
-      description: `${cancha.reservations} reservas en ${cancha.sport}`
+  // Drill-down handlers
+  const handleCanchaClick = (canchaId: string, canchaName: string) => {
+    setDrillDownData({
+      type: 'cancha',
+      id: canchaId,
+      name: canchaName,
+      subtitle: 'Análisis detallado de la cancha'
     })
+    setDrillDownOpen(true)
+  }
+
+  const handleBarClick = (cancha: any) => {
+    if (cancha.id) {
+      handleCanchaClick(cancha.id, cancha.name)
+    } else {
+      toast.info(`Detalles de ${cancha.name}`, {
+        description: `${cancha.reservations} reservas en ${cancha.sport}`
+      })
+    }
+  }
+
+  const handleSportClick = (sport: string) => {
+    setDrillDownData({
+      type: 'deporte',
+      name: sport,
+      subtitle: `Análisis de todas las canchas de ${sport}`
+    })
+    setDrillDownOpen(true)
+  }
+
+  const handleHeatMapCellClick = (cell: { day: string; hour: number; occupancy: number }) => {
+    setDrillDownData({
+      type: 'hora',
+      name: `${cell.day} - ${cell.hour}:00`,
+      subtitle: `Reservas para ${cell.day} a las ${cell.hour}:00`,
+      metadata: { hour: cell.hour, day: cell.day }
+    })
+    setDrillDownOpen(true)
+  }
+
+  const handleDayClick = (day: string) => {
+    setDrillDownData({
+      type: 'dia',
+      name: day,
+      subtitle: `Todas las reservas del ${day}`,
+      metadata: { day }
+    })
+    setDrillDownOpen(true)
+  }
+
+  const handleTopCanchaClick = (cancha: any) => {
+    handleCanchaClick(cancha.id, cancha.name)
+  }
+
+  const handleClubClick = (clubId: string, clubName: string) => {
+    setDrillDownData({
+      type: 'club',
+      id: clubId,
+      name: clubName,
+      subtitle: 'Análisis completo del club'
+    })
+    setDrillDownOpen(true)
+  }
+
+  const closeDrillDown = () => {
+    setDrillDownOpen(false)
+    setDrillDownData(null)
   }
 
   const handleApplyFilters = async (filters: Record<string, unknown>) => {
@@ -521,16 +596,32 @@ export default function DashboardPage() {
           data={data.canchaDistribution}
           loading={loading}
           onBarClick={handleBarClick}
+          onSportClick={handleSportClick}
         />
       </div>
 
         {/* Row 3 - HeatMap and Top Canchas */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <HeatMap data={data.heatMapData} loading={loading} />
+          <HeatMap
+            data={data.heatMapData}
+            loading={loading}
+            onCellClick={handleHeatMapCellClick}
+            onDayClick={handleDayClick}
+          />
           <TopCanchasTable
             data={data.topCanchas}
             loading={loading}
             onViewMore={() => toast.info('Ver todas las canchas')}
+            onRowClick={handleTopCanchaClick}
+          />
+        </div>
+
+        {/* Row 4 - Club Analytics */}
+        <div className="grid grid-cols-1 gap-6">
+          <ClubAnalyticsCard
+            loading={loading}
+            onClubClick={handleClubClick}
+            onCanchaClick={handleCanchaClick}
           />
         </div>
       </div>
@@ -541,6 +632,13 @@ export default function DashboardPage() {
         onToggle={() => setFiltersOpen(!filtersOpen)}
         onApplyFilters={handleApplyFilters}
         onClearFilters={handleClearFilters}
+      />
+
+      {/* Drill-Down Modal */}
+      <DrillDownModal
+        isOpen={drillDownOpen}
+        onClose={closeDrillDown}
+        data={drillDownData}
       />
     </div>
   )

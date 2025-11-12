@@ -1,6 +1,6 @@
 /**
  * TopCanchasTable Component
- * Tabla mostrando las top 5 canchas con mejores métricas
+ * Tabla mostrando las top 5 canchas con mejores métricas y drill-down
  */
 
 'use client'
@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ArrowUpDown, Trophy, TrendingUp, TrendingDown } from 'lucide-react'
+import { ArrowUpDown, Trophy, TrendingUp, TrendingDown, MousePointerClick } from 'lucide-react'
 
 interface TopCanchaData {
   id: string
@@ -26,14 +26,16 @@ interface TopCanchasTableProps {
   data: TopCanchaData[]
   loading?: boolean
   onViewMore?: () => void
+  onRowClick?: (cancha: TopCanchaData) => void
 }
 
 type SortKey = 'reservations' | 'revenue' | 'occupancy'
 type SortOrder = 'asc' | 'desc'
 
-export function TopCanchasTable({ data, loading = false, onViewMore }: TopCanchasTableProps) {
+export function TopCanchasTable({ data, loading = false, onViewMore, onRowClick }: TopCanchasTableProps) {
   const [sortKey, setSortKey] = useState<SortKey>('revenue')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
+  const [hoveredRow, setHoveredRow] = useState<string | null>(null)
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -90,8 +92,9 @@ export function TopCanchasTable({ data, loading = false, onViewMore }: TopCancha
               <Trophy className="h-5 w-5 text-yellow-500" />
               Top 5 Canchas
             </CardTitle>
-            <CardDescription className="text-gray-600 dark:text-gray-400 mt-1">
-              Mejores canchas por rendimiento
+            <CardDescription className="text-gray-600 dark:text-gray-400 mt-1 flex items-center gap-2">
+              <MousePointerClick className="h-4 w-4" />
+              Mejores canchas - Click en fila para análisis completo
             </CardDescription>
           </div>
           {onViewMore && (
@@ -140,9 +143,12 @@ export function TopCanchasTable({ data, loading = false, onViewMore }: TopCancha
             </TableHeader>
             <TableBody>
               {sortedData.slice(0, 5).map((cancha, index) => (
-                <TableRow 
+                <TableRow
                   key={cancha.id}
-                  className="hover:bg-gray-50 dark:hover:bg-gray-900/50"
+                  className="hover:bg-gray-50 dark:hover:bg-gray-900/50 cursor-pointer transition-colors"
+                  onClick={() => onRowClick?.(cancha)}
+                  onMouseEnter={() => setHoveredRow(cancha.id)}
+                  onMouseLeave={() => setHoveredRow(null)}
                 >
                   <TableCell className="text-center">
                     {getRankBadge(index)}
@@ -157,6 +163,9 @@ export function TopCanchasTable({ data, loading = false, onViewMore }: TopCancha
                       ) : cancha.trend < 0 ? (
                         <TrendingDown className="h-4 w-4 text-red-500" />
                       ) : null}
+                      {hoveredRow === cancha.id && (
+                        <MousePointerClick className="h-4 w-4 text-primary animate-pulse" />
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -187,6 +196,16 @@ export function TopCanchasTable({ data, loading = false, onViewMore }: TopCancha
               ))}
             </TableBody>
           </Table>
+        </div>
+
+        {/* Hint */}
+        <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+          <p className="text-xs text-blue-700 dark:text-blue-300 flex items-center gap-2">
+            <MousePointerClick className="h-4 w-4" />
+            <span>
+              <strong>Tip:</strong> Haz click en cualquier fila para ver el análisis completo de la cancha con gráficos detallados
+            </span>
+          </p>
         </div>
       </CardContent>
     </Card>
