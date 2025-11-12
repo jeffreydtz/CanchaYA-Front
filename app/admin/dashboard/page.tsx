@@ -14,6 +14,7 @@ import { TopCanchasTable } from '@/components/admin/dashboard/TopCanchasTable'
 import { DashboardFilters } from '@/components/admin/dashboard/DashboardFilters'
 import { DrillDownModal, type DrillDownData } from '@/components/admin/dashboard/DrillDownModal'
 import { ClubAnalyticsCard } from '@/components/admin/dashboard/ClubAnalyticsCard'
+import { TopCanchasPieChart } from '@/components/admin/dashboard/TopCanchasPieChart'
 import { Button } from '@/components/ui/button'
 import { RefreshCw, Download, Calendar, Users, TrendingUp, DollarSign, Filter } from 'lucide-react'
 import { toast } from 'sonner'
@@ -112,7 +113,7 @@ const fetchDashboardData = async (filters?: Record<string, any> | null): Promise
 
       // Filter by deporte
       if (filters.deporte && filters.deporte !== 'all') {
-        canchas = canchas.filter(c => c.deporte.nombre.toLowerCase() === filters.deporte.toLowerCase())
+        canchas = canchas.filter(c => c.deporte?.nombre?.toLowerCase() === filters.deporte.toLowerCase())
         const canchaIds = canchas.map(c => c.id)
         reservas = reservas.filter(r => canchaIds.includes(r.disponibilidad?.cancha?.id))
       }
@@ -251,7 +252,7 @@ const fetchDashboardData = async (filters?: Record<string, any> | null): Promise
         } else {
           canchaMap.set(canchaId!, {
             name: canchaData.nombre,
-            sport: canchaData.deporte.nombre,
+            sport: canchaData.deporte?.nombre || 'Sin deporte',
             count: 1
           })
         }
@@ -321,7 +322,7 @@ const fetchDashboardData = async (filters?: Record<string, any> | null): Promise
           return {
             id: entry.canchaId,
             name: entry.canchaNombre,
-            sport: cancha?.deporte.nombre || 'Desconocido',
+            sport: cancha?.deporte?.nombre || 'Desconocido',
             reservations: entry.cantidadReservas,
             revenue: Number(entry.cantidadReservas || 0) * Number(cancha?.precioPorHora || 0),
             occupancy: Math.round((Number(entry.cantidadReservas || 0) / 30) * 100),
@@ -671,6 +672,15 @@ export default function DashboardPage() {
             loading={loading}
             onViewMore={() => toast.info('Ver todas las canchas')}
             onRowClick={handleTopCanchaClick}
+          />
+        </div>
+
+        {/* Row 3.5 - Top 5 Canchas Pie Chart */}
+        <div className="grid grid-cols-1 gap-6">
+          <TopCanchasPieChart
+            data={data.topCanchas}
+            loading={loading}
+            onSliceClick={handleTopCanchaClick}
           />
         </div>
 
