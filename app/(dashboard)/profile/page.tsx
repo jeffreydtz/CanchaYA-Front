@@ -145,19 +145,46 @@ function ProfileForm() {
     setUploadingAvatar(true)
     try {
       const formData = new FormData()
-      formData.append('avatar', avatarFile)
+      formData.append('file', avatarFile)
 
       // Upload to your backend endpoint that handles Cloudinary upload
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/usuarios/${user.id}/avatar`, {
-        method: 'POST',
+      // Try PATCH method first, then POST if that fails
+      let response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/usuarios/${user.id}/avatar`, {
+        method: 'PATCH',
         body: formData,
         headers: {
           'Authorization': `Bearer ${document.cookie.split('token=')[1]?.split(';')[0]}`,
         },
       })
 
+      // If PATCH fails with 405, try POST
+      if (!response.ok && response.status === 405) {
+        console.log('PATCH failed, trying POST method')
+        response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/usuarios/${user.id}/avatar`, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'Authorization': `Bearer ${document.cookie.split('token=')[1]?.split(';')[0]}`,
+          },
+        })
+      }
+
+      // If still fails, try PUT
+      if (!response.ok && response.status === 405) {
+        console.log('POST failed, trying PUT method')
+        response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/usuarios/${user.id}/avatar`, {
+          method: 'PUT',
+          body: formData,
+          headers: {
+            'Authorization': `Bearer ${document.cookie.split('token=')[1]?.split(';')[0]}`,
+          },
+        })
+      }
+
       if (!response.ok) {
-        throw new Error('Error al subir avatar')
+        const errorText = await response.text()
+        console.error('Avatar upload failed:', response.status, errorText)
+        throw new Error(`Error al subir avatar: ${response.status} ${response.statusText}`)
       }
 
       const result = await response.json()
@@ -168,7 +195,7 @@ function ProfileForm() {
       setAvatarPreview(null)
     } catch (error) {
       console.error('Error uploading avatar:', error)
-      toast.error('Error al subir el avatar')
+      toast.error(error instanceof Error ? error.message : 'Error al subir el avatar')
     } finally {
       setUploadingAvatar(false)
     }

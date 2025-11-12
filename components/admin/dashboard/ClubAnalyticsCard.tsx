@@ -82,7 +82,7 @@ export function ClubAnalyticsCard({
 
         // Filter by deporte
         if (filters.deporte && filters.deporte !== 'all') {
-          canchas = canchas.filter(c => c.deporte.nombre.toLowerCase() === filters.deporte.toLowerCase())
+          canchas = canchas.filter(c => c.deporte?.nombre?.toLowerCase() === filters.deporte.toLowerCase())
           const canchaIds = canchas.map(c => c.id)
           reservas = reservas.filter(r => canchaIds.includes(r.disponibilidad?.cancha?.id))
         }
@@ -143,7 +143,7 @@ export function ClubAnalyticsCard({
           return sum + Number(cancha?.precioPorHora || 0)
         }, 0)
 
-        const deportes = Array.from(new Set(clubCanchasData.map((c: Cancha) => c.deporte.nombre)))
+        const deportes = Array.from(new Set(clubCanchasData.map((c: Cancha) => c.deporte?.nombre).filter(Boolean)))
 
         const totalSlots = clubCanchasData.length * 24 * 7 // canchas * hours * days
         const ocupacion = totalSlots > 0 ? Math.round((confirmedReservas.length / totalSlots) * 100) : 0
@@ -360,7 +360,7 @@ export function ClubAnalyticsCard({
                             </p>
                             <div className="flex items-center gap-2 mt-1">
                               <Badge variant="outline" className="text-xs">
-                                {cancha.deporte.nombre}
+                                {cancha.deporte?.nombre || 'Sin deporte'}
                               </Badge>
                               <span className="text-xs text-gray-500">
                                 ${formatCompactNumber(Number(cancha.precioPorHora || 0))}/h

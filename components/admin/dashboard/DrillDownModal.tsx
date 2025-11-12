@@ -157,7 +157,7 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
 
         case 'deporte':
           filteredReservations = reservas.filter(
-            r => r.disponibilidad?.cancha?.deporte.nombre === data.name
+            r => r.disponibilidad?.cancha?.deporte?.nombre === data.name
           )
           break
 
@@ -269,8 +269,8 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
     const exportData = analytics.reservations.map(r => ({
       'Fecha': format(new Date(r.fechaHora), 'dd/MM/yyyy HH:mm', { locale: es }),
       'Cancha': r.disponibilidad?.cancha?.nombre || 'N/A',
-      'Deporte': r.disponibilidad?.cancha?.deporte.nombre || 'N/A',
-      'Usuario': r.persona.nombre,
+      'Deporte': r.disponibilidad?.cancha?.deporte?.nombre || 'N/A',
+      'Usuario': r.persona?.nombre || 'N/A',
       'Estado': r.estado
     }))
 
@@ -537,17 +537,17 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
                                   {reservation.disponibilidad?.cancha?.nombre || 'N/A'}
                                 </div>
                                 <div className="text-xs text-gray-500">
-                                  {reservation.disponibilidad?.cancha?.deporte.nombre || 'N/A'}
+                                  {reservation.disponibilidad?.cancha?.deporte?.nombre || 'N/A'}
                                 </div>
                               </div>
                             </TableCell>
                             <TableCell>
                               <div>
                                 <div className="font-medium">
-                                  {reservation.persona.nombre}
+                                  {reservation.persona?.nombre || 'N/A'}
                                 </div>
                                 <div className="text-xs text-gray-500">
-                                  ID: {reservation.persona.id}
+                                  ID: {reservation.persona?.id || 'N/A'}
                                 </div>
                               </div>
                             </TableCell>
