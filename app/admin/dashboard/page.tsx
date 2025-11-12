@@ -21,6 +21,7 @@ import { format, subDays, startOfDay } from 'date-fns'
 import { es } from 'date-fns/locale'
 import apiClient from '@/lib/api-client'
 import { downloadCSV, downloadExcel, generateFilename } from '@/lib/analytics/export'
+import { formatCompactNumber, formatCurrency } from '@/lib/analytics/formatters'
 
 interface DashboardData {
   metrics: {
@@ -113,8 +114,12 @@ const fetchDashboardData = async (): Promise<DashboardData> => {
     // Calculate revenue (sum of all completed reservations)
     const totalRevenue = confirmedReservations.reduce((sum, r) => {
       const cancha = canchas.find(c => c.id === r.disponibilidad?.cancha?.id)
-      return sum + (cancha?.precioPorHora || 0)
+      const price = cancha?.precioPorHora || 0
+      return sum + (isNaN(price) ? 0 : price)
     }, 0)
+
+    // Ensure totalRevenue is a valid number
+    const validRevenue = isNaN(totalRevenue) || !isFinite(totalRevenue) ? 0 : totalRevenue
 
     // Calculate occupancy rate
     const totalSlots = canchas.length * 24 * 7 // Simplified: canchas * hours * days
@@ -147,7 +152,7 @@ const fetchDashboardData = async (): Promise<DashboardData> => {
         status: occupancyRate >= 70 ? 'good' as const : occupancyRate >= 50 ? 'warning' as const : 'danger' as const
       },
       revenue: {
-        value: `$${totalRevenue.toLocaleString()}`,
+        value: validRevenue >= 10000 ? `$${formatCompactNumber(validRevenue)}` : `$${validRevenue.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
         change: 12.5, // Would need historical data to calculate
         sparklineData: sparklineData.map(count => count * 100), // Simplified revenue estimation
         status: 'good' as const
