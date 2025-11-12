@@ -172,7 +172,7 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
 
       const totalRevenue = confirmedReservations.reduce((sum, r) => {
         const cancha = canchas.find(c => c.id === r.disponibilidad?.cancha?.id)
-        return sum + (cancha?.precioPorHora || 0)
+        return sum + Number(cancha?.precioPorHora || 0)
       }, 0)
 
       // Hourly distribution
@@ -193,7 +193,7 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
         const day = new Date(r.fechaHora).getDay()
         const existing = dailyMap.get(day) || { cantidad: 0, ingresos: 0 }
         const cancha = canchas.find(c => c.id === r.disponibilidad?.cancha?.id)
-        const revenue = cancha?.precioPorHora || 0
+        const revenue = Number(cancha?.precioPorHora || 0)
         dailyMap.set(day, {
           cantidad: existing.cantidad + 1,
           ingresos: existing.ingresos + revenue
@@ -212,7 +212,7 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
         const userName = r.persona.nombre
         const existing = userMap.get(userId) || { reservas: 0, gasto: 0 }
         const cancha = canchas.find(c => c.id === r.disponibilidad?.cancha?.id)
-        const cost = cancha?.precioPorHora || 0
+        const cost = Number(cancha?.precioPorHora || 0)
         userMap.set(userName, {
           reservas: existing.reservas + 1,
           gasto: existing.gasto + cost

@@ -76,7 +76,7 @@ export default function HeroSection() {
         // Calculate average rating from valoraciones
         let averageRating = 4.9
         if (valoracionesResponse.data && valoracionesResponse.data.length > 0) {
-          const totalRating = valoracionesResponse.data.reduce((sum, val) => sum + val.puntaje, 0)
+          const totalRating = valoracionesResponse.data.reduce((sum, val) => sum + Number(val.puntaje || 0), 0)
           averageRating = Number((totalRating / valoracionesResponse.data.length).toFixed(1))
         }
 

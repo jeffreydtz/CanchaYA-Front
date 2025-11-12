@@ -228,7 +228,7 @@ export default function FeaturedCourts() {
                 v => v.tipo_objetivo === 'cancha' && v.id_objetivo === court.id
               )
               if (courtVals.length > 0) {
-                const avg = courtVals.reduce((sum, v) => sum + v.puntaje, 0) / courtVals.length
+                const avg = courtVals.reduce((sum, v) => sum + Number(v.puntaje || 0), 0) / courtVals.length
                 ratings[court.id] = avg
               } else {
                 ratings[court.id] = 4.5 // Default rating
