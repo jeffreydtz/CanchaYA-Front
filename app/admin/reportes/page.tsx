@@ -114,7 +114,7 @@ const fetchReportData = async (period: string): Promise<ReportData> => {
     // Calculate total revenue
     const totalRevenue = confirmedReservations.reduce((sum, r) => {
       const cancha = canchas.find(c => c.id === r.disponibilidad?.cancha?.id)
-      return sum + (cancha?.precioPorHora || 0)
+      return sum + Number(cancha?.precioPorHora || 0)
     }, 0)
 
     // Calculate occupancy rate
@@ -134,7 +134,7 @@ const fetchReportData = async (period: string): Promise<ReportData> => {
 
       const revenue = monthReservations.reduce((sum, r) => {
         const cancha = canchas.find(c => c.id === r.disponibilidad?.cancha?.id)
-        return sum + (cancha?.precioPorHora || 0)
+        return sum + Number(cancha?.precioPorHora || 0)
       }, 0)
 
       return {
@@ -156,7 +156,7 @@ const fetchReportData = async (period: string): Promise<ReportData> => {
 
       const revenue = dayReservations.reduce((sum, r) => {
         const cancha = canchas.find(c => c.id === r.disponibilidad?.cancha?.id)
-        return sum + (cancha?.precioPorHora || 0)
+        return sum + Number(cancha?.precioPorHora || 0)
       }, 0)
 
       return {
@@ -170,7 +170,7 @@ const fetchReportData = async (period: string): Promise<ReportData> => {
     const hourlyRevenueData = ocupacionHorarios.length > 0
       ? ocupacionHorarios.slice(0, 8).map(o => ({
           hour: o.hora,
-          revenue: o.ocupacion * 100 // Simplified revenue calculation
+          revenue: Number(o.ocupacion || 0) * 100 // Simplified revenue calculation
         }))
       : Array.from({ length: 8 }, (_, i) => {
           const hour = 8 + i * 2
@@ -180,7 +180,7 @@ const fetchReportData = async (period: string): Promise<ReportData> => {
           })
           const revenue = hourReservations.reduce((sum, r) => {
             const cancha = canchas.find(c => c.id === r.disponibilidad?.cancha?.id)
-            return sum + (cancha?.precioPorHora || 0)
+            return sum + Number(cancha?.precioPorHora || 0)
           }, 0)
           return { hour: `${hour}:00`, revenue }
         })
@@ -192,7 +192,7 @@ const fetchReportData = async (period: string): Promise<ReportData> => {
       if (cancha) {
         const sportName = cancha.deporte.nombre
         const existing = sportMap.get(sportName)
-        const revenue = cancha.precioPorHora || 0
+        const revenue = Number(cancha.precioPorHora || 0)
         if (existing) {
           existing.count++
           existing.revenue += revenue
@@ -221,7 +221,7 @@ const fetchReportData = async (period: string): Promise<ReportData> => {
           return {
             location: item.clubNombre,
             reservations: 0, // Not provided by API
-            revenue: item.ingresoTotal,
+            revenue: Number(item.ingresoTotal || 0),
             growth: Math.random() > 0.5 ? Math.random() * 20 : -Math.random() * 10
           }
         } else {
@@ -232,7 +232,7 @@ const fetchReportData = async (period: string): Promise<ReportData> => {
           )
           const clubRevenue = clubReservations.reduce((sum, r) => {
             const cancha = canchas.find(c => c.id === r.disponibilidad?.cancha?.id)
-            return sum + (cancha?.precioPorHora || 0)
+            return sum + Number(cancha?.precioPorHora || 0)
           }, 0)
           return {
             location: item.nombre,

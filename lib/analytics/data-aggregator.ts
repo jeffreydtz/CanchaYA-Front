@@ -205,7 +205,7 @@ function calculateMetrics(
 
   // FINANCIAL METRICS
   const payments = reservations.map(r => ({
-    monto: r.precio || 0,
+    monto: Number(r.precio || 0),
     estado: r.estado === 'CONFIRMADA' ? 'PAGADO' : 'PENDIENTE'
   }));
 
@@ -215,9 +215,9 @@ function calculateMetrics(
 
   const pendingPayments = payments
     .filter(p => p.estado === 'PENDIENTE')
-    .reduce((sum, p) => sum + p.monto, 0);
+    .reduce((sum, p) => sum + Number(p.monto || 0), 0);
 
-  const expectedRevenue = payments.reduce((sum, p) => sum + p.monto, 0);
+  const expectedRevenue = payments.reduce((sum, p) => sum + Number(p.monto || 0), 0);
 
   const delinquencyRate = calculateDelinquencyRate(pendingPayments, expectedRevenue);
   const collectionRate = calculateCollectionRate(totalRevenue, expectedRevenue);
@@ -564,7 +564,7 @@ async function fetchUsersTrend(start: Date, end: Date): Promise<TimeSeriesData[]
 function processTopCourts(topCourtsData: any[], reservations: any[]): CourtPerformance[] {
   return topCourtsData.slice(0, 5).map(court => {
     const courtReservations = reservations.filter(r => r.canchaId === court.id);
-    const revenue = courtReservations.reduce((sum, r) => sum + (r.precio || 0), 0);
+    const revenue = courtReservations.reduce((sum, r) => sum + Number(r.precio || 0), 0);
 
     return {
       id: court.id,

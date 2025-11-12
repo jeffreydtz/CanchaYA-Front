@@ -67,7 +67,7 @@ export function calculateAverageReservationsPerDay(
 export function calculateTotalRevenue(payments: Array<{ monto: number; estado: string }>): number {
   return payments
     .filter(p => p.estado === 'PAGADO')
-    .reduce((sum, p) => sum + p.monto, 0);
+    .reduce((sum, p) => sum + Number(p.monto || 0), 0);
 }
 
 /**
@@ -136,7 +136,7 @@ export function calculateAverageFrequency(
 ): number {
   if (userReservations.length === 0) return 0;
 
-  const totalReservations = userReservations.reduce((sum, u) => sum + u.count, 0);
+  const totalReservations = userReservations.reduce((sum, u) => sum + Number(u.count || 0), 0);
   return totalReservations / userReservations.length;
 }
 
@@ -213,7 +213,7 @@ export function determineStatus(
  */
 export function calculateMean(values: number[]): number {
   if (values.length === 0) return 0;
-  return values.reduce((sum, val) => sum + val, 0) / values.length;
+  return values.reduce((sum, val) => sum + Number(val || 0), 0) / values.length;
 }
 
 /**

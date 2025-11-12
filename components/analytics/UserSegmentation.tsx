@@ -14,8 +14,8 @@ interface UserSegmentationProps {
 }
 
 export function UserSegmentation({ segmentData, className }: UserSegmentationProps) {
-  const totalUsers = segmentData.reduce((sum, s) => sum + s.count, 0);
-  const totalRevenue = segmentData.reduce((sum, s) => sum + s.revenue, 0);
+  const totalUsers = segmentData.reduce((sum, s) => sum + Number(s.count || 0), 0);
+  const totalRevenue = segmentData.reduce((sum, s) => sum + Number(s.revenue || 0), 0);
 
   // Prepare chart data
   const chartData = segmentData.map(s => ({
@@ -294,7 +294,7 @@ function generateRecommendations(segmentData: UserSegmentData[]): string[] {
 
   // VIP recommendations
   if (vipSegment && vipSegment.count > 0) {
-    const vipRevenue = (vipSegment.revenue / segmentData.reduce((sum, s) => sum + s.revenue, 0)) * 100;
+    const vipRevenue = (Number(vipSegment.revenue || 0) / segmentData.reduce((sum, s) => sum + Number(s.revenue || 0), 0)) * 100;
     recommendations.push(
       `🌟 Usuarios VIP representan ${formatPercentage(vipRevenue, 1)} de los ingresos con solo ${formatPercentage(vipSegment.percentage, 1)} de usuarios. Implementar programa de beneficios exclusivos para retenerlos.`
     );

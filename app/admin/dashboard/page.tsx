@@ -164,7 +164,7 @@ const fetchDashboardData = async (filters?: Record<string, any> | null): Promise
     // Calculate revenue (sum of all completed reservations)
     const totalRevenue = confirmedReservations.reduce((sum, r) => {
       const cancha = canchas.find(c => c.id === r.disponibilidad?.cancha?.id)
-      const price = cancha?.precioPorHora || 0
+      const price = Number(cancha?.precioPorHora || 0)
       return sum + (isNaN(price) ? 0 : price)
     }, 0)
 
@@ -230,7 +230,7 @@ const fetchDashboardData = async (filters?: Record<string, any> | null): Promise
       })
       const dayRevenue = dayReservations.reduce((sum, r) => {
         const cancha = canchas.find(c => c.id === r.disponibilidad?.cancha?.id)
-        return sum + (cancha?.precioPorHora || 0)
+        return sum + Number(cancha?.precioPorHora || 0)
       }, 0)
       return {
         date: format(date, 'dd MMM', { locale: es }),
@@ -282,7 +282,7 @@ const fetchDashboardData = async (filters?: Record<string, any> | null): Promise
           heatMapData.push({
             day,
             hour,
-            occupancy: ocupacion?.ocupacion || 0
+            occupancy: Number(ocupacion?.ocupacion || 0)
           })
         }
       }
@@ -312,7 +312,7 @@ const fetchDashboardData = async (filters?: Record<string, any> | null): Promise
             name: data.name,
             sport: data.sport,
             reservations: data.count,
-            revenue: data.count * (cancha?.precioPorHora || 0),
+            revenue: data.count * Number(cancha?.precioPorHora || 0),
             occupancy: Math.round((data.count / 30) * 100),
             trend: Math.random() > 0.5 ? Math.floor(Math.random() * 10) : -Math.floor(Math.random() * 5)
           }
@@ -323,8 +323,8 @@ const fetchDashboardData = async (filters?: Record<string, any> | null): Promise
             name: entry.canchaNombre,
             sport: cancha?.deporte.nombre || 'Desconocido',
             reservations: entry.cantidadReservas,
-            revenue: entry.cantidadReservas * (cancha?.precioPorHora || 0),
-            occupancy: Math.round((entry.cantidadReservas / 30) * 100),
+            revenue: Number(entry.cantidadReservas || 0) * Number(cancha?.precioPorHora || 0),
+            occupancy: Math.round((Number(entry.cantidadReservas || 0) / 30) * 100),
             trend: Math.random() > 0.5 ? Math.floor(Math.random() * 10) : -Math.floor(Math.random() * 5)
           }
         }

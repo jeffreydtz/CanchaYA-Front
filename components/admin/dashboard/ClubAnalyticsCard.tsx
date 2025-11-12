@@ -140,7 +140,7 @@ export function ClubAnalyticsCard({
 
         const ingresos = confirmedReservas.reduce((sum: number, r: Reserva) => {
           const cancha = clubCanchasData.find((c: Cancha) => c.id === r.disponibilidad?.cancha?.id)
-          return sum + (cancha?.precioPorHora || 0)
+          return sum + Number(cancha?.precioPorHora || 0)
         }, 0)
 
         const deportes = Array.from(new Set(clubCanchasData.map((c: Cancha) => c.deporte.nombre)))
@@ -363,7 +363,7 @@ export function ClubAnalyticsCard({
                                 {cancha.deporte.nombre}
                               </Badge>
                               <span className="text-xs text-gray-500">
-                                ${formatCompactNumber(cancha.precioPorHora)}/h
+                                ${formatCompactNumber(Number(cancha.precioPorHora || 0))}/h
                               </span>
                             </div>
                           </div>
