@@ -54,7 +54,7 @@ const profileSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>
 
 function ProfileForm() {
-  const { user, refreshUser } = useAuth()
+  const { user, refreshUser, personaId } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(false)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
@@ -87,14 +87,16 @@ function ProfileForm() {
   }, [user, reset])
 
   const onSubmit = async (data: ProfileFormData) => {
-    if (!user) return
+    if (!user || !personaId) {
+      toast.error('No se pudo obtener la información del usuario')
+      return
+    }
 
     setLoading(true)
     try {
-      const response = await apiClient.updateUsuario(user.id, {
+      const response = await apiClient.updatePersona(personaId, {
         nombre: data.nombre,
         email: data.email,
-        telefono: data.telefono,
       })
 
       if (response.error) {
