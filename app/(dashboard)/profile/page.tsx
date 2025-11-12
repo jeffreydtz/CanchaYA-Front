@@ -57,6 +57,9 @@ function ProfileForm() {
   const { user, refreshUser } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
 
   const {
     register,
@@ -88,14 +91,12 @@ function ProfileForm() {
 
     setLoading(true)
     try {
-      // Note: In new API, we should use updatePersona, but for now just show message
-      // const response = await apiClient.updatePersona(user.id, data)
-      toast.info('La funcionalidad de actualizar perfil necesita actualizarse para la nueva API')
-      setIsEditing(false)
+      const response = await apiClient.updateUsuario(user.id, {
+        nombre: data.nombre,
+        email: data.email,
+        telefono: data.telefono,
+      })
 
-      // Commented out until personas endpoint is properly integrated
-      /*
-      const response = await apiClient.updatePersona(user.id, data)
       if (response.error) {
         toast.error(response.error)
       } else {
@@ -103,11 +104,71 @@ function ProfileForm() {
         await refreshUser()
         setIsEditing(false)
       }
-      */
     } catch (error: any) {
       toast.error('Error al actualizar el perfil')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('El archivo debe ser menor a 5MB')
+        return
+      }
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('El archivo debe ser una imagen')
+        return
+      }
+
+      setAvatarFile(file)
+
+      // Create preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleAvatarUpload = async () => {
+    if (!avatarFile || !user) return
+
+    setUploadingAvatar(true)
+    try {
+      const formData = new FormData()
+      formData.append('avatar', avatarFile)
+
+      // Upload to your backend endpoint that handles Cloudinary upload
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/usuarios/${user.id}/avatar`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Authorization': `Bearer ${document.cookie.split('token=')[1]?.split(';')[0]}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('Error al subir avatar')
+      }
+
+      const result = await response.json()
+
+      toast.success('Avatar actualizado correctamente')
+      await refreshUser()
+      setAvatarFile(null)
+      setAvatarPreview(null)
+    } catch (error) {
+      console.error('Error uploading avatar:', error)
+      toast.error('Error al subir el avatar')
+    } finally {
+      setUploadingAvatar(false)
     }
   }
 
@@ -150,15 +211,35 @@ function ProfileForm() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Avatar Section */}
           <div className="flex items-center gap-6">
-            <Avatar className="h-24 w-24">
-              <AvatarImage src="/placeholder-user.png" alt={user.nombre} />
-              <AvatarFallback className="text-2xl bg-gradient-to-br from-primary to-secondary text-white">
-                {user?.nombre?.charAt(0)?.toUpperCase() || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            <div className="space-y-2">
+            <div className="relative group">
+              <Avatar className="h-24 w-24 ring-2 ring-primary/20 transition-all duration-300 group-hover:ring-primary/50">
+                <AvatarImage
+                  src={avatarPreview || user.avatarUrl || '/placeholder-user.png'}
+                  alt={user.nombre}
+                  className="object-cover"
+                />
+                <AvatarFallback className="text-2xl bg-gradient-to-br from-primary to-secondary text-white">
+                  {user?.nombre?.charAt(0)?.toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              {/* Upload overlay */}
+              <label
+                htmlFor="avatar-upload"
+                className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+              >
+                <Edit className="h-6 w-6 text-white" />
+              </label>
+              <input
+                id="avatar-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                className="hidden"
+              />
+            </div>
+            <div className="space-y-2 flex-1">
               <h3 className="text-xl font-semibold">{user?.nombre || 'Usuario'}</h3>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <Badge variant={user.rol === 'admin' ? 'default' : 'secondary'}>
                   {user.rol === 'admin' ? (
                     <>
@@ -179,6 +260,31 @@ function ProfileForm() {
               <p className="text-sm text-gray-600 dark:text-gray-300">
                 Miembro desde {new Date(user.fechaCreacion).toLocaleDateString()}
               </p>
+              {/* Avatar upload button */}
+              {avatarFile && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleAvatarUpload}
+                    disabled={uploadingAvatar}
+                  >
+                    {uploadingAvatar ? 'Subiendo...' : 'Subir Avatar'}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setAvatarFile(null)
+                      setAvatarPreview(null)
+                    }}
+                    disabled={uploadingAvatar}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 
