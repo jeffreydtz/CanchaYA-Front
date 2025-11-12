@@ -74,7 +74,7 @@ const getColorForSport = (sport: string): string => {
   return SPORT_COLORS[sport] || '#6b7280'
 }
 
-const fetchDashboardData = async (): Promise<DashboardData> => {
+const fetchDashboardData = async (filters?: Record<string, any> | null): Promise<DashboardData> => {
   try {
     // Fetch all required data in parallel
     const [
@@ -96,10 +96,60 @@ const fetchDashboardData = async (): Promise<DashboardData> => {
       throw new Error('Error fetching data from API')
     }
 
-    const reservas = reservasRes.data || []
-    const canchas = canchasRes.data || []
+    let reservas = reservasRes.data || []
+    let canchas = canchasRes.data || []
     const canchasTop = canchasTopRes.data || []
     const ocupacionHorarios = ocupacionHorariosRes.data || []
+
+    // Apply filters if provided
+    if (filters) {
+      // Filter by cancha
+      if (filters.cancha && filters.cancha !== 'all') {
+        canchas = canchas.filter(c => c.id === filters.cancha)
+        const canchaIds = canchas.map(c => c.id)
+        reservas = reservas.filter(r => canchaIds.includes(r.disponibilidad?.cancha?.id))
+      }
+
+      // Filter by deporte
+      if (filters.deporte && filters.deporte !== 'all') {
+        canchas = canchas.filter(c => c.deporte.nombre.toLowerCase() === filters.deporte.toLowerCase())
+        const canchaIds = canchas.map(c => c.id)
+        reservas = reservas.filter(r => canchaIds.includes(r.disponibilidad?.cancha?.id))
+      }
+
+      // Filter by date range
+      if (filters.dateRange && filters.dateRange.from) {
+        const fromDate = new Date(filters.dateRange.from)
+        const toDate = filters.dateRange.to ? new Date(filters.dateRange.to) : new Date()
+        reservas = reservas.filter(r => {
+          const reservaDate = new Date(r.fechaHora)
+          return reservaDate >= fromDate && reservaDate <= toDate
+        })
+      } else if (filters.periodo && filters.periodo !== 'month') {
+        // Apply periodo filter
+        const today = new Date()
+        let fromDate: Date
+
+        switch (filters.periodo) {
+          case 'today':
+            fromDate = startOfDay(today)
+            break
+          case 'week':
+            fromDate = subDays(today, 7)
+            break
+          case 'quarter':
+            fromDate = subDays(today, 90)
+            break
+          case 'year':
+            fromDate = subDays(today, 365)
+            break
+          default:
+            fromDate = subDays(today, 30) // month
+        }
+
+        reservas = reservas.filter(r => new Date(r.fechaHora) >= fromDate)
+      }
+    }
 
     // Filter confirmed and completed reservations
     const confirmedReservations = reservas.filter(r => r.estado === 'confirmada' || r.estado === 'completada')
@@ -307,7 +357,7 @@ export default function DashboardPage() {
   const loadData = async () => {
     try {
       setLoading(true)
-      const dashboardData = await fetchDashboardData()
+      const dashboardData = await fetchDashboardData(activeFilters)
       setData(dashboardData)
       setLastUpdate(new Date())
     } catch (error) {
@@ -470,11 +520,19 @@ export default function DashboardPage() {
 
   const handleApplyFilters = async (filters: Record<string, unknown>) => {
     setActiveFilters(filters)
-    // TODO: Implement filter logic in fetchDashboardData
-    await loadData()
-    toast.success('Filtros aplicados', {
-      description: `Mostrando datos filtrados`
-    })
+    try {
+      setLoading(true)
+      const dashboardData = await fetchDashboardData(filters)
+      setData(dashboardData)
+      toast.success('Filtros aplicados', {
+        description: `Mostrando datos filtrados`
+      })
+    } catch (error) {
+      console.error('Error applying filters:', error)
+      toast.error('Error al aplicar filtros')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleClearFilters = async () => {

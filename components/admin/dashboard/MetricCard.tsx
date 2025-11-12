@@ -31,6 +31,7 @@ export function MetricCard({
   loading = false
 }: MetricCardProps) {
   const getTrendIcon = () => {
+    if (!change || change === 0 || isNaN(change)) return <Minus className="h-4 w-4" />
     if (change > 0) return <TrendingUp className="h-4 w-4" />
     if (change < 0) return <TrendingDown className="h-4 w-4" />
     return <Minus className="h-4 w-4" />
@@ -46,6 +47,7 @@ export function MetricCard({
   }
 
   const getChangeColor = () => {
+    if (!change || change === 0 || isNaN(change)) return 'text-gray-600 dark:text-gray-400'
     if (change > 0) return 'text-green-600 dark:text-green-400'
     if (change < 0) return 'text-red-600 dark:text-red-400'
     return 'text-gray-600 dark:text-gray-400'
@@ -113,7 +115,7 @@ export function MetricCard({
               {getTrendIcon()}
             </div>
             <span className={`text-sm font-semibold ${getChangeColor()}`}>
-              {change > 0 ? '+' : ''}{change.toFixed(1)}%
+              {!change || isNaN(change) ? 'Sin cambios' : `${change > 0 ? '+' : ''}${change.toFixed(1)}%`}
             </span>
             <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
               vs anterior
