@@ -50,6 +50,7 @@ import { es } from 'date-fns/locale'
 import apiClient, { type Reserva } from '@/lib/api-client'
 import { toast } from 'sonner'
 import { downloadCSV } from '@/lib/analytics/export'
+import { formatCompactNumber } from '@/lib/analytics/formatters'
 
 export type DrillDownType = 'cancha' | 'club' | 'hora' | 'dia' | 'deporte'
 
@@ -363,7 +364,7 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-green-600">
-                      ${analytics.summary.ingresoTotal.toLocaleString()}
+                      ${formatCompactNumber(analytics.summary.ingresoTotal)}
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
                       Total generado
@@ -407,7 +408,14 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="dia" />
                       <YAxis />
-                      <Tooltip />
+                      <Tooltip
+                        formatter={(value: any, name: string) => {
+                          if (name === 'Ingresos ($)') {
+                            return `$${formatCompactNumber(Number(value))}`
+                          }
+                          return value
+                        }}
+                      />
                       <Legend />
                       <Bar dataKey="cantidad" name="Reservas" fill="#3b82f6" />
                       <Bar dataKey="ingresos" name="Ingresos ($)" fill="#10b981" />
@@ -452,8 +460,10 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
                     <BarChart data={analytics.revenueByPeriod}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="periodo" />
-                      <YAxis />
-                      <Tooltip />
+                      <YAxis tickFormatter={(value) => `$${formatCompactNumber(value)}`} />
+                      <Tooltip
+                        formatter={(value: any) => `$${formatCompactNumber(Number(value))}`}
+                      />
                       <Bar dataKey="ingresos" name="Ingresos" fill="#10b981" />
                     </BarChart>
                   </ResponsiveContainer>
@@ -488,7 +498,7 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
                           <TableCell className="font-medium">{user.usuario}</TableCell>
                           <TableCell className="text-right">{user.reservas}</TableCell>
                           <TableCell className="text-right font-semibold text-green-600">
-                            ${user.gastTotal.toLocaleString()}
+                            ${formatCompactNumber(user.gastTotal)}
                           </TableCell>
                         </TableRow>
                       ))}
