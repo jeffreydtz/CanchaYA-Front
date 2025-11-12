@@ -76,6 +76,7 @@ export interface Persona {
   nombre: string
   apellido: string
   email: string
+  avatarUrl?: string
 }
 
 export interface User {
@@ -98,6 +99,8 @@ export interface UserLegacy {
   deudaPendiente?: number
   estadoCuenta?: 'activo' | 'bloqueado'
   fechaCreacion: string
+  avatarUrl?: string
+  apellido?: string
 }
 
 export interface Club {

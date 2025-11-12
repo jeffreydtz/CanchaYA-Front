@@ -90,7 +90,11 @@ export default function Navbar() {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-12 w-12 rounded-full hover:scale-110 transition-all duration-500 group">
                       <Avatar className="h-12 w-12 ring-2 ring-gold/30 hover:ring-gold hover:shadow-glow-gold transition-all duration-500">
-                        <AvatarImage src={'/placeholder-user.png'} alt={user?.nombre || 'Usuario'} />
+                        <AvatarImage
+                          src={user?.avatarUrl || '/placeholder-user.png'}
+                          alt={user?.nombre || 'Usuario'}
+                          className="object-cover"
+                        />
                         <AvatarFallback className="metallic-gold text-black font-black text-lg">
                           {user?.nombre?.charAt(0).toUpperCase()}
                         </AvatarFallback>
@@ -102,8 +106,12 @@ export default function Navbar() {
                     <DropdownMenuLabel className="p-4">
                       <div className="flex flex-col space-y-2">
                         <div className="flex items-center space-x-3">
-                          <Avatar className="h-12 w-12">
-                            <AvatarImage src={'/placeholder-user.png'} alt={user?.nombre || 'Usuario'} />
+                          <Avatar className="h-12 w-12 ring-2 ring-primary/20">
+                            <AvatarImage
+                              src={user?.avatarUrl || '/placeholder-user.png'}
+                              alt={user?.nombre || 'Usuario'}
+                              className="object-cover"
+                            />
                             <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white font-bold">
                               {user?.nombre?.charAt(0).toUpperCase()}
                             </AvatarFallback>

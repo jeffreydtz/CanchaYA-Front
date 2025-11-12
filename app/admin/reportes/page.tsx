@@ -305,7 +305,7 @@ export default function AdminReportsPage() {
     {
       id: 'revenue',
       title: 'Ingresos totales',
-      value: `$${(totalRevenue / 1000).toFixed(0)}K`,
+      value: totalRevenue >= 1000 ? `$${(totalRevenue / 1000).toFixed(1)}K` : `$${totalRevenue.toLocaleString()}`,
       description: '+$45K vs mes anterior',
       delta: '+12.5%',
       trend: 'up',
@@ -598,10 +598,11 @@ export default function AdminReportsPage() {
                       ))}
                     </Pie>
                     <Tooltip
-                      formatter={(value, name) => [
-                        `$${sportData.find((s) => s.name === name)?.revenue?.toLocaleString()}`,
-                        name,
-                      ]}
+                      formatter={(value, name) => {
+                        const revenue = sportData.find((s) => s.name === name)?.revenue
+                        const formattedRevenue = typeof revenue === 'number' && !isNaN(revenue) ? revenue.toLocaleString() : '0'
+                        return [`$${formattedRevenue}`, name]
+                      }}
                       contentStyle={{
                         borderRadius: 16,
                         border: '1px solid #e2e8f0',
@@ -702,7 +703,9 @@ export default function AdminReportsPage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-slate-900">${(location.revenue / 1000).toFixed(0)}K</p>
+                      <p className="font-semibold text-slate-900">
+                        {location.revenue >= 1000 ? `$${(location.revenue / 1000).toFixed(1)}K` : `$${location.revenue.toLocaleString()}`}
+                      </p>
                       <div className="mt-1 flex items-center justify-end gap-1">
                         {location.growth > 0 ? (
                           <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
@@ -715,7 +718,7 @@ export default function AdminReportsPage() {
                           }`}
                         >
                           {location.growth > 0 ? '+' : ''}
-                          {location.growth}%
+                          {typeof location.growth === 'number' && !isNaN(location.growth) ? location.growth.toFixed(1) : '0'}%
                         </span>
                       </div>
                     </div>
