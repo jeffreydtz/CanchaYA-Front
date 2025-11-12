@@ -47,13 +47,13 @@ import {
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import apiClient from '@/lib/api-client'
+import apiClient, { type Reserva } from '@/lib/api-client'
 import { toast } from 'sonner'
 import { downloadCSV } from '@/lib/analytics/export'
 
 export type DrillDownType = 'cancha' | 'club' | 'hora' | 'dia' | 'deporte'
 
-interface DrillDownData {
+export interface DrillDownData {
   type: DrillDownType
   id?: string
   name: string
@@ -67,26 +67,7 @@ interface DrillDownModalProps {
   data: DrillDownData | null
 }
 
-interface ReservationDetail {
-  id: string
-  fechaHora: string
-  estado: string
-  persona: {
-    nombre: string
-    apellido: string
-    email: string
-  }
-  disponibilidad?: {
-    cancha?: {
-      id: string
-      nombre: string
-      deporte: {
-        nombre: string
-      }
-    }
-  }
-  precioTotal?: number
-}
+type ReservationDetail = Reserva
 
 interface DetailedAnalytics {
   summary: {
@@ -126,7 +107,7 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
       // Fetch all reservations and filter based on drill-down type
       const reservasRes = await apiClient.getReservas()
       const canchasRes = await apiClient.getCanchas()
-      const clubsRes = await apiClient.getClubs()
+      const clubsRes = await apiClient.getClubes()
 
       if (reservasRes.error || canchasRes.error) {
         throw new Error('Error fetching data')
@@ -226,8 +207,8 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
       // User statistics
       const userMap = new Map<string, { reservas: number; gasto: number }>()
       confirmedReservations.forEach(r => {
-        const userId = r.persona.email
-        const userName = `${r.persona.nombre} ${r.persona.apellido}`
+        const userId = r.persona.id
+        const userName = r.persona.nombre
         const existing = userMap.get(userId) || { reservas: 0, gasto: 0 }
         const cancha = canchas.find(c => c.id === r.disponibilidad?.cancha?.id)
         const cost = cancha?.precioPorHora || 0
@@ -288,10 +269,8 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
       'Fecha': format(new Date(r.fechaHora), 'dd/MM/yyyy HH:mm', { locale: es }),
       'Cancha': r.disponibilidad?.cancha?.nombre || 'N/A',
       'Deporte': r.disponibilidad?.cancha?.deporte.nombre || 'N/A',
-      'Usuario': `${r.persona.nombre} ${r.persona.apellido}`,
-      'Email': r.persona.email,
-      'Estado': r.estado,
-      'Precio': r.precioTotal || 0
+      'Usuario': r.persona.nombre,
+      'Estado': r.estado
     }))
 
     const filename = `drill-down-${data.type}-${data.name.replace(/\s+/g, '-')}-${format(new Date(), 'yyyy-MM-dd')}.csv`
@@ -555,10 +534,10 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
                             <TableCell>
                               <div>
                                 <div className="font-medium">
-                                  {reservation.persona.nombre} {reservation.persona.apellido}
+                                  {reservation.persona.nombre}
                                 </div>
                                 <div className="text-xs text-gray-500">
-                                  {reservation.persona.email}
+                                  ID: {reservation.persona.id}
                                 </div>
                               </div>
                             </TableCell>

@@ -20,8 +20,8 @@ import { toast } from 'sonner'
 import { format, subDays, startOfDay } from 'date-fns'
 import { es } from 'date-fns/locale'
 import apiClient from '@/lib/api-client'
-import { downloadCSV, downloadExcel, generateFilename } from '@/lib/analytics/export'
-import { formatCompactNumber, formatCurrency } from '@/lib/analytics/formatters'
+import { downloadExcel, generateFilename } from '@/lib/analytics/export'
+import { formatCompactNumber } from '@/lib/analytics/formatters'
 
 interface DashboardData {
   metrics: {

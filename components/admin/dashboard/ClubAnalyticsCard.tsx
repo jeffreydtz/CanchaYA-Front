@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import apiClient from '@/lib/api-client'
 import { toast } from 'sonner'
+import type { Club, Cancha, Reserva } from '@/lib/api-client'
 
 interface ClubStats {
   id: string
@@ -46,7 +47,7 @@ export function ClubAnalyticsCard({
   const [loading, setLoading] = useState(true)
   const [clubStats, setClubStats] = useState<ClubStats[]>([])
   const [expandedClub, setExpandedClub] = useState<string | null>(null)
-  const [clubCanchas, setClubCanchas] = useState<Record<string, any[]>>({})
+  const [clubCanchas, setClubCanchas] = useState<Record<string, Cancha[]>>({})
 
   useEffect(() => {
     loadClubAnalytics()
@@ -58,7 +59,7 @@ export function ClubAnalyticsCard({
 
       // Fetch data
       const [clubsRes, canchasRes, reservasRes] = await Promise.all([
-        apiClient.getClubs(),
+        apiClient.getClubes(),
         apiClient.getCanchas(),
         apiClient.getReservas()
       ])
@@ -67,28 +68,28 @@ export function ClubAnalyticsCard({
         throw new Error('Error fetching data')
       }
 
-      const clubs = clubsRes.data || []
-      const canchas = canchasRes.data || []
-      const reservas = reservasRes.data || []
+      const clubs: Club[] = clubsRes.data || []
+      const canchas: Cancha[] = canchasRes.data || []
+      const reservas: Reserva[] = reservasRes.data || []
 
       // Calculate stats for each club
-      const stats: ClubStats[] = clubs.map(club => {
-        const clubCanchasData = canchas.filter(c => c.club?.id === club.id)
-        const clubCanchaIds = clubCanchasData.map(c => c.id)
-        const clubReservas = reservas.filter(r =>
+      const stats: ClubStats[] = clubs.map((club: Club) => {
+        const clubCanchasData = canchas.filter((c: Cancha) => c.club?.id === club.id)
+        const clubCanchaIds = clubCanchasData.map((c: Cancha) => c.id)
+        const clubReservas = reservas.filter((r: Reserva) =>
           r.disponibilidad?.cancha?.id && clubCanchaIds.includes(r.disponibilidad.cancha.id)
         )
 
         const confirmedReservas = clubReservas.filter(
-          r => r.estado === 'confirmada' || r.estado === 'completada'
+          (r: Reserva) => r.estado === 'confirmada' || r.estado === 'completada'
         )
 
-        const ingresos = confirmedReservas.reduce((sum, r) => {
-          const cancha = clubCanchasData.find(c => c.id === r.disponibilidad?.cancha?.id)
+        const ingresos = confirmedReservas.reduce((sum: number, r: Reserva) => {
+          const cancha = clubCanchasData.find((c: Cancha) => c.id === r.disponibilidad?.cancha?.id)
           return sum + (cancha?.precioPorHora || 0)
         }, 0)
 
-        const deportes = Array.from(new Set(clubCanchasData.map(c => c.deporte.nombre)))
+        const deportes = Array.from(new Set(clubCanchasData.map((c: Cancha) => c.deporte.nombre)))
 
         const totalSlots = clubCanchasData.length * 24 * 7 // canchas * hours * days
         const ocupacion = totalSlots > 0 ? Math.round((confirmedReservas.length / totalSlots) * 100) : 0
@@ -103,12 +104,12 @@ export function ClubAnalyticsCard({
           ocupacion,
           deportes
         }
-      }).sort((a, b) => b.ingresos - a.ingresos)
+      }).sort((a: ClubStats, b: ClubStats) => b.ingresos - a.ingresos)
 
       // Store canchas by club for expansion
-      const canchasByClub: Record<string, any[]> = {}
-      clubs.forEach(club => {
-        canchasByClub[club.id] = canchas.filter(c => c.club?.id === club.id)
+      const canchasByClub: Record<string, Cancha[]> = {}
+      clubs.forEach((club: Club) => {
+        canchasByClub[club.id] = canchas.filter((c: Cancha) => c.club?.id === club.id)
       })
 
       setClubStats(stats)
@@ -243,7 +244,7 @@ export function ClubAnalyticsCard({
 
                     <div className="flex items-center gap-2 mt-3">
                       <span className="text-xs text-gray-500">Deportes:</span>
-                      {club.deportes.map(deporte => (
+                      {club.deportes.map((deporte: string) => (
                         <Badge key={deporte} variant="secondary" className="text-xs">
                           {deporte}
                         </Badge>
@@ -286,7 +287,7 @@ export function ClubAnalyticsCard({
               {/* Expanded Canchas List */}
               {expandedClub === club.id && clubCanchas[club.id] && (
                 <div className="ml-6 space-y-2">
-                  {clubCanchas[club.id].map(cancha => (
+                  {clubCanchas[club.id].map((cancha: Cancha) => (
                     <div
                       key={cancha.id}
                       className="p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-primary dark:hover:border-primary transition-colors cursor-pointer"
