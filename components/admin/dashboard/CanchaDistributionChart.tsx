@@ -1,24 +1,25 @@
 /**
  * CanchaDistributionChart Component
- * Gráfico de barras horizontales mostrando reservas por cancha
+ * Gráfico de barras horizontales mostrando reservas por cancha con drill-down
  */
 
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   Cell
 } from 'recharts'
-import { MapPin } from 'lucide-react'
+import { MapPin, MousePointerClick } from 'lucide-react'
 
 interface CanchaData {
+  id?: string
   name: string
   reservations: number
   sport: string
@@ -29,6 +30,7 @@ interface CanchaDistributionChartProps {
   data: CanchaData[]
   loading?: boolean
   onBarClick?: (cancha: CanchaData) => void
+  onSportClick?: (sport: string) => void
 }
 
 const SPORT_COLORS: Record<string, string> = {
@@ -40,10 +42,11 @@ const SPORT_COLORS: Record<string, string> = {
   default: '#6b7280'
 }
 
-export function CanchaDistributionChart({ 
-  data, 
+export function CanchaDistributionChart({
+  data,
   loading = false,
-  onBarClick 
+  onBarClick,
+  onSportClick
 }: CanchaDistributionChartProps) {
   
   if (loading) {
@@ -93,8 +96,9 @@ export function CanchaDistributionChart({
               <MapPin className="h-5 w-5 text-primary" />
               Distribución por Cancha
             </CardTitle>
-            <CardDescription className="text-gray-600 dark:text-gray-400 mt-1">
-              Cantidad de reservas por cancha y deporte
+            <CardDescription className="text-gray-600 dark:text-gray-400 mt-1 flex items-center gap-2">
+              <MousePointerClick className="h-4 w-4" />
+              Cantidad de reservas - Click en barra para detalles
             </CardDescription>
           </div>
         </div>
@@ -135,20 +139,31 @@ export function CanchaDistributionChart({
             </Bar>
           </BarChart>
         </ResponsiveContainer>
-        
-        {/* Legend */}
+
+        {/* Legend - Interactive */}
         <div className="mt-4 flex flex-wrap gap-3 justify-center">
           {Array.from(new Set(data.map(d => d.sport))).map((sport) => (
-            <div key={sport} className="flex items-center gap-2">
-              <div 
-                className="w-3 h-3 rounded-full" 
+            <button
+              key={sport}
+              onClick={() => onSportClick?.(sport)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+              title={`Ver análisis de ${sport}`}
+            >
+              <div
+                className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: SPORT_COLORS[sport] || SPORT_COLORS.default }}
               />
               <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
                 {sport}
               </span>
-            </div>
+              <MousePointerClick className="h-3 w-3 text-gray-400" />
+            </button>
           ))}
+        </div>
+
+        {/* Hint */}
+        <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs text-blue-700 dark:text-blue-300">
+          <strong>Tip:</strong> Click en una barra para ver detalles de la cancha, o en un deporte para filtrar
         </div>
       </CardContent>
     </Card>
