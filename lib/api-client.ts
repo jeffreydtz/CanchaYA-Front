@@ -182,19 +182,50 @@ export interface Equipo {
 
 export interface Desafio {
   id: string // UUID
-  reserva: { id: string }
-  deporte: { nombre: string }
-  creador: { nombre: string; apellido?: string; id?: string }
+  estado: 'Pendiente' | 'Aceptado' | 'Cancelado' | 'Finalizado'
+  reserva: {
+    id: string
+    fechaHora: string
+    disponibilidad: DisponibilidadHorario
+  }
+  deporte: {
+    id: string
+    nombre: string
+  }
+  creador: {
+    id: string
+    nombre: string
+    apellido: string
+    email: string
+  }
   jugadoresCreador: Persona[]
   invitadosDesafiados: Persona[]
   jugadoresDesafiados: Persona[]
-  estado: 'pendiente' | 'aceptado' | 'cancelado' | 'finalizado'
-  ganador: 'creador' | 'desafiado' | null
-  golesCreador: number | null
-  golesDesafiado: number | null
+  ganadorLado: 'creador' | 'desafiado' | null
+  resultado: string | null // e.g., "3-2"
   valoracionCreador: number | null  // 1-5
   valoracionDesafiado: number | null  // 1-5
   creadoEl: string // ISO Date
+  actualizadoEl: string // ISO Date
+}
+
+// DTOs para Desafíos
+export interface CrearDesafioDto {
+  reservaId: string // UUID - Must be a future reservation without existing challenge
+  deporteId: string // UUID
+  invitadosDesafiadosIds: string[] // Array of Persona UUIDs (min 1)
+  jugadoresCreadorIds?: string[] // Optional teammates for creator
+}
+
+export interface AgregarJugadoresDto {
+  lado: 'creador' | 'desafiado'
+  jugadoresIds: string[] // Array of Persona UUIDs
+}
+
+export interface FinalizarDesafioDto {
+  ganadorLado: 'creador' | 'desafiado'
+  resultado?: string // e.g., "3-2" format: "golesCreador-golesDesafiado"
+  valoracion?: number // 1-5
 }
 
 export interface Deuda {
@@ -788,35 +819,24 @@ const apiClient = {
   
   /**
    * Listar desafíos - GET /desafios
-   * @note Referenced in API v1 documentation
+   * Returns all challenges in the system with full relations
+   * Frontend should filter by personaId for user-specific views
    */
-  getDesafios: (params?: {
-    estado?: string;
-    deporteId?: string;
-    equipoId?: string;
-    jugadorId?: string;
-    fecha?: string;
-  }) => {
-    const searchParams = new URLSearchParams()
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) searchParams.append(key, value)
-      })
-    }
-    const query = searchParams.toString() ? `?${searchParams.toString()}` : ''
-    return apiRequest<Desafio[]>(`/desafios${query}`)
-  },
+  getDesafios: () => apiRequest<Desafio[]>('/desafios'),
 
   /**
    * Crear desafío - POST /desafios
-   * CORRECTED: Backend uses reserva-based challenges, not team-based
+   * Creates a new challenge based on an existing reservation
+   * The creator's personaId is extracted from the JWT token
+   *
+   * Validations:
+   * - reservaId must exist and not have an existing challenge
+   * - Reservation must be in the future
+   * - deporteId must exist
+   * - Creator is automatically added to jugadoresCreador
+   * - All invitadosDesafiadosIds must be valid personas
    */
-  createDesafio: (data: {
-    reservaId: string; // UUID - Must be a future reservation
-    deporteId: string; // UUID
-    invitadosDesafiadosIds: string[]; // Array of Persona UUIDs (min 1)
-    jugadoresCreadorIds?: string[]; // Optional teammates for creator
-  }) =>
+  createDesafio: (data: CrearDesafioDto) =>
     apiRequest<Desafio>('/desafios', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -824,22 +844,56 @@ const apiClient = {
 
   /**
    * Aceptar desafío - PATCH /desafios/{id}/aceptar
-   * CORRECTED: Backend requires personaId, not equipoRivalId
+   * Accepts a challenge invitation
+   * The personaId is extracted from the JWT token
+   *
+   * Validations:
+   * - Challenge must exist
+   * - Reservation must be in the future
+   * - Person must be in invitadosDesafiados
+   * - Person cannot have already accepted
+   *
+   * Actions:
+   * - Moves person from invitadosDesafiados to jugadoresDesafiados
+   * - Changes estado to 'Aceptado' if it was 'Pendiente'
    */
-  aceptarDesafio: (id: string, personaId: string) =>
+  aceptarDesafio: (id: string) =>
     apiRequest<Desafio>(`/desafios/${id}/aceptar`, {
       method: 'PATCH',
-      body: JSON.stringify({ personaId }),
+      body: JSON.stringify({}),
+    }),
+
+  /**
+   * Rechazar desafío - PATCH /desafios/{id}/rechazar
+   * Rejects a challenge invitation
+   * The personaId is extracted from the JWT token
+   *
+   * Validations:
+   * - Person must be in invitadosDesafiados (not in jugadoresDesafiados)
+   *
+   * Actions:
+   * - Removes person from invitadosDesafiados
+   * - If no one left in invitados + jugadores, estado → 'Cancelado'
+   */
+  rechazarDesafio: (id: string) =>
+    apiRequest<Desafio>(`/desafios/${id}/rechazar`, {
+      method: 'PATCH',
+      body: JSON.stringify({})
     }),
 
   /**
    * Agregar jugadores a un desafío - PATCH /desafios/{id}/agregar-jugadores
-   * Add more players to either team
+   * Add more players to either team after challenge creation/acceptance
+   *
+   * Validations:
+   * - Challenge must be in 'Pendiente' or 'Aceptado' estado
+   * - All jugadoresIds must be valid personas
+   * - Authorization:
+   *   - lado='creador': caller must be creator or already in jugadoresCreador
+   *   - lado='desafiado': caller must be in jugadoresDesafiados
+   * - Players cannot be duplicated or moved between teams
    */
-  agregarJugadoresDesafio: (id: string, data: {
-    lado: 'creador' | 'desafiado';
-    jugadoresIds: string[]; // Array of Persona UUIDs
-  }) =>
+  agregarJugadoresDesafio: (id: string, data: AgregarJugadoresDto) =>
     apiRequest<Desafio>(`/desafios/${id}/agregar-jugadores`, {
       method: 'PATCH',
       body: JSON.stringify(data),
@@ -847,13 +901,21 @@ const apiClient = {
 
   /**
    * Finalizar desafío - PATCH /desafios/{id}/finalizar
-   * CORRECTED: Backend requires ganadorLado and optional result/valoracion
+   * Finalize a challenge and record results, update ELO and stats
+   *
+   * Validations:
+   * - Challenge estado must be 'Aceptado'
+   * - Reservation must be in the past (match already occurred)
+   * - Caller must be a participant (any player from either team)
+   * - resultado format: "golesCreador-golesDesafiado" (e.g., "3-2")
+   *
+   * Actions:
+   * - Updates ELO rankings for all participants
+   * - Updates stats (partidos, goles, victorias, derrotas, racha)
+   * - Records valoracion if provided
+   * - Generates audit log and sends notifications
    */
-  finalizarDesafio: (id: string, data: {
-    ganadorLado: 'creador' | 'desafiado';
-    resultado?: string; // e.g., "3-2"
-    valoracion?: number; // 1-5
-  }) =>
+  finalizarDesafio: (id: string, data: FinalizarDesafioDto) =>
     apiRequest<Desafio>(`/desafios/${id}/finalizar`, {
       method: 'PATCH',
       body: JSON.stringify(data),
@@ -1065,8 +1127,21 @@ const apiClient = {
 
   /**
    * Obtener perfil competitivo del usuario - GET /perfil-competitivo
+   * Returns the competitive profile(s) for the authenticated user
+   * Creates profile if it doesn't exist
    */
   getPerfilCompetitivo: () => apiRequest<PerfilCompetitivo[]>('/perfil-competitivo'),
+
+  /**
+   * Actualizar perfil competitivo - PATCH /perfil-competitivo
+   * Allows activating/deactivating the competitive profile
+   * When activo=false, user won't be counted for ranking calculations
+   */
+  updatePerfilCompetitivo: (data: { activo: boolean }) =>
+    apiRequest<PerfilCompetitivo>('/perfil-competitivo', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
 
   /**
    * Obtener ranking global - GET /ranking
@@ -1081,15 +1156,6 @@ const apiClient = {
 
 
 
-  /**
-   * Rechazar desafío - PATCH /desafios/{id}/rechazar
-   * Reject challenge invitation
-   */
-  rechazarDesafio: (id: string, personaId?: string) =>
-    apiRequest<Desafio>(`/desafios/${id}/rechazar`, { 
-      method: 'PATCH',
-      body: personaId ? JSON.stringify({ personaId }) : undefined
-    }),
 
 
   /**
