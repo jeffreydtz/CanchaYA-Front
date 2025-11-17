@@ -177,7 +177,7 @@ function ActiveChallenges() {
     try {
       const response = await apiClient.getDesafios()
       if (response.data) {
-        setDesafios(response.data.filter(d => d.estado === 'pendiente' || d.estado === 'aceptado'))
+        setDesafios(response.data.filter(d => d.estado === 'Pendiente' || d.estado === 'Aceptado'))
       }
     } catch (error) {
       console.error('Error fetching challenges:', error)
@@ -197,7 +197,7 @@ function ActiveChallenges() {
     }
     
     try {
-      const response = await apiClient.aceptarDesafio(desafioId, personaId)
+      const response = await apiClient.aceptarDesafio(desafioId)
       if (response.error) {
         toast.error(response.error)
       } else {
@@ -216,7 +216,7 @@ function ActiveChallenges() {
     }
     
     try {
-      const response = await apiClient.rechazarDesafio(desafioId, personaId)
+      const response = await apiClient.rechazarDesafio(desafioId)
       if (response.error) {
         toast.error(response.error)
       } else {
@@ -294,7 +294,7 @@ function ActiveChallenges() {
                     {desafio.creador?.nombre} vs {desafio.jugadoresDesafiados?.length > 0 ? desafio.jugadoresDesafiados.map(j => j.nombre).join(', ') : 'Esperando rival'}
                   </h3>
                   <Badge
-                    variant={desafio.estado === 'aceptado' ? 'default' : 'secondary'}
+                    variant={desafio.estado === 'Aceptado' ? 'default' : 'secondary'}
                     className="text-xs"
                   >
                     {desafio.estado}
@@ -306,15 +306,15 @@ function ActiveChallenges() {
                     <MapPin className="h-4 w-4" />
                     <span>{desafio.deporte?.nombre}</span>
                   </div>
-                  {desafio.golesCreador !== null && desafio.golesDesafiado !== null && (
+                  {desafio.resultado && (
                     <div className="flex items-center gap-2">
-                      <span>Resultado: {desafio.golesCreador} - {desafio.golesDesafiado}</span>
+                      <span>Resultado: {desafio.resultado}</span>
                     </div>
                   )}
                 </div>
 
                 <div className="flex gap-2 mt-4">
-                  {desafio.estado === 'pendiente' && personaId && desafio.invitadosDesafiados.some(inv => inv.id === personaId) && (
+                  {desafio.estado === 'Pendiente' && personaId && desafio.invitadosDesafiados.some(inv => inv.id === personaId) && (
                     <>
                       <Button size="sm" variant="outline" onClick={() => handleAceptar(desafio.id)}>
                         Aceptar
@@ -324,12 +324,12 @@ function ActiveChallenges() {
                       </Button>
                     </>
                   )}
-                  {desafio.estado === 'aceptado' && (
+                  {desafio.estado === 'Aceptado' && (
                     <Button size="sm" disabled>
                       Pendiente de jugar
                     </Button>
                   )}
-                  {desafio.estado === 'pendiente' && (!personaId || !desafio.invitadosDesafiados.some(inv => inv.id === personaId)) && (
+                  {desafio.estado === 'Pendiente' && (!personaId || !desafio.invitadosDesafiados.some(inv => inv.id === personaId)) && (
                     <Badge variant="secondary">Esperando respuesta</Badge>
                   )}
                 </div>
