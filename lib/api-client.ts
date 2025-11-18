@@ -142,6 +142,7 @@ export interface DisponibilidadHorario {
   id: string
   diaSemana: number // 0-6 (Sunday-Saturday)
   horario: {
+    id?: string
     horaInicio: string // HH:MM
     horaFin: string // HH:MM
   }
@@ -151,6 +152,39 @@ export interface DisponibilidadHorario {
     deporte: { nombre: string }
   }
   disponible?: boolean
+}
+
+export interface CanchaFoto {
+  id: string
+  url: string
+  orden: number
+  canchaId: string
+  creadaEl: string
+}
+
+export interface AvailabilitySlot {
+  canchaId: string
+  canchaNombre: string
+  horarioId: string
+  horaInicio: string
+  horaFin: string
+  disponibilidadId: string
+  fecha: string
+}
+
+export interface CrearDisponibilidadLoteDto {
+  canchaIds: string[]
+  horarioIds: string[]
+  diasSemana: number[] // 0-6 (0=domingo, 1=lunes, etc.)
+  disponible: boolean
+}
+
+export interface CrearDisponibilidadLoteResponse {
+  inserted: number
+  skipped: number
+  totalPost: number
+  created: DisponibilidadHorario[]
+  message?: string
 }
 
 export interface Reserva {
@@ -646,6 +680,45 @@ const apiClient = {
   deleteCancha: (id: string) =>
     apiRequest<void>(`/canchas/${id}`, { method: 'DELETE' }),
 
+  /**
+   * Subir foto de cancha - POST /canchas/{id}/fotos
+   * @param id ID de la cancha
+   * @param file Archivo de imagen (FormData)
+   */
+  uploadCanchaFoto: (id: string, file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const token = getCookie ? getCookie('token') : undefined
+    return fetch(`${BACKEND_URL}/canchas/${id}/fotos`, {
+      method: 'POST',
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: formData,
+    }).then(async (response) => {
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        return { error: data.message || 'Error al subir foto', status: response.status }
+      }
+      return { data, status: response.status }
+    }).catch((error) => ({
+      error: error.message || 'Error de red',
+      status: 0
+    }))
+  },
+
+  /**
+   * Obtener fotos de una cancha - GET /canchas/{id}/fotos
+   */
+  getCanchaFotos: (id: string) => apiRequest<CanchaFoto[]>(`/canchas/${id}/fotos`),
+
+  /**
+   * Eliminar foto de cancha - DELETE /canchas/{id}/fotos/{fotoId}
+   */
+  deleteCanchaFoto: (canchaId: string, fotoId: string) =>
+    apiRequest<void>(`/canchas/${canchaId}/fotos/${fotoId}`, { method: 'DELETE' }),
+
   // ===== CLUBES =====
   // NOTE: Clubes endpoints not in main API docs but implemented in backend (see seed scripts)
   
@@ -675,11 +748,11 @@ const apiClient = {
   getClub: (id: string) => apiRequest<Club>(`/clubes/${id}`),
 
   /**
-   * Actualizar club - PATCH /clubes/{id}
+   * Actualizar club - PUT /clubes/{id}
    */
   updateClub: (id: string, data: Partial<Club>) =>
     apiRequest<Club>(`/clubes/${id}`, {
-      method: 'PATCH',
+      method: 'PUT',
       body: JSON.stringify(data),
     }),
 
@@ -688,6 +761,23 @@ const apiClient = {
    */
   deleteClub: (id: string) =>
     apiRequest<void>(`/clubes/${id}`, { method: 'DELETE' }),
+
+  /**
+   * Obtener IDs de canchas de varios clubes - POST /clubes/canchas/ids
+   * @param clubIds Array de IDs de clubes
+   */
+  getCanchaIdsByClubs: (clubIds: string[]) =>
+    apiRequest<{ canchaIds: string[] }>('/clubes/canchas/ids', {
+      method: 'POST',
+      body: JSON.stringify({ clubIds }),
+    }),
+
+  /**
+   * Obtener IDs de canchas de varios clubes (query string) - GET /clubes/canchas/ids?clubIds=uuid1,uuid2
+   * @param clubIds Array de IDs de clubes
+   */
+  getCanchaIdsByClubsQuery: (clubIds: string[]) =>
+    apiRequest<{ canchaIds: string[] }>(`/clubes/canchas/ids?clubIds=${clubIds.join(',')}`),
 
   // ===== DEPORTES =====
   // NOTE: Deportes endpoints not in main API docs but implemented in backend (see seed scripts)
@@ -1040,6 +1130,54 @@ const apiClient = {
    */
   deleteHorario: (id: string) =>
     apiRequest<void>(`/horarios/${id}`, { method: 'DELETE' }),
+
+  // ===== DISPONIBILIDAD CANCHA (WEEKLY PATTERNS) =====
+
+  /**
+   * Crear patrón de disponibilidad en lote - POST /disponibilidad-cancha
+   * Crea múltiples combinaciones de cancha × horario × día de semana
+   */
+  crearDisponibilidadLote: (data: CrearDisponibilidadLoteDto) =>
+    apiRequest<CrearDisponibilidadLoteResponse>('/disponibilidad-cancha', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  /**
+   * Listar patrón de disponibilidad por cancha - GET /disponibilidad-cancha/{canchaId}
+   * Retorna todas las combinaciones de día × horario para esa cancha
+   */
+  getDisponibilidadPorCancha: (canchaId: string) =>
+    apiRequest<DisponibilidadHorario[]>(`/disponibilidad-cancha/${canchaId}`),
+
+  /**
+   * Eliminar una fila del patrón - DELETE /disponibilidad-cancha/{id}
+   */
+  deleteDisponibilidadHorario: (id: string) =>
+    apiRequest<void>(`/disponibilidad-cancha/${id}`, { method: 'DELETE' }),
+
+  /**
+   * Obtener disponibilidad dinámica por rango de fechas - GET /disponibilidad-cancha/availability
+   * Muestra solo los slots libres (sin reservas pendientes/confirmadas)
+   * @param from Fecha desde (YYYY-MM-DD)
+   * @param to Fecha hasta (YYYY-MM-DD)
+   * @param clubId ID del club (opcional)
+   * @param canchaId ID de la cancha (opcional)
+   */
+  getDisponibilidadDinamica: (params: {
+    from: string
+    to: string
+    clubId?: string
+    canchaId?: string
+  }) => {
+    const queryParams = new URLSearchParams()
+    queryParams.append('from', params.from)
+    queryParams.append('to', params.to)
+    if (params.clubId) queryParams.append('clubId', params.clubId)
+    if (params.canchaId) queryParams.append('canchaId', params.canchaId)
+
+    return apiRequest<AvailabilitySlot[]>(`/disponibilidad-cancha/availability?${queryParams.toString()}`)
+  },
 
   // ===== VALORACIONES =====
   // NOTE: Valoraciones are documented in API docs under "Entidades relacionadas"

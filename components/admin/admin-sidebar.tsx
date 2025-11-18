@@ -25,7 +25,8 @@ import {
   Bell,
   Download,
   UserCog,
-  ChevronDown
+  ChevronDown,
+  Clock
 } from "lucide-react"
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
@@ -70,10 +71,22 @@ const menuItems = [
     ]
   },
   {
+    title: "Clubes",
+    url: "/admin/clubes",
+    icon: Building2,
+    description: "Gestión de clubes deportivos"
+  },
+  {
     title: "Canchas",
     url: "/admin/canchas",
     icon: MapPin,
     description: "Gestión de canchas deportivas"
+  },
+  {
+    title: "Disponibilidad",
+    url: "/admin/disponibilidad",
+    icon: Clock,
+    description: "Patrones de disponibilidad semanal"
   },
   {
     title: "Reservas",

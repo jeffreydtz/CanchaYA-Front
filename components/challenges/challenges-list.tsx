@@ -89,9 +89,9 @@ export default function ChallengesList() {
 
   // Filter challenges based on active filter
   const getFilteredChallenges = () => {
-    if (!user?.personaId) return []
+    if (!user?.id) return []
 
-    const personaId = user.personaId
+    const personaId = user.id
 
     switch (activeFilter) {
       case 'created':
@@ -136,9 +136,9 @@ export default function ChallengesList() {
 
   // Count challenges for each filter
   const getCounts = () => {
-    if (!user?.personaId) return { all: 0, created: 0, invited: 0, playing: 0, finalized: 0 }
+    if (!user?.id) return { all: 0, created: 0, invited: 0, playing: 0, finalized: 0 }
 
-    const personaId = user.personaId
+    const personaId = user.id
 
     return {
       all: challenges.filter(c =>
@@ -164,7 +164,7 @@ export default function ChallengesList() {
 
   const counts = getCounts()
 
-  if (!user?.personaId) {
+  if (!user?.id) {
     return (
       <Card>
         <CardHeader>
@@ -258,7 +258,7 @@ export default function ChallengesList() {
                 <ChallengeCard
                   key={challenge.id}
                   challenge={challenge}
-                  currentPersonaId={user.personaId}
+                  currentPersonaId={user.id}
                   onAccept={handleAcceptChallenge}
                   onReject={handleRejectChallenge}
                   onUpdate={loadChallenges}
