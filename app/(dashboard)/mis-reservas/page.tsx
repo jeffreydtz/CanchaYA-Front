@@ -50,13 +50,16 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import Navbar from '@/components/navbar/navbar'
+import { RescheduleReservationDialog } from '@/components/reservations/reschedule-reservation-dialog'
 
-function ReservationCard({ reserva, onCancel, onConfirm }: { 
-  reserva: Reserva; 
+function ReservationCard({ reserva, onCancel, onConfirm, onUpdate }: {
+  reserva: Reserva;
   onCancel: (id: string) => void;
   onConfirm: (id: string) => void;
+  onUpdate: (updatedReserva: Reserva) => void;
 }) {
   const [showCancelDialog, setShowCancelDialog] = useState(false)
+  const [showRescheduleDialog, setShowRescheduleDialog] = useState(false)
   const [cancelling, setCancelling] = useState(false)
   const [confirming, setConfirming] = useState(false)
 
@@ -161,7 +164,7 @@ function ReservationCard({ reserva, onCancel, onConfirm }: {
                     {reserva.disponibilidad?.cancha?.nombre}
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    {reserva.disponibilidad?.cancha?.deporte?.nombre}
+                    {reserva.disponibilidad?.horario?.horaInicio} - {reserva.disponibilidad?.horario?.horaFin}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -181,6 +184,16 @@ function ReservationCard({ reserva, onCancel, onConfirm }: {
                           Ver cancha
                         </Link>
                       </DropdownMenuItem>
+                      {reserva.estado.toLowerCase() === 'pendiente' && isUpcoming && (
+                        <>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => setShowRescheduleDialog(true)}
+                          >
+                            Reprogramar reserva
+                          </DropdownMenuItem>
+                        </>
+                      )}
                       {canCancel && isUpcoming && (
                         <>
                           <DropdownMenuSeparator />
@@ -292,6 +305,14 @@ function ReservationCard({ reserva, onCancel, onConfirm }: {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Reschedule Dialog */}
+      <RescheduleReservationDialog
+        open={showRescheduleDialog}
+        onOpenChange={setShowRescheduleDialog}
+        reserva={reserva}
+        onSuccess={onUpdate}
+      />
     </>
   )
 }
@@ -335,7 +356,7 @@ export default function MisReservasPage() {
   const [activeTab, setActiveTab] = useState('all')
 
   useEffect(() => {
-    if (!isAuthenticated) return
+    if (!isAuthenticated || !user?.personaId) return
 
     const fetchReservas = async () => {
       setLoading(true)
@@ -343,7 +364,12 @@ export default function MisReservasPage() {
       try {
         const response = await apiClient.getReservas()
         if (response.data) {
-          setReservas(response.data)
+          // Filter reservations by current user's personaId
+          // Backend returns all reservations, frontend filters by user
+          const userReservas = response.data.filter(
+            (reserva: Reserva) => reserva.persona.id === user.personaId
+          )
+          setReservas(userReservas)
         } else {
           setError(response.error || 'Error al cargar las reservas')
         }
@@ -355,17 +381,23 @@ export default function MisReservasPage() {
     }
 
     fetchReservas()
-  }, [isAuthenticated])
+  }, [isAuthenticated, user?.personaId])
 
   const handleCancelReservation = (reservaId: string) => {
     setReservas(prev => prev.filter(r => r.id !== reservaId))
   }
 
   const handleConfirmReservation = (reservaId: string) => {
-    setReservas(prev => prev.map(r => 
-      r.id === reservaId 
-        ? { ...r, estado: 'confirmada' as const, fechaConfirmacion: new Date().toISOString() }
+    setReservas(prev => prev.map(r =>
+      r.id === reservaId
+        ? { ...r, estado: 'confirmada' as const }
         : r
+    ))
+  }
+
+  const handleUpdateReservation = (updatedReserva: Reserva) => {
+    setReservas(prev => prev.map(r =>
+      r.id === updatedReserva.id ? updatedReserva : r
     ))
   }
 
@@ -531,6 +563,7 @@ export default function MisReservasPage() {
                     reserva={reserva}
                     onCancel={handleCancelReservation}
                     onConfirm={handleConfirmReservation}
+                    onUpdate={handleUpdateReservation}
                   />
                 ))}
               </div>

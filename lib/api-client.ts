@@ -189,19 +189,40 @@ export interface CrearDisponibilidadLoteResponse {
 
 export interface Reserva {
   id: string // UUID
-  fechaHora: string // ISO 8601
-  estado: 'pendiente' | 'confirmada' | 'cancelada' | 'completada'
+  fechaHora: string // ISO 8601 (e.g., "2025-11-17T15:00:00.000Z")
+  creadaEl: string // ISO 8601
+  estado: 'pendiente' | 'confirmada' | 'cancelada'
   persona: {
     id: string
     nombre: string
+    apellido: string
+    email: string
   }
-  disponibilidad: DisponibilidadHorario
+  disponibilidad: {
+    id: string
+    diaSemana: number // 0=domingo, 1=lunes, ..., 6=sábado
+    cancha: {
+      id: string
+      nombre: string
+    }
+    horario: {
+      id: string
+      horaInicio: string // "15:00"
+      horaFin: string // "16:00"
+    }
+  }
 }
 
 export interface CreateReservaData {
-  personaId: string // UUID - Required by backend
   disponibilidadId: string // UUID
-  fechaHora: string // ISO 8601 format (e.g., "2025-10-21T18:00:00Z")
+  fechaHora: string // ISO 8601 format (e.g., "2025-11-17T15:00:00-03:00")
+  // Note: personaId is extracted from JWT token by backend
+}
+
+export interface EditReservaData {
+  disponibilidadId?: string // UUID - optional
+  fechaHora?: string // ISO 8601 format - optional
+  // Note: At least one field must be provided
 }
 
 export interface Equipo {
@@ -892,6 +913,23 @@ const apiClient = {
    * Obtener reserva por ID - GET /reservas/{id}
    */
   getReserva: (id: string) => apiRequest<Reserva>(`/reservas/${id}`),
+
+  /**
+   * Editar/Reprogramar reserva - PATCH /reservas/{id}
+   * Solo permitido si estado === 'pendiente'
+   * Solo admin o dueño de la reserva
+   * Se puede cambiar disponibilidadId, fechaHora o ambos (al menos uno requerido)
+   * Reglas:
+   * - Reserva debe existir y estar pendiente
+   * - Usuario debe ser admin o dueño (personaId === reserva.persona.id)
+   * - Disponibilidad debe estar disponible
+   * - No puede haber doble booking
+   */
+  editReserva: (id: string, data: EditReservaData) =>
+    apiRequest<Reserva>(`/reservas/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
 
   /**
    * Confirmar reserva - PATCH /reservas/:id/confirmar

@@ -29,19 +29,19 @@ export default function AdminReservationsPage() {
 
   const filteredReservations = reservations.filter(reservation =>
     (reservation.disponibilidad?.cancha?.nombre?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-    (reservation.persona?.nombre?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+    (reservation.persona?.nombre?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (reservation.persona?.apellido?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (reservation.persona?.email?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   )
 
   const getStatusBadge = (estado: Reserva['estado']) => {
     switch (estado) {
       case 'confirmada':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Confirmada</Badge>
+        return <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200">Confirmada</Badge>
       case 'pendiente':
-        return <Badge variant="secondary" className="bg-gray-100 text-gray-800">Pendiente</Badge>
+        return <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">Pendiente</Badge>
       case 'cancelada':
-        return <Badge variant="destructive" className="bg-red-100 text-red-800">Cancelada</Badge>
-      case 'completada':
-        return <Badge variant="outline" className="bg-blue-100 text-blue-800">Completada</Badge>
+        return <Badge variant="destructive" className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200">Cancelada</Badge>
       default:
         return <Badge variant="outline">Desconocido</Badge>
     }
@@ -101,23 +101,33 @@ export default function AdminReservationsPage() {
               <TableRow>
                 <TableHead>Cancha</TableHead>
                 <TableHead>Usuario</TableHead>
+                <TableHead>Email</TableHead>
                 <TableHead>Fecha</TableHead>
                 <TableHead>Hora</TableHead>
+                <TableHead>Horario</TableHead>
                 <TableHead>Estado</TableHead>
-                <TableHead>Precio</TableHead>
+                <TableHead>Creada</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredReservations.map((reservation) => {
                 const { fecha, hora } = formatDateTime(reservation.fechaHora)
+                const { fecha: fechaCreacion } = formatDateTime(reservation.creadaEl)
+                const fullName = `${reservation.persona?.nombre || ''} ${reservation.persona?.apellido || ''}`.trim()
+                const horario = reservation.disponibilidad?.horario
+                  ? `${reservation.disponibilidad.horario.horaInicio} - ${reservation.disponibilidad.horario.horaFin}`
+                  : '-'
+
                 return (
                   <TableRow key={reservation.id}>
                     <TableCell className="font-medium">{reservation.disponibilidad?.cancha?.nombre || '-'}</TableCell>
-                    <TableCell>{reservation.persona?.nombre || '-'}</TableCell>
+                    <TableCell>{fullName || '-'}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{reservation.persona?.email || '-'}</TableCell>
                     <TableCell>{fecha}</TableCell>
                     <TableCell>{hora}</TableCell>
+                    <TableCell className="text-sm">{horario}</TableCell>
                     <TableCell>{getStatusBadge(reservation.estado)}</TableCell>
-                    <TableCell>-</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{fechaCreacion}</TableCell>
                   </TableRow>
                 )
               })}
