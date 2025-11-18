@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, FileText, Download } from 'lucide-react';
 import { ReportBuilder, ReportHistoryItem } from '@/components/analytics/ReportBuilder';
+import { AnalyticsLegend } from '@/components/analytics/AnalyticsLegend';
 import type { ReportConfig, Report } from '@/lib/analytics/types';
 import { toast } from 'sonner';
 import { downloadCSV, downloadExcel, generateFilename } from '@/lib/analytics/export';
@@ -307,6 +308,13 @@ export default function ReportesAnalyticsPage() {
               Reporte Financiero Rápido
             </Button>
           </div>
+        </div>
+      )}
+
+      {/* Analytics Legend - Help Section */}
+      {!isCreating && (
+        <div className="mt-12 pt-8 border-t border-gray-200">
+          <AnalyticsLegend />
         </div>
       )}
     </div>

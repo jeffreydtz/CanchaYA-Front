@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Users, RefreshCw } from 'lucide-react';
 import { UserSegmentation } from '@/components/analytics/UserSegmentation';
+import { AnalyticsLegend } from '@/components/analytics/AnalyticsLegend';
 import type { UserSegmentData } from '@/lib/analytics/types';
 import { toast } from 'sonner';
 import { downloadCSV, generateFilename } from '@/lib/analytics/export';
@@ -196,6 +197,11 @@ export default function SegmentacionPage() {
             ]}
           />
         </div>
+      </div>
+
+      {/* Analytics Legend - Help Section */}
+      <div className="mt-12 pt-8 border-t border-gray-200">
+        <AnalyticsLegend />
       </div>
     </div>
   );

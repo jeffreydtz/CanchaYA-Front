@@ -15,6 +15,7 @@ import { DashboardFilters } from '@/components/admin/dashboard/DashboardFilters'
 import { DrillDownModal, type DrillDownData } from '@/components/admin/dashboard/DrillDownModal'
 import { ClubAnalyticsCard } from '@/components/admin/dashboard/ClubAnalyticsCard'
 import { TopCanchasPieChart } from '@/components/admin/dashboard/TopCanchasPieChart'
+import { AnalyticsLegend } from '@/components/analytics/AnalyticsLegend'
 import { Button } from '@/components/ui/button'
 import { RefreshCw, Download, Calendar, Users, TrendingUp, DollarSign, Filter } from 'lucide-react'
 import { toast } from 'sonner'
@@ -692,6 +693,11 @@ export default function DashboardPage() {
             onCanchaClick={handleCanchaClick}
             filters={activeFilters}
           />
+        </div>
+
+        {/* Analytics Legend - Help Section */}
+        <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
+          <AnalyticsLegend />
         </div>
       </div>
 
