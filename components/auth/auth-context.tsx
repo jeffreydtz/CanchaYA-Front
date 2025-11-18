@@ -69,10 +69,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (decoded.personaId) {
             try {
               const personaResponse = await apiClient.getPersona(decoded.personaId)
-              if (personaResponse.data && personaResponse.data.avatarUrl) {
+              if (personaResponse.data?.avatarUrl) {
                 console.log('Avatar URL fetched on initial load:', personaResponse.data.avatarUrl)
+                const avatarUrl = personaResponse.data.avatarUrl
                 setUser((prevUser) =>
-                  prevUser ? { ...prevUser, avatarUrl: personaResponse.data.avatarUrl } : null
+                  prevUser ? { ...prevUser, avatarUrl } : null
                 )
               }
             } catch (error) {
@@ -151,10 +152,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (decoded.personaId) {
             try {
               const personaResponse = await apiClient.getPersona(decoded.personaId)
-              if (personaResponse.data && personaResponse.data.avatarUrl) {
+              if (personaResponse.data?.avatarUrl) {
                 console.log('Avatar URL fetched after login:', personaResponse.data.avatarUrl)
+                const avatarUrl = personaResponse.data.avatarUrl
                 setUser((prevUser) =>
-                  prevUser ? { ...prevUser, avatarUrl: personaResponse.data.avatarUrl } : null
+                  prevUser ? { ...prevUser, avatarUrl } : null
                 )
               }
             } catch (error) {
@@ -245,10 +247,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (decoded.personaId) {
         try {
           const personaResponse = await apiClient.getPersona(decoded.personaId)
-          if (personaResponse.data && personaResponse.data.avatarUrl) {
+          if (personaResponse.data?.avatarUrl) {
             console.log('Avatar URL fetched:', personaResponse.data.avatarUrl)
+            const avatarUrl = personaResponse.data.avatarUrl
             setUser((prevUser) =>
-              prevUser ? { ...prevUser, avatarUrl: personaResponse.data.avatarUrl } : null
+              prevUser ? { ...prevUser, avatarUrl } : null
             )
           }
         } catch (error) {
