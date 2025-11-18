@@ -111,9 +111,10 @@ export function EditCanchaDialog({ cancha, open, onOpenChange, onSuccess }: Edit
 
     setLoading(true)
     try {
-      // Preparar datos con coordenadas opcionales
+      // Preparar datos sin el campo activa (backend no lo acepta en updates)
+      const { activa, ...formDataWithoutActive } = formData
       const submitData = {
-        ...formData,
+        ...formDataWithoutActive,
         ...(coordinates && { latitud: coordinates.lat, longitud: coordinates.lng })
       }
       const response = await apiClient.updateCancha(cancha.id, submitData)
