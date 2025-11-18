@@ -607,23 +607,72 @@ const apiClient = {
   // ===== PERSONAS =====
 
   /**
+   * Listar todas las personas - GET /personas (solo admin)
+   * Auth: admin only
+   */
+  getPersonas: () => apiRequest<Persona[]>('/personas'),
+
+  /**
    * Buscar personas - GET /personas/search?q=<texto>
+   * Busca por nombre, apellido o email (mínimo 2 caracteres)
+   * Máximo 20 resultados
    */
   searchPersonas: (q: string) => apiRequest<Persona[]>(`/personas/search?q=${encodeURIComponent(q)}`),
 
   /**
    * Obtener persona por ID - GET /personas/:id
+   * Auth: admin u owner
    */
   getPersona: (id: string) => apiRequest<Persona>(`/personas/${id}`),
 
   /**
-   * Actualizar persona - PATCH /personas/:id
+   * Actualizar persona - PUT /personas/:id
+   * Auth: admin u owner
+   * Campos permitidos: nombre, apellido, email
    */
   updatePersona: (id: string, data: Partial<Persona>) =>
     apiRequest<Persona>(`/personas/${id}`, {
-      method: 'PATCH',
+      method: 'PUT',
       body: JSON.stringify(data),
     }),
+
+  /**
+   * Eliminar persona - DELETE /personas/:id
+   * Auth: solo admin
+   */
+  deletePersona: (id: string) =>
+    apiRequest<void>(`/personas/${id}`, { method: 'DELETE' }),
+
+  /**
+   * Subir avatar de persona - POST /personas/:id/avatar
+   * Auth: admin u owner
+   * @param id ID de la persona
+   * @param file Archivo de imagen (FormData)
+   * Validaciones: JPEG/PNG, < 5MB
+   * Returns: { avatarUrl: string, persona: Persona }
+   */
+  uploadPersonaAvatar: (id: string, file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const token = getCookie ? getCookie('token') : undefined
+    return fetch(`${BACKEND_URL}/personas/${id}/avatar`, {
+      method: 'POST',
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: formData,
+    }).then(async (response) => {
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        return { error: data.message || 'Error al subir avatar', status: response.status }
+      }
+      return { data, status: response.status }
+    }).catch((error) => ({
+      error: error.message || 'Error de red',
+      status: 0
+    }))
+  },
 
   // ===== CANCHAS =====
 
