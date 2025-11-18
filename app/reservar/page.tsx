@@ -34,63 +34,19 @@ export default function ReservarPage() {
   const [reserving, setReserving] = useState<string | null>(null)
   const [personaId, setPersonaId] = useState<string | null>(null)
 
-  // Obtener personaId desde /auth/me endpoint
   useEffect(() => {
     const fetchPersonaId = async () => {
       try {
         const response = await apiClient.getMe()
-
-        console.log('📡 Full /auth/me response:', {
-          status: response.status,
-          error: response.error,
-          data: response.data
-        })
-
-        if (response.error) {
-          console.error('❌ /auth/me endpoint error:', response.error)
-          return
-        }
-
-        if (!response.data) {
-          console.error('❌ /auth/me returned no data')
-          return
-        }
-
-        const { personaId, id, email } = response.data
-
-        console.log('🔍 Extracted from /auth/me:', {
-          personaId,
-          personaIdType: typeof personaId,
-          personaIdLength: personaId ? personaId.length : 'null',
-          userId: id,
-          email
-        })
-
-        // Validate UUID format (basic validation)
-        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-        const isValidUUID = personaId && uuidRegex.test(personaId)
-
-        console.log('✅ personaId validation:', {
-          personaId,
-          isValidUUID,
-          matches: isValidUUID ? '✓ Valid UUID' : '✗ NOT a valid UUID'
-        })
-
-        if (!isValidUUID) {
-          console.error('❌ personaId is not a valid UUID:', personaId)
-          return
-        }
-
-        setPersonaId(personaId)
+        if (response.error || !response.data) return
+        setPersonaId(response.data.personaId)
       } catch (error) {
-        console.error('Error fetching personaId from /auth/me:', error)
+        console.error('Error fetching personaId:', error)
       }
     }
-
     fetchPersonaId()
   }, [])
 
-  // Cargar clubes al inicio
   useEffect(() => {
     const loadClubs = async () => {
       setLoading(true)
@@ -108,7 +64,6 @@ export default function ReservarPage() {
     loadClubs()
   }, [])
 
-  // Cargar canchas cuando se selecciona un club
   useEffect(() => {
     const loadCanchas = async () => {
       if (!selectedClub) {
@@ -135,7 +90,6 @@ export default function ReservarPage() {
     loadCanchas()
   }, [selectedClub])
 
-  // Cargar disponibilidad cuando cambia la cancha o la fecha
   useEffect(() => {
     const loadAvailability = async () => {
       if (!selectedCancha || !selectedDate) {
@@ -153,7 +107,6 @@ export default function ReservarPage() {
         })
 
         if (response.data) {
-          // Filtrar por la fecha seleccionada y ordenar por hora
           const slots = response.data
             .filter(slot => slot.fecha === dateStr)
             .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio))
@@ -184,72 +137,29 @@ export default function ReservarPage() {
 
     setReserving(slot.disponibilidadId)
     try {
-      // Build ISO datetime string with proper formatting and timezone
-      // Format: YYYY-MM-DDTHH:mm:ss-03:00 (Argentina timezone)
       const [hours, minutes] = slot.horaInicio.split(':')
       const year = selectedDate.getFullYear()
       const month = String(selectedDate.getMonth() + 1).padStart(2, '0')
       const day = String(selectedDate.getDate()).padStart(2, '0')
       const fechaHora = `${year}-${month}-${day}T${hours}:${minutes}:00-03:00`
 
-      // Validate slot data
       const dateStr = format(selectedDate, 'yyyy-MM-dd')
       if (slot.fecha !== dateStr) {
-        console.error('❌ Slot fecha mismatch:', {
-          slotFecha: slot.fecha,
-          expectedFecha: dateStr,
-          selectedDate: selectedDate.toISOString()
-        })
         toast.error('Error de validación', {
           description: 'La fecha del slot no coincide con la fecha seleccionada'
         })
         return
       }
 
-      // Build payload - send ONLY what backend expects
-      // Backend documentation says: personaId is extracted from JWT token
-      // So we should NOT send it in the payload
       const requestPayload = {
         disponibilidadId: slot.disponibilidadId,
-        fechaHora: fechaHora
+        fechaHora: fechaHora,
+        personaId: personaId
       }
-
-      console.log('🔍 Datos de disponibilidad desde slot:', {
-        slotId: slot.disponibilidadId,
-        slotFecha: slot.fecha,
-        slotHoraInicio: slot.horaInicio,
-        slotHoraFin: slot.horaFin,
-        slotCanchaNombre: slot.canchaNombre,
-        slotDisponibilidadId: slot.disponibilidadId
-      })
-
-      console.log('📤 Creating reservation with:', {
-        payload: requestPayload,
-        personaId: personaId,
-        horaInicio: slot.horaInicio,
-        selectedDate: selectedDate.toISOString(),
-        selectedDateDayOfWeek: selectedDate.getDay(),
-        fullSlotData: slot,
-        expectedFechaHora: fechaHora,
-        personaIdStatus: personaId ? '✓ Present' : '✗ Missing (will be from JWT)',
-        payloadSize: JSON.stringify(requestPayload).length
-      })
 
       const response = await apiClient.createReserva(requestPayload)
 
-      console.log('📥 Response from backend:', {
-        error: response.error,
-        status: response.status,
-        data: response.data,
-        fullResponse: response
-      })
-
       if (response.error) {
-        console.error('❌ Backend error response:', {
-          error: response.error,
-          status: response.status,
-          payload: requestPayload
-        })
         toast.error('Error al crear reserva', {
           description: response.error
         })
@@ -294,18 +204,10 @@ export default function ReservarPage() {
           <p className="text-gray-600 dark:text-gray-400 mt-1">
             Selecciona un club, cancha y horario para hacer tu reserva
           </p>
-          {/* Debug info */}
-          {personaId && (
-            <p className="text-xs text-gray-500 dark:text-gray-500 mt-2 font-mono">
-              👤 PersonaID: {personaId.substring(0, 8)}...
-            </p>
-          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Filters */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Club Selection */}
             <Card className="border-gray-200 dark:border-gray-800">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -337,7 +239,6 @@ export default function ReservarPage() {
               </CardContent>
             </Card>
 
-            {/* Cancha Selection */}
             <Card className="border-gray-200 dark:border-gray-800">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -378,7 +279,6 @@ export default function ReservarPage() {
               </CardContent>
             </Card>
 
-            {/* Calendar */}
             <Card className="border-gray-200 dark:border-gray-800">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -399,7 +299,6 @@ export default function ReservarPage() {
             </Card>
           </div>
 
-          {/* Right Column - Available Slots */}
           <div className="lg:col-span-2">
             <Card className="border-gray-200 dark:border-gray-800 min-h-[600px]">
               <CardHeader className="border-b border-gray-100 dark:border-gray-800">

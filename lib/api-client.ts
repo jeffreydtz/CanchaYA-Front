@@ -218,7 +218,7 @@ export interface Reserva {
 export interface CreateReservaData {
   disponibilidadId: string // UUID
   fechaHora: string // ISO 8601 format (e.g., "2025-11-17T15:00:00-03:00")
-  // Note: personaId is extracted from JWT token by backend - DO NOT include in payload
+  personaId: string // UUID - REQUIRED: must be sent in payload
 }
 
 export interface EditReservaData {
@@ -524,25 +524,6 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
-  }
-
-  // Log JWT content for /reservas POST requests
-  if (endpoint === '/reservas' && options.method === 'POST' && token) {
-    try {
-      const parts = token.split('.')
-      if (parts.length === 3) {
-        const decoded = JSON.parse(atob(parts[1]))
-        console.log('🔐 JWT Payload being sent:', {
-          endpoint,
-          token: token.substring(0, 20) + '...',
-          payload: decoded,
-          hasPersonaId: 'personaId' in decoded,
-          personaId: decoded.personaId
-        })
-      }
-    } catch (e) {
-      console.warn('Could not decode JWT:', e)
-    }
   }
 
   try {
