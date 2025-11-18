@@ -97,8 +97,10 @@ export default function PersonaAvatar({
       } else if ('data' in response && response.data) {
         toast.success('Avatar actualizado correctamente')
 
-        // Get the new avatar URL from response
-        const newAvatarUrl = (response.data as any).avatarUrl || (response.data as any).persona?.avatarUrl
+        // Extract avatar URL from response
+        // Response format: { avatarUrl: string, persona: Persona } or { persona: { avatarUrl: string } }
+        const responseData = response.data as any
+        const newAvatarUrl = responseData?.avatarUrl || responseData?.persona?.avatarUrl
 
         if (newAvatarUrl && onAvatarUpdated) {
           onAvatarUpdated(newAvatarUrl)
