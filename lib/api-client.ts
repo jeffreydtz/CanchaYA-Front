@@ -218,7 +218,7 @@ export interface Reserva {
 export interface CreateReservaData {
   disponibilidadId: string // UUID
   fechaHora: string // ISO 8601 format (e.g., "2025-11-17T15:00:00-03:00")
-  // Note: personaId is extracted from JWT token by backend
+  // Note: personaId is extracted from JWT token by backend - DO NOT include in payload
 }
 
 export interface EditReservaData {
@@ -519,19 +519,38 @@ export interface ReservasHeatmap {
 
 async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
   const token = getCookie ? getCookie('token') : undefined
-  
+
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   }
 
+  // Log JWT content for /reservas POST requests
+  if (endpoint === '/reservas' && options.method === 'POST' && token) {
+    try {
+      const parts = token.split('.')
+      if (parts.length === 3) {
+        const decoded = JSON.parse(atob(parts[1]))
+        console.log('🔐 JWT Payload being sent:', {
+          endpoint,
+          token: token.substring(0, 20) + '...',
+          payload: decoded,
+          hasPersonaId: 'personaId' in decoded,
+          personaId: decoded.personaId
+        })
+      }
+    } catch (e) {
+      console.warn('Could not decode JWT:', e)
+    }
+  }
+
   try {
-    const response = await fetch(`${BACKEND_URL}${endpoint}`, { 
-      ...options, 
-      headers 
+    const response = await fetch(`${BACKEND_URL}${endpoint}`, {
+      ...options,
+      headers
     })
-    
+
     let data
     try {
       data = await response.json()
@@ -540,21 +559,43 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
     }
 
     if (!response.ok) {
-      return { 
-        error: data.message || data.error || 'Error de API', 
-        status: response.status 
+      // Handle different error formats from backend
+      let errorMessage = 'Error de API'
+
+      if (data.message) {
+        errorMessage = data.message
+      } else if (data.error) {
+        errorMessage = data.error
+      } else if (Array.isArray(data.errors) && data.errors.length > 0) {
+        // Handle array of errors
+        errorMessage = Array.isArray(data.errors)
+          ? data.errors.join(', ')
+          : data.errors.toString()
+      } else if (data.error && typeof data.error === 'string') {
+        errorMessage = data.error
+      }
+
+      console.error(`API Error [${response.status}] at ${endpoint}:`, {
+        status: response.status,
+        data,
+        errorMessage
+      })
+
+      return {
+        error: errorMessage,
+        status: response.status
       }
     }
 
-    return { 
-      data: data, 
-      message: data.message, 
-      status: response.status 
+    return {
+      data: data,
+      message: data.message,
+      status: response.status
     }
   } catch (error: any) {
-    return { 
-      error: error.message || 'Error de red', 
-      status: 0 
+    return {
+      error: error.message || 'Error de red',
+      status: 0
     }
   }
 }

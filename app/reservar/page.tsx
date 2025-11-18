@@ -39,16 +39,49 @@ export default function ReservarPage() {
     const fetchPersonaId = async () => {
       try {
         const response = await apiClient.getMe()
-        if (response.data && response.data.personaId) {
-          console.log('✅ personaId obtained from /auth/me:', {
-            personaId: response.data.personaId,
-            userId: response.data.id,
-            email: response.data.email
-          })
-          setPersonaId(response.data.personaId)
-        } else {
-          console.warn('⚠️ personaId not found in /auth/me response:', response.data)
+
+        console.log('📡 Full /auth/me response:', {
+          status: response.status,
+          error: response.error,
+          data: response.data
+        })
+
+        if (response.error) {
+          console.error('❌ /auth/me endpoint error:', response.error)
+          return
         }
+
+        if (!response.data) {
+          console.error('❌ /auth/me returned no data')
+          return
+        }
+
+        const { personaId, id, email } = response.data
+
+        console.log('🔍 Extracted from /auth/me:', {
+          personaId,
+          personaIdType: typeof personaId,
+          personaIdLength: personaId ? personaId.length : 'null',
+          userId: id,
+          email
+        })
+
+        // Validate UUID format (basic validation)
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+        const isValidUUID = personaId && uuidRegex.test(personaId)
+
+        console.log('✅ personaId validation:', {
+          personaId,
+          isValidUUID,
+          matches: isValidUUID ? '✓ Valid UUID' : '✗ NOT a valid UUID'
+        })
+
+        if (!isValidUUID) {
+          console.error('❌ personaId is not a valid UUID:', personaId)
+          return
+        }
+
+        setPersonaId(personaId)
       } catch (error) {
         console.error('Error fetching personaId from /auth/me:', error)
       }
@@ -159,29 +192,64 @@ export default function ReservarPage() {
       const day = String(selectedDate.getDate()).padStart(2, '0')
       const fechaHora = `${year}-${month}-${day}T${hours}:${minutes}:00-03:00`
 
+      // Validate slot data
+      const dateStr = format(selectedDate, 'yyyy-MM-dd')
+      if (slot.fecha !== dateStr) {
+        console.error('❌ Slot fecha mismatch:', {
+          slotFecha: slot.fecha,
+          expectedFecha: dateStr,
+          selectedDate: selectedDate.toISOString()
+        })
+        toast.error('Error de validación', {
+          description: 'La fecha del slot no coincide con la fecha seleccionada'
+        })
+        return
+      }
+
+      // Build payload - send ONLY what backend expects
+      // Backend documentation says: personaId is extracted from JWT token
+      // So we should NOT send it in the payload
       const requestPayload = {
         disponibilidadId: slot.disponibilidadId,
         fechaHora: fechaHora
       }
 
-      console.log('Creating reservation with:', {
+      console.log('🔍 Datos de disponibilidad desde slot:', {
+        slotId: slot.disponibilidadId,
+        slotFecha: slot.fecha,
+        slotHoraInicio: slot.horaInicio,
+        slotHoraFin: slot.horaFin,
+        slotCanchaNombre: slot.canchaNombre,
+        slotDisponibilidadId: slot.disponibilidadId
+      })
+
+      console.log('📤 Creating reservation with:', {
         payload: requestPayload,
         personaId: personaId,
         horaInicio: slot.horaInicio,
         selectedDate: selectedDate.toISOString(),
         selectedDateDayOfWeek: selectedDate.getDay(),
-        fullSlotData: slot
+        fullSlotData: slot,
+        expectedFechaHora: fechaHora,
+        personaIdStatus: personaId ? '✓ Present' : '✗ Missing (will be from JWT)',
+        payloadSize: JSON.stringify(requestPayload).length
       })
 
       const response = await apiClient.createReserva(requestPayload)
 
-      console.log('Response from backend:', {
+      console.log('📥 Response from backend:', {
         error: response.error,
         status: response.status,
+        data: response.data,
         fullResponse: response
       })
 
       if (response.error) {
+        console.error('❌ Backend error response:', {
+          error: response.error,
+          status: response.status,
+          payload: requestPayload
+        })
         toast.error('Error al crear reserva', {
           description: response.error
         })
@@ -226,6 +294,12 @@ export default function ReservarPage() {
           <p className="text-gray-600 dark:text-gray-400 mt-1">
             Selecciona un club, cancha y horario para hacer tu reserva
           </p>
+          {/* Debug info */}
+          {personaId && (
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-2 font-mono">
+              👤 PersonaID: {personaId.substring(0, 8)}...
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
