@@ -141,9 +141,20 @@ export default function ReservarPage() {
 
     setReserving(slot.disponibilidadId)
     try {
-      // Construir la fechaHora en formato ISO con timezone de Argentina
-      const dateStr = format(selectedDate, 'yyyy-MM-dd')
-      const fechaHora = `${dateStr}T${slot.horaInicio}:00-03:00`
+      // Build ISO datetime string with proper formatting and timezone
+      // Format: YYYY-MM-DDTHH:mm:ss-03:00 (Argentina timezone)
+      const [hours, minutes] = slot.horaInicio.split(':')
+      const year = selectedDate.getFullYear()
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0')
+      const day = String(selectedDate.getDate()).padStart(2, '0')
+      const fechaHora = `${year}-${month}-${day}T${hours}:${minutes}:00-03:00`
+
+      console.log('Creating reservation with:', {
+        disponibilidadId: slot.disponibilidadId,
+        fechaHora,
+        horaInicio: slot.horaInicio,
+        selectedDate: selectedDate.toISOString()
+      })
 
       const response = await apiClient.createReserva({
         disponibilidadId: slot.disponibilidadId,
