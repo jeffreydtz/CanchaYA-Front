@@ -62,7 +62,7 @@ function Calendar({
     day: "p-0 text-center align-middle",
     day_button: cn(
       buttonVariants({ variant: "ghost" }),
-      "h-9 w-full rounded-md p-0 font-medium transition-all duration-200 hover:bg-accent/50 aria-selected:opacity-100 aria-selected:bg-cyan-500 dark:aria-selected:bg-cyan-600 aria-selected:text-white dark:aria-selected:text-white aria-selected:shadow-[0_0_15px_rgba(0,217,255,0.4)] aria-selected:ring-2 aria-selected:ring-cyan-400 dark:aria-selected:ring-cyan-500 aria-selected:scale-105"
+      "h-9 w-full rounded-md p-0 font-medium transition-all duration-200 hover:bg-accent/50"
     ),
     today: "text-secondary-foreground font-bold",
     outside: "text-muted-foreground/70",
@@ -71,7 +71,7 @@ function Calendar({
     range_start: "rounded-l-md",
     range_middle: "bg-cyan-400/20 text-foreground",
     range_end: "rounded-r-md",
-    selected: "text-white",
+    selected: "!bg-cyan-500 dark:!bg-cyan-600 !text-white !shadow-[0_0_15px_rgba(0,217,255,0.4)] !ring-2 !ring-cyan-400 dark:!ring-cyan-500 scale-105 !opacity-100",
   }
 
   const mergedClassNames = {
