@@ -34,28 +34,27 @@ export default function ReservarPage() {
   const [reserving, setReserving] = useState<string | null>(null)
   const [personaId, setPersonaId] = useState<string | null>(null)
 
-  // Obtener personaId del token
+  // Obtener personaId desde /auth/me endpoint
   useEffect(() => {
-    const token = getCookie('token')
-    if (token) {
+    const fetchPersonaId = async () => {
       try {
-        const decoded: any = jwtDecode(token)
-        console.log('JWT Token decoded:', {
-          personaId: decoded.personaId,
-          userId: decoded.userId,
-          email: decoded.email,
-          allFields: decoded
-        })
-        setPersonaId(decoded.personaId || null)
-        if (!decoded.personaId) {
-          console.warn('⚠️ personaId is missing from JWT token!')
+        const response = await apiClient.getMe()
+        if (response.data && response.data.personaId) {
+          console.log('✅ personaId obtained from /auth/me:', {
+            personaId: response.data.personaId,
+            userId: response.data.id,
+            email: response.data.email
+          })
+          setPersonaId(response.data.personaId)
+        } else {
+          console.warn('⚠️ personaId not found in /auth/me response:', response.data)
         }
       } catch (error) {
-        console.error('Error decoding token:', error)
+        console.error('Error fetching personaId from /auth/me:', error)
       }
-    } else {
-      console.warn('⚠️ No token found in cookies')
     }
+
+    fetchPersonaId()
   }, [])
 
   // Cargar clubes al inicio
