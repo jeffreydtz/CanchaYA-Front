@@ -26,7 +26,8 @@ import {
   Download,
   UserCog,
   ChevronDown,
-  Clock
+  Clock,
+  DollarSign
 } from "lucide-react"
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
@@ -105,6 +106,12 @@ const menuItems = [
     url: "/admin/personas",
     icon: UserCog,
     description: "Gestión de perfiles de personas"
+  },
+  {
+    title: "Deudas",
+    url: "/admin/deudas",
+    icon: DollarSign,
+    description: "Gestión de deudas de usuarios"
   },
   {
     title: "Reportes",

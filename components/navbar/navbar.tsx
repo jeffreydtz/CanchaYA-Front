@@ -6,7 +6,7 @@ import NotificationBell from '@/components/notifications/notification-bell'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { LogOut, User, Menu, X, Home, Calendar, Shield, Search, Trophy, Bell } from 'lucide-react'
+import { LogOut, User, Menu, X, Home, Calendar, Shield, Search, Trophy, Bell, DollarSign, Clock } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useLanguage } from '@/lib/language-context'
 
@@ -153,6 +153,18 @@ export default function Navbar() {
                       <Link href="/notificaciones" className="flex items-center p-3 rounded-lg hover:bg-muted cursor-pointer">
                         <Bell className="mr-3 h-5 w-5" />
                         <span className="font-medium">Notificaciones</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/mis-deudas" className="flex items-center p-3 rounded-lg hover:bg-muted cursor-pointer">
+                        <DollarSign className="mr-3 h-5 w-5" />
+                        <span className="font-medium">Mis Deudas</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/mi-disponibilidad" className="flex items-center p-3 rounded-lg hover:bg-muted cursor-pointer">
+                        <Clock className="mr-3 h-5 w-5" />
+                        <span className="font-medium">Mi Disponibilidad</span>
                       </Link>
                     </DropdownMenuItem>
                     {isAdmin && (

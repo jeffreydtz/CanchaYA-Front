@@ -52,6 +52,10 @@ const Court3DViewer = dynamic(() => import('@/components/3d/Court3DViewer'), {
   ),
 })
 
+// Import court ratings and photo gallery components
+import CourtRatings from '@/components/court/court-ratings'
+import CourtPhotoGallery from '@/components/court/court-photo-gallery'
+
 const timeSlots = [
   '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', 
   '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', 
@@ -467,6 +471,19 @@ export default function CanchaDetailPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Photo Gallery */}
+            <CourtPhotoGallery
+              canchaId={canchaId}
+              canchaNombre={cancha.nombre}
+              isAdmin={false}
+            />
+
+            {/* Ratings and Reviews */}
+            <CourtRatings
+              canchaId={canchaId}
+              canchaNombre={cancha.nombre}
+            />
           </div>
 
           {/* Sidebar - Reservation */}
