@@ -60,7 +60,7 @@ function CourtCard({ cancha }: { cancha: Cancha }) {
     <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 group">
       <div className="relative h-48 overflow-hidden">
         <Image
-          src="/cancha.jpeg"
+          src="/cancha.png"
           alt={cancha.nombre}
           fill
           className="object-cover group-hover:scale-105 transition-transform duration-300"

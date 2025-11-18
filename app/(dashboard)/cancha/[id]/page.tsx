@@ -294,7 +294,7 @@ export default function CanchaDetailPage() {
       {/* Hero Section with Overlay */}
       <div className="relative h-[60vh] min-h-[400px] overflow-hidden">
         <Image
-          src="/cancha.jpeg"
+          src="/cancha.png"
           alt={cancha.nombre}
           fill
           className="object-cover"

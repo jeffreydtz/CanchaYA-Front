@@ -45,7 +45,7 @@ function CourtCard({ court, index, rating = 4.5 }: CourtCardProps) {
     >
       <div className="relative h-64 overflow-hidden">
         <Image
-          src={'/cancha.jpeg'}
+          src={'/cancha.png'}
           alt={court.nombre}
           fill
           className="object-cover transition-transform duration-700 group-hover:scale-110"

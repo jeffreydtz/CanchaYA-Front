@@ -144,7 +144,7 @@ function ReservationCard({ reserva, onCancel, onConfirm, onUpdate }: {
             {/* Court Image */}
             <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
               <Image
-                src="/cancha.jpeg"
+                src="/cancha.png"
                 alt={reserva.disponibilidad?.cancha?.nombre || 'Cancha'}
                 fill
                 className="object-cover"
