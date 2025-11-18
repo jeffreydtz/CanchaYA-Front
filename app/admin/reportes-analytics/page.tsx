@@ -9,6 +9,7 @@ import type { ReportConfig, Report } from '@/lib/analytics/types';
 import { toast } from 'sonner';
 import { downloadCSV, downloadExcel, generateFilename } from '@/lib/analytics/export';
 import { fetchDashboardData } from '@/lib/analytics/data-aggregator';
+import { REPORT_CONFIG } from '@/lib/analytics/config';
 
 export default function ReportesAnalyticsPage() {
   const [reports, setReports] = useState<Report[]>([]);
@@ -101,7 +102,7 @@ export default function ReportesAnalyticsPage() {
             'Tendencia': kpi.trend,
             'Estado': kpi.status
           }));
-          result = downloadExcel(excelData, filename, 'Reporte Analytics');
+          result = downloadExcel(excelData, filename, REPORT_CONFIG.excelSheetName);
           break;
 
         case 'PDF':

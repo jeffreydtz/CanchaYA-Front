@@ -12,6 +12,7 @@ import {
   getStatusLabel
 } from '@/lib/analytics/formatters';
 import { cn } from '@/lib/utils';
+import { CHART_CONFIG, COLOR_PALETTES, LAYOUT_CONFIG } from '@/lib/analytics/config';
 
 interface KPICardProps {
   kpi: KPI;
@@ -120,9 +121,9 @@ function MiniSparkline({ data, trend }: MiniSparklineProps) {
   const min = Math.min(...data);
   const range = max - min;
 
-  const height = 40;
-  const width = 100;
-  const padding = 2;
+  const height = CHART_CONFIG.sparkline.height;
+  const width = CHART_CONFIG.sparkline.width;
+  const padding = CHART_CONFIG.sparkline.padding;
 
   // Normalize data points to fit in height
   const points = data.map((value, index) => {
@@ -132,8 +133,8 @@ function MiniSparkline({ data, trend }: MiniSparklineProps) {
     return `${x},${y}`;
   }).join(' ');
 
-  const lineColor = trend === 'up' ? '#10b981' : trend === 'down' ? '#ef4444' : '#6b7280';
-  const fillColor = trend === 'up' ? 'rgba(16, 185, 129, 0.1)' : trend === 'down' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(107, 114, 128, 0.1)';
+  const lineColor = trend === 'up' ? COLOR_PALETTES.trend.up : trend === 'down' ? COLOR_PALETTES.trend.down : COLOR_PALETTES.trend.neutral;
+  const fillColor = trend === 'up' ? COLOR_PALETTES.trendFill.up : trend === 'down' ? COLOR_PALETTES.trendFill.down : COLOR_PALETTES.trendFill.neutral;
 
   return (
     <div className="w-full h-10">
@@ -171,7 +172,7 @@ interface KPIGridProps {
   columns?: 2 | 3 | 4;
 }
 
-export function KPIGrid({ kpis, onKPIClick, columns = 4 }: KPIGridProps) {
+export function KPIGrid({ kpis, onKPIClick, columns = LAYOUT_CONFIG.kpiGridColumns as 2 | 3 | 4 }: KPIGridProps) {
   const gridCols = {
     2: 'grid-cols-1 md:grid-cols-2',
     3: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',

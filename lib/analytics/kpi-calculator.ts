@@ -4,6 +4,7 @@
  */
 
 import { MetricStatus, TrendDirection } from './types';
+import { TREND_THRESHOLDS } from './config';
 
 // ============================================================================
 // OPERATIONAL KPIs
@@ -173,7 +174,7 @@ export function calculateChangePercent(currentValue: number, previousValue: numb
 export function determineTrend(
   currentValue: number,
   previousValue: number,
-  threshold: number = 5
+  threshold: number = TREND_THRESHOLDS.detectionThreshold
 ): TrendDirection {
   const changePercent = calculateChangePercent(currentValue, previousValue);
 
@@ -337,7 +338,7 @@ export function calculateLinearTrend(values: number[]): { slope: number; interce
  */
 export function detectOutliersZScore(
   values: number[],
-  threshold: number = 3
+  threshold: number = TREND_THRESHOLDS.outlierZScore
 ): { indices: number[]; values: number[]; zScores: number[] } {
   const mean = calculateMean(values);
   const stdDev = calculateStandardDeviation(values);

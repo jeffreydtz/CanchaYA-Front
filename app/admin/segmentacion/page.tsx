@@ -21,8 +21,9 @@ export default function SegmentacionPage() {
     try {
       setLoading(true);
 
-      // In production, this would fetch from API
-      // For now, generate mock data
+      // TODO: Replace this mock data with API call to /usuarios/segmentacion or similar endpoint
+      // Mock Data - Replace with API call
+      // This hardcoded data should be replaced with dynamic data from the backend
       const mockData: UserSegmentData[] = [
         {
           segment: 'VIP',

@@ -24,6 +24,7 @@ import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { formatChartTooltip, formatChartAxis } from '@/lib/analytics/formatters';
 import { exportChartAsPNG } from '@/lib/analytics/export';
+import { CHART_CONFIG, COLOR_PALETTES } from '@/lib/analytics/config';
 
 type ChartType = 'line' | 'bar' | 'area' | 'pie';
 
@@ -51,16 +52,7 @@ interface AnalyticsChartProps {
   className?: string;
 }
 
-const COLORS = [
-  '#3b82f6', // blue-500
-  '#10b981', // green-500
-  '#f59e0b', // amber-500
-  '#ef4444', // red-500
-  '#8b5cf6', // violet-500
-  '#ec4899', // pink-500
-  '#14b8a6', // teal-500
-  '#f97316', // orange-500
-];
+const COLORS = COLOR_PALETTES.chart;
 
 export function AnalyticsChart({
   title,
@@ -69,7 +61,7 @@ export function AnalyticsChart({
   data,
   dataKeys,
   xAxisKey = 'name',
-  height = 300,
+  height = CHART_CONFIG.defaultHeight,
   showLegend = true,
   showGrid = true,
   showExport = true,
@@ -102,16 +94,16 @@ export function AnalyticsChart({
           {type === 'line' && (
             <ResponsiveContainer width="100%" height={height}>
               <LineChart data={data}>
-                {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />}
+                {showGrid && <CartesianGrid strokeDasharray={CHART_CONFIG.grid.strokeDasharray} stroke={CHART_CONFIG.grid.color} />}
                 <XAxis
                   dataKey={xAxisKey}
-                  stroke="#6b7280"
+                  stroke={CHART_CONFIG.axis.strokeColor}
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
                 />
                 <YAxis
-                  stroke="#6b7280"
+                  stroke={CHART_CONFIG.axis.strokeColor}
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
@@ -138,16 +130,16 @@ export function AnalyticsChart({
           {type === 'bar' && (
             <ResponsiveContainer width="100%" height={height}>
               <BarChart data={data}>
-                {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />}
+                {showGrid && <CartesianGrid strokeDasharray={CHART_CONFIG.grid.strokeDasharray} stroke={CHART_CONFIG.grid.color} />}
                 <XAxis
                   dataKey={xAxisKey}
-                  stroke="#6b7280"
+                  stroke={CHART_CONFIG.axis.strokeColor}
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
                 />
                 <YAxis
-                  stroke="#6b7280"
+                  stroke={CHART_CONFIG.axis.strokeColor}
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
@@ -171,16 +163,16 @@ export function AnalyticsChart({
           {type === 'area' && (
             <ResponsiveContainer width="100%" height={height}>
               <AreaChart data={data}>
-                {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />}
+                {showGrid && <CartesianGrid strokeDasharray={CHART_CONFIG.grid.strokeDasharray} stroke={CHART_CONFIG.grid.color} />}
                 <XAxis
                   dataKey={xAxisKey}
-                  stroke="#6b7280"
+                  stroke={CHART_CONFIG.axis.strokeColor}
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
                 />
                 <YAxis
-                  stroke="#6b7280"
+                  stroke={CHART_CONFIG.axis.strokeColor}
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
@@ -196,7 +188,7 @@ export function AnalyticsChart({
                     name={dk.label}
                     stroke={dk.color || COLORS[index % COLORS.length]}
                     fill={dk.color || COLORS[index % COLORS.length]}
-                    fillOpacity={0.2}
+                    fillOpacity={CHART_CONFIG.areaChartFillOpacity}
                     strokeWidth={2}
                   />
                 ))}
@@ -211,9 +203,9 @@ export function AnalyticsChart({
                   data={data}
                   dataKey={dataKeys[0].key}
                   nameKey={xAxisKey}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
+                  cx={CHART_CONFIG.pieChart.cx}
+                  cy={CHART_CONFIG.pieChart.cy}
+                  outerRadius={CHART_CONFIG.pieChart.outerRadius}
                   label={(entry) => `${entry[xAxisKey]}: ${entry[dataKeys[0].key]}`}
                 >
                   {data.map((entry, index) => (
@@ -266,7 +258,7 @@ interface TimeSeriesChartProps {
   format?: 'number' | 'currency' | 'percentage';
 }
 
-export function TimeSeriesChart({ title, data, height = 300, format = 'number' }: TimeSeriesChartProps) {
+export function TimeSeriesChart({ title, data, height = CHART_CONFIG.defaultHeight, format = 'number' }: TimeSeriesChartProps) {
   const formattedData = data.map(d => ({
     name: typeof d.timestamp === 'string' ? d.timestamp : d.timestamp.toLocaleDateString(),
     value: d.value
@@ -277,7 +269,7 @@ export function TimeSeriesChart({ title, data, height = 300, format = 'number' }
       title={title}
       type="area"
       data={formattedData}
-      dataKeys={[{ key: 'value', label: 'Valor', color: '#3b82f6', format }]}
+      dataKeys={[{ key: 'value', label: 'Valor', color: COLOR_PALETTES.comparison.primary, format }]}
       height={height}
     />
   );
@@ -291,15 +283,15 @@ interface ComparisonChartProps {
   height?: number;
 }
 
-export function ComparisonChart({ title, data, label1, label2, height = 300 }: ComparisonChartProps) {
+export function ComparisonChart({ title, data, label1, label2, height = CHART_CONFIG.defaultHeight }: ComparisonChartProps) {
   return (
     <AnalyticsChart
       title={title}
       type="bar"
       data={data}
       dataKeys={[
-        { key: 'value1', label: label1, color: '#3b82f6' },
-        { key: 'value2', label: label2, color: '#10b981' }
+        { key: 'value1', label: label1, color: COLOR_PALETTES.comparison.primary },
+        { key: 'value2', label: label2, color: COLOR_PALETTES.comparison.secondary }
       ]}
       xAxisKey="category"
       height={height}
@@ -313,7 +305,7 @@ interface DistributionChartProps {
   height?: number;
 }
 
-export function DistributionChart({ title, data, height = 300 }: DistributionChartProps) {
+export function DistributionChart({ title, data, height = CHART_CONFIG.defaultHeight }: DistributionChartProps) {
   return (
     <AnalyticsChart
       title={title}

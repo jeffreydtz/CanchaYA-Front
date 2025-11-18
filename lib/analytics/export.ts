@@ -5,6 +5,7 @@
 
 import type { ExportOptions, ExportResult } from './types';
 import { formatMetricValue, formatDate, formatDateTime } from './formatters';
+import { REPORT_CONFIG } from './config';
 
 // ============================================================================
 // CSV EXPORT
@@ -309,13 +310,13 @@ export function createPrintableReport(
       <style>
         body {
           font-family: Arial, sans-serif;
-          padding: 20px;
-          max-width: 210mm;
+          padding: ${REPORT_CONFIG.printConfig.padding};
+          max-width: ${REPORT_CONFIG.printConfig.maxWidth};
           margin: 0 auto;
         }
         h1 {
           color: #333;
-          border-bottom: 2px solid #e5e7eb;
+          border-bottom: 2px solid ${REPORT_CONFIG.printConfig.borderColor};
           padding-bottom: 10px;
         }
         h2 {
@@ -330,10 +331,10 @@ export function createPrintableReport(
         th, td {
           padding: 8px;
           text-align: left;
-          border: 1px solid #ddd;
+          border: 1px solid ${REPORT_CONFIG.printConfig.borderColor};
         }
         th {
-          background-color: #f3f4f6;
+          background-color: ${REPORT_CONFIG.printConfig.headerBackground};
           font-weight: bold;
         }
         @media print {

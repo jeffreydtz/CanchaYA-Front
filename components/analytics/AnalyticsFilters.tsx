@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Calendar, Filter, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AnalyticsFilters, DateRangeFilter } from '@/lib/analytics/types';
+import { ANALYTICS_DEFAULTS, USER_SEGMENTS } from '@/lib/analytics/config';
+import { DATE_PRESETS } from '@/lib/analytics/constants';
 
 interface AnalyticsFiltersProps {
   filters: AnalyticsFilters;
@@ -22,15 +24,7 @@ export function AnalyticsFiltersComponent({
 }: AnalyticsFiltersProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const datePresets = [
-    { value: 'today', label: 'Hoy' },
-    { value: 'yesterday', label: 'Ayer' },
-    { value: 'last7days', label: 'Últimos 7 días' },
-    { value: 'last30days', label: 'Últimos 30 días' },
-    { value: 'thisMonth', label: 'Este mes' },
-    { value: 'lastMonth', label: 'Mes pasado' },
-    { value: 'custom', label: 'Personalizado' }
-  ];
+  const datePresets = Object.values(DATE_PRESETS);
 
   const handlePresetChange = (preset: string) => {
     const today = new Date();
@@ -95,14 +89,14 @@ export function AnalyticsFiltersComponent({
 
   const handleReset = () => {
     const today = new Date();
-    const last30Days = new Date(today);
-    last30Days.setDate(last30Days.getDate() - 30);
+    const defaultDaysAgo = new Date(today);
+    defaultDaysAgo.setDate(defaultDaysAgo.getDate() - ANALYTICS_DEFAULTS.defaultDateRangeDays);
 
     const defaultFilters: AnalyticsFilters = {
       dateRange: {
-        start: last30Days,
+        start: defaultDaysAgo,
         end: today,
-        preset: 'last30days'
+        preset: DATE_PRESETS.last30days.value as any
       }
     };
 
@@ -208,31 +202,14 @@ export function AnalyticsFiltersComponent({
                   Segmento de usuarios
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  <FilterChip
-                    label="Todos"
-                    active={!filters.userSegment || filters.userSegment === 'ALL'}
-                    onClick={() => onChange({ ...filters, userSegment: 'ALL' })}
-                  />
-                  <FilterChip
-                    label="VIP"
-                    active={filters.userSegment === 'VIP'}
-                    onClick={() => onChange({ ...filters, userSegment: 'VIP' })}
-                  />
-                  <FilterChip
-                    label="Regulares"
-                    active={filters.userSegment === 'REGULAR'}
-                    onClick={() => onChange({ ...filters, userSegment: 'REGULAR' })}
-                  />
-                  <FilterChip
-                    label="Ocasionales"
-                    active={filters.userSegment === 'OCCASIONAL'}
-                    onClick={() => onChange({ ...filters, userSegment: 'OCCASIONAL' })}
-                  />
-                  <FilterChip
-                    label="Inactivos"
-                    active={filters.userSegment === 'INACTIVE'}
-                    onClick={() => onChange({ ...filters, userSegment: 'INACTIVE' })}
-                  />
+                  {Object.entries(USER_SEGMENTS).map(([key, segment]) => (
+                    <FilterChip
+                      key={key}
+                      label={segment.label}
+                      active={!filters.userSegment ? key === 'ALL' : filters.userSegment === key}
+                      onClick={() => onChange({ ...filters, userSegment: key as any })}
+                    />
+                  ))}
                 </div>
               </div>
             </div>

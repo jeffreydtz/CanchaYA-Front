@@ -24,6 +24,7 @@ import { es } from 'date-fns/locale'
 import apiClient from '@/lib/api-client'
 import { downloadExcel, generateFilename } from '@/lib/analytics/export'
 import { formatCompactNumber } from '@/lib/analytics/formatters'
+import { SPORTS_COLORS } from '@/lib/analytics/constants'
 
 interface DashboardData {
   metrics: {
@@ -58,22 +59,9 @@ interface DashboardData {
   topCanchas: Array<{ id: string; name: string; sport: string; reservations: number; revenue: number; occupancy: number; trend: number }>
 }
 
-// Colores para deportes
-const SPORT_COLORS: Record<string, string> = {
-  'Fútbol': '#3b82f6',
-  'Fútbol 5': '#3b82f6',
-  'Fútbol 7': '#2563eb',
-  'Tenis': '#10b981',
-  'Paddle': '#f59e0b',
-  'Pádel': '#f59e0b',
-  'Básquet': '#ef4444',
-  'Baloncesto': '#ef4444',
-  'Vóley': '#8b5cf6',
-  'Voleibol': '#8b5cf6',
-}
-
+// Use centralized sports colors from analytics constants
 const getColorForSport = (sport: string): string => {
-  return SPORT_COLORS[sport] || '#6b7280'
+  return SPORTS_COLORS[sport] || '#6b7280'
 }
 
 const fetchDashboardData = async (filters?: Record<string, any> | null): Promise<DashboardData> => {

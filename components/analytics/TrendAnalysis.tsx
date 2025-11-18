@@ -8,6 +8,7 @@ import type { TimeSeriesData } from '@/lib/analytics/types';
 import { calculateLinearTrend, calculateMean, calculateStandardDeviation } from '@/lib/analytics/kpi-calculator';
 import { formatNumber, formatPercentage } from '@/lib/analytics/formatters';
 import { cn } from '@/lib/utils';
+import { TREND_THRESHOLDS, COLOR_PALETTES } from '@/lib/analytics/config';
 
 interface TrendAnalysisProps {
   title: string;
@@ -53,7 +54,8 @@ export function TrendAnalysis({
   const variationCoeff = (stdDev / mean) * 100;
 
   // Determine trend direction
-  const trendDirection = slope > 0.05 ? 'up' : slope < -0.05 ? 'down' : 'neutral';
+  const detectionThreshold = TREND_THRESHOLDS.detectionThreshold / 100;
+  const trendDirection = slope > detectionThreshold ? 'up' : slope < -detectionThreshold ? 'down' : 'neutral';
   const TrendIcon = trendDirection === 'up' ? TrendingUp : trendDirection === 'down' ? TrendingDown : Minus;
 
   // Calculate percentage change from first to last
@@ -86,8 +88,8 @@ export function TrendAnalysis({
           type="line"
           data={chartData}
           dataKeys={[
-            { key: 'value', label: 'Valor Real', color: '#3b82f6' },
-            { key: 'trend', label: 'Tendencia', color: '#9ca3af' }
+            { key: 'value', label: 'Valor Real', color: COLOR_PALETTES.comparison.primary },
+            { key: 'trend', label: 'Tendencia', color: COLOR_PALETTES.trend.neutral }
           ]}
           height={300}
           showLegend={true}
@@ -226,13 +228,13 @@ function generateInsights(
   }
 
   // Volatility insight
-  if (variationCoeff < 10) {
+  if (variationCoeff < TREND_THRESHOLDS.lowVolatilityPercent) {
     insights.push(
       <li key="volatility">
         • <strong>Baja variabilidad</strong> - Los valores son consistentes
       </li>
     );
-  } else if (variationCoeff > 30) {
+  } else if (variationCoeff > TREND_THRESHOLDS.highVolatilityPercent) {
     insights.push(
       <li key="volatility">
         • <strong>Alta variabilidad</strong> - Se observan fluctuaciones importantes
@@ -241,15 +243,15 @@ function generateInsights(
   }
 
   // Recent performance
-  const recentValues = values.slice(-7);
+  const recentValues = values.slice(-TREND_THRESHOLDS.recentDataWindowDays);
   const recentMean = calculateMean(recentValues);
   const overallMean = calculateMean(values);
   const recentVsOverall = ((recentMean - overallMean) / overallMean) * 100;
 
-  if (Math.abs(recentVsOverall) > 10) {
+  if (Math.abs(recentVsOverall) > TREND_THRESHOLDS.varianceThreshold) {
     insights.push(
       <li key="recent">
-        • Últimos 7 días: {recentVsOverall > 0 ? 'por encima' : 'por debajo'} de la media ({formatPercentage(Math.abs(recentVsOverall), 1)})
+        • Últimos {TREND_THRESHOLDS.recentDataWindowDays} días: {recentVsOverall > 0 ? 'por encima' : 'por debajo'} de la media ({formatPercentage(Math.abs(recentVsOverall), 1)})
       </li>
     );
   }
@@ -301,7 +303,7 @@ export function PeriodComparison({
           title=""
           type="bar"
           data={chartData}
-          dataKeys={[{ key: 'value', label: 'Promedio', color: '#3b82f6' }]}
+          dataKeys={[{ key: 'value', label: 'Promedio', color: COLOR_PALETTES.comparison.primary }]}
           height={200}
           showExport={false}
         />

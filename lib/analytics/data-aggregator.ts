@@ -20,6 +20,7 @@ import {
   roundTo
 } from './kpi-calculator';
 import type { DashboardData, DashboardMetrics, KPI, CourtPerformance, HeatmapData, TimeSeriesData } from './types';
+import { ANALYTICS_DEFAULTS, STATUS_THRESHOLDS, TIME_CONFIG } from './config';
 
 // ============================================================================
 // MAIN DASHBOARD DATA AGGREGATOR
@@ -36,7 +37,7 @@ export async function fetchDashboardData(
   try {
     // Default to last 30 days if no dates provided
     const end = endDate || new Date();
-    const start = startDate || new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const start = startDate || new Date(end.getTime() - ANALYTICS_DEFAULTS.defaultDateRangeDays * 24 * 60 * 60 * 1000);
 
     // Fetch all data in parallel
     const [
@@ -181,11 +182,10 @@ function calculateMetrics(
   ).length;
 
   // Calculate total available hours
-  const hoursPerDay = 14; // Assuming courts open 10am-12am (14 hours)
-  const availableHours = courts.length * hoursPerDay * daysDiff;
+  const availableHours = courts.length * ANALYTICS_DEFAULTS.hoursPerDay * daysDiff;
 
   // Calculate reserved hours (assuming 1 hour per reservation on average)
-  const reservedHours = totalReservations;
+  const reservedHours = totalReservations * ANALYTICS_DEFAULTS.hoursPerReservation;
 
   const occupancyRate = calculateOccupancyRate(reservedHours, availableHours);
   const noShowRate = calculateNoShowRate(cancelledReservations, totalReservations);
@@ -200,7 +200,7 @@ function calculateMetrics(
 
   const sortedHours = Object.entries(hourCounts)
     .sort(([, a], [, b]) => b - a)
-    .slice(0, 3)
+    .slice(0, ANALYTICS_DEFAULTS.topHoursLimit)
     .map(([hour]) => `${hour}:00`);
 
   // FINANCIAL METRICS
@@ -257,8 +257,7 @@ function calculateMetrics(
   const averageFrequency = calculateAverageFrequency(userReservationCounts);
 
   // Simplified LTV calculation
-  const averageLifetimeMonths = 18; // Assumption: average user lifetime is 18 months
-  const lifetimeValue = averageTicket * averageFrequency * averageLifetimeMonths;
+  const lifetimeValue = averageTicket * averageFrequency * ANALYTICS_DEFAULTS.averageUserLifetimeMonths;
 
   return {
     // Operational
@@ -327,11 +326,11 @@ async function calculateKPIs(
         type: 'OPERATIONAL',
         value: currentMetrics.occupancyRate,
         previousValue: previousMetrics.occupancyRate,
-        target: 75,
+        target: STATUS_THRESHOLDS.occupancy.green,
         change: currentMetrics.occupancyRate - previousMetrics.occupancyRate,
         changePercent: calculateChangePercent(currentMetrics.occupancyRate, previousMetrics.occupancyRate),
         trend: determineTrend(currentMetrics.occupancyRate, previousMetrics.occupancyRate),
-        status: determineStatus(currentMetrics.occupancyRate, 75, 60, true),
+        status: determineStatus(currentMetrics.occupancyRate, STATUS_THRESHOLDS.occupancy.green, STATUS_THRESHOLDS.occupancy.warning, true),
         unit: '%',
         format: 'percentage'
       },
@@ -357,11 +356,11 @@ async function calculateKPIs(
         type: 'OPERATIONAL',
         value: currentMetrics.noShowRate,
         previousValue: previousMetrics.noShowRate,
-        target: 10,
+        target: STATUS_THRESHOLDS.noShowRate.green,
         change: currentMetrics.noShowRate - previousMetrics.noShowRate,
         changePercent: calculateChangePercent(currentMetrics.noShowRate, previousMetrics.noShowRate),
         trend: determineTrend(currentMetrics.noShowRate, previousMetrics.noShowRate),
-        status: determineStatus(currentMetrics.noShowRate, 10, 15, false),
+        status: determineStatus(currentMetrics.noShowRate, STATUS_THRESHOLDS.noShowRate.green, STATUS_THRESHOLDS.noShowRate.warning, false),
         unit: '%',
         format: 'percentage'
       },
@@ -439,11 +438,11 @@ async function calculateKPIs(
         type: 'USER',
         value: currentMetrics.retentionRate,
         previousValue: previousMetrics.retentionRate,
-        target: 80,
+        target: STATUS_THRESHOLDS.retentionRate.green,
         change: currentMetrics.retentionRate - previousMetrics.retentionRate,
         changePercent: calculateChangePercent(currentMetrics.retentionRate, previousMetrics.retentionRate),
         trend: determineTrend(currentMetrics.retentionRate, previousMetrics.retentionRate),
-        status: determineStatus(currentMetrics.retentionRate, 80, 70, true),
+        status: determineStatus(currentMetrics.retentionRate, STATUS_THRESHOLDS.retentionRate.green, STATUS_THRESHOLDS.retentionRate.warning, true),
         unit: '%',
         format: 'percentage'
       }
@@ -468,7 +467,7 @@ function generateKPIsWithoutComparison(metrics: DashboardMetrics): KPI[] {
       change: 0,
       changePercent: 0,
       trend: 'neutral',
-      status: determineStatus(metrics.occupancyRate, 75, 60, true),
+      status: determineStatus(metrics.occupancyRate, STATUS_THRESHOLDS.occupancy.green, STATUS_THRESHOLDS.occupancy.warning, true),
       unit: '%',
       format: 'percentage'
     },
@@ -505,56 +504,21 @@ function generateKPIsWithoutComparison(metrics: DashboardMetrics): KPI[] {
 // ============================================================================
 
 async function fetchOccupancyTrend(start: Date, end: Date): Promise<TimeSeriesData[]> {
-  // Simplified - generate mock trend data
-  // In production, fetch from API or calculate from reservations
-  const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-  const data: TimeSeriesData[] = [];
-
-  for (let i = 0; i < days; i++) {
-    const date = new Date(start.getTime() + i * 24 * 60 * 60 * 1000);
-    data.push({
-      timestamp: date,
-      value: Math.random() * 30 + 60, // Random value between 60-90
-      label: date.toLocaleDateString()
-    });
-  }
-
-  return data;
+  // Return empty array - API endpoint not available yet
+  // TODO: Implement when occupancy trend endpoint is available from backend
+  return [];
 }
 
 async function fetchRevenueTrend(start: Date, end: Date): Promise<TimeSeriesData[]> {
-  const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-  const data: TimeSeriesData[] = [];
-
-  for (let i = 0; i < days; i++) {
-    const date = new Date(start.getTime() + i * 24 * 60 * 60 * 1000);
-    data.push({
-      timestamp: date,
-      value: Math.random() * 5000 + 3000, // Random value between 3000-8000
-      label: date.toLocaleDateString()
-    });
-  }
-
-  return data;
+  // Return empty array - API endpoint not available yet
+  // TODO: Implement when revenue trend endpoint is available from backend
+  return [];
 }
 
 async function fetchUsersTrend(start: Date, end: Date): Promise<TimeSeriesData[]> {
-  const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-  const data: TimeSeriesData[] = [];
-
-  let baseValue = 1000;
-
-  for (let i = 0; i < days; i++) {
-    const date = new Date(start.getTime() + i * 24 * 60 * 60 * 1000);
-    baseValue += Math.random() * 10 - 3; // Slight growth over time
-    data.push({
-      timestamp: date,
-      value: Math.floor(baseValue),
-      label: date.toLocaleDateString()
-    });
-  }
-
-  return data;
+  // Return empty array - API endpoint not available yet
+  // TODO: Implement when users trend endpoint is available from backend
+  return [];
 }
 
 // ============================================================================
@@ -562,7 +526,7 @@ async function fetchUsersTrend(start: Date, end: Date): Promise<TimeSeriesData[]
 // ============================================================================
 
 function processTopCourts(topCourtsData: any[], reservations: any[]): CourtPerformance[] {
-  return topCourtsData.slice(0, 5).map(court => {
+  return topCourtsData.slice(0, ANALYTICS_DEFAULTS.topCourtsLimit).map(court => {
     const courtReservations = reservations.filter(r => r.canchaId === court.id);
     const revenue = courtReservations.reduce((sum, r) => sum + Number(r.precio || 0), 0);
 
@@ -583,18 +547,18 @@ function processTopCourts(topCourtsData: any[], reservations: any[]): CourtPerfo
 // ============================================================================
 
 function processHeatmap(occupancyData: any[]): HeatmapData {
-  const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-  const hours = Array.from({ length: 14 }, (_, i) => `${i + 10}:00`); // 10am-12am
+  const days = TIME_CONFIG.dayLabels;
+  const hours = Array.from({ length: ANALYTICS_DEFAULTS.hoursPerDay }, (_, i) => `${i + TIME_CONFIG.hourDisplayStart}:00`);
 
   // Initialize matrix with zeros
-  const data: number[][] = Array(7).fill(0).map(() => Array(14).fill(0));
+  const data: number[][] = Array(days.length).fill(0).map(() => Array(hours.length).fill(0));
 
   // Fill with actual data if available
   occupancyData.forEach((item: any) => {
     const dayIndex = item.dayOfWeek ? days.indexOf(item.dayOfWeek) : -1;
-    const hourIndex = item.hour ? item.hour - 10 : -1;
+    const hourIndex = item.hour ? item.hour - TIME_CONFIG.hourDisplayStart : -1;
 
-    if (dayIndex >= 0 && hourIndex >= 0 && hourIndex < 14) {
+    if (dayIndex >= 0 && hourIndex >= 0 && hourIndex < hours.length) {
       data[dayIndex][hourIndex] = item.occupancy || 0;
     }
   });

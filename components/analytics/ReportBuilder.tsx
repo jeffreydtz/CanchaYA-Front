@@ -17,6 +17,7 @@ import { Calendar, Download, FileText, X } from 'lucide-react';
 import type { ReportConfig, ReportType, ReportFormat } from '@/lib/analytics/types';
 import { cn } from '@/lib/utils';
 import { downloadCSV, downloadJSON, generateFilename } from '@/lib/analytics/export';
+import { ANALYTICS_DEFAULTS, LAYOUT_CONFIG } from '@/lib/analytics/config';
 
 interface ReportBuilderProps {
   onGenerate: (config: ReportConfig) => void;
@@ -99,7 +100,7 @@ export function ReportBuilder({ onGenerate, onCancel }: ReportBuilderProps) {
   const [reportName, setReportName] = useState('');
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState(
-    new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    new Date(Date.now() - ANALYTICS_DEFAULTS.defaultDateRangeDays * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   );
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>([]);
@@ -265,7 +266,7 @@ export function ReportBuilder({ onGenerate, onCancel }: ReportBuilderProps) {
         {/* Format Selection */}
         <div className="space-y-2">
           <Label>Formato de exportación</Label>
-          <div className="grid grid-cols-4 gap-2">
+          <div className={`grid grid-cols-${LAYOUT_CONFIG.reportFormatColumns} gap-2`}>
             {FORMATS.map((fmt) => (
               <button
                 key={fmt.value}

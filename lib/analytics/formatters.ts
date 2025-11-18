@@ -4,6 +4,7 @@
  */
 
 import { TrendDirection, MetricStatus } from './types';
+import { FORMAT_CONFIG } from './config';
 
 // ============================================================================
 // NUMBER FORMATTING
@@ -14,7 +15,7 @@ import { TrendDirection, MetricStatus } from './types';
  * Example: 1234567 -> "1,234,567"
  */
 export function formatNumber(value: number, decimals: number = 0): string {
-  return new Intl.NumberFormat('es-AR', {
+  return new Intl.NumberFormat(FORMAT_CONFIG.locale, {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals
   }).format(value);
@@ -25,9 +26,9 @@ export function formatNumber(value: number, decimals: number = 0): string {
  * Example: 1234.56 -> "$1.234,56"
  */
 export function formatCurrency(value: number, showSymbol: boolean = true): string {
-  const formatted = new Intl.NumberFormat('es-AR', {
+  const formatted = new Intl.NumberFormat(FORMAT_CONFIG.locale, {
     style: 'currency',
-    currency: 'ARS',
+    currency: FORMAT_CONFIG.currency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(value);
@@ -48,11 +49,11 @@ export function formatPercentage(value: number, decimals: number = 2): string {
  * Example: 1234567 -> "1.23M"
  */
 export function formatCompactNumber(value: number): string {
-  if (value >= 1_000_000) {
-    return `${(value / 1_000_000).toFixed(2)}M`;
+  if (value >= FORMAT_CONFIG.abbreviationThresholds.million) {
+    return `${(value / FORMAT_CONFIG.abbreviationThresholds.million).toFixed(2)}M`;
   }
-  if (value >= 1_000) {
-    return `${(value / 1_000).toFixed(1)}K`;
+  if (value >= FORMAT_CONFIG.abbreviationThresholds.thousand) {
+    return `${(value / FORMAT_CONFIG.abbreviationThresholds.thousand).toFixed(1)}K`;
   }
   return formatNumber(value);
 }

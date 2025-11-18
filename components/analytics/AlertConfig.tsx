@@ -16,6 +16,7 @@ import { Switch } from '@/components/ui/switch';
 import { Bell, Mail, Smartphone, MessageSquare, X } from 'lucide-react';
 import type { Alert, AlertCondition, AlertSeverity, AlertChannel } from '@/lib/analytics/types';
 import { cn } from '@/lib/utils';
+import { ALERT_CONFIG, COLOR_PALETTES } from '@/lib/analytics/config';
 
 interface AlertConfigProps {
   alert?: Alert;
@@ -42,9 +43,9 @@ const CONDITIONS: Array<{ value: AlertCondition; label: string }> = [
 ];
 
 const SEVERITIES: Array<{ value: AlertSeverity; label: string; color: string }> = [
-  { value: 'LOW', label: 'Baja', color: 'bg-blue-100 text-blue-800' },
+  { value: 'LOW', label: 'Baja', color: 'bg-green-100 text-green-800' },
   { value: 'MEDIUM', label: 'Media', color: 'bg-yellow-100 text-yellow-800' },
-  { value: 'HIGH', label: 'Alta', color: 'bg-orange-100 text-orange-800' },
+  { value: 'HIGH', label: 'Alta', color: 'bg-red-100 text-red-800' },
   { value: 'CRITICAL', label: 'Crítica', color: 'bg-red-100 text-red-800' },
 ];
 
@@ -65,7 +66,7 @@ export function AlertConfig({ alert, onSave, onCancel }: AlertConfigProps) {
   );
   const [severity, setSeverity] = useState<AlertSeverity>(alert?.severity || 'MEDIUM');
   const [channels, setChannels] = useState<AlertChannel[]>(alert?.channels || ['EMAIL']);
-  const [cooldownMinutes, setCooldownMinutes] = useState(alert?.cooldownMinutes || 30);
+  const [cooldownMinutes, setCooldownMinutes] = useState(alert?.cooldownMinutes || ALERT_CONFIG.defaultCooldownMinutes);
   const [active, setActive] = useState(alert?.active ?? true);
 
   const handleChannelToggle = (channel: AlertChannel) => {
