@@ -53,13 +53,13 @@ export function AddPlayersDialog({
         if (response.data) {
           // Filter out players already in the challenge
           const allPlayers = [
-            ...(challenge?.jugadoresCreador || []),
-            ...(challenge?.jugadoresDesafiados || []),
-            ...(challenge?.invitadosDesafiados || []),
+            ...challenge.jugadoresCreador,
+            ...challenge.jugadoresDesafiados,
+            ...challenge.invitadosDesafiados,
           ]
           const filtered = response.data.filter(
-            p => !allPlayers.some(existing => existing?.id === p?.id) &&
-                 !selectedPlayers.some(selected => selected?.id === p?.id)
+            p => !allPlayers.some(existing => existing.id === p.id) &&
+                 !selectedPlayers.some(selected => selected.id === p.id)
           )
           setSearchResults(filtered)
         }
@@ -178,15 +178,15 @@ export function AddPlayersDialog({
             <div className="space-y-2 max-h-[200px] overflow-y-auto border rounded-lg p-2">
               {searchResults.map(person => (
                 <div
-                  key={person?.id}
+                  key={person.id}
                   className="flex items-center justify-between p-2 hover:bg-muted rounded cursor-pointer"
                   onClick={() => handleAddPlayer(person)}
                 >
                   <div>
                     <div className="font-medium text-sm">
-                      {person?.nombre} {person?.apellido}
+                      {person.nombre} {person.apellido}
                     </div>
-                    <div className="text-xs text-muted-foreground">{person?.email}</div>
+                    <div className="text-xs text-muted-foreground">{person.email}</div>
                   </div>
                   <Button size="sm" variant="ghost">
                     <UserPlus className="h-4 w-4" />
@@ -209,16 +209,16 @@ export function AddPlayersDialog({
               <div className="space-y-1">
                 {selectedPlayers.map(player => (
                   <div
-                    key={player?.id}
+                    key={player.id}
                     className="flex items-center justify-between p-2 bg-muted rounded"
                   >
                     <div className="text-sm">
-                      {player?.nombre} {player?.apellido}
+                      {player.nombre} {player.apellido}
                     </div>
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => handleRemovePlayer(player?.id || '')}
+                      onClick={() => handleRemovePlayer(player.id)}
                     >
                       <X className="h-4 w-4" />
                     </Button>

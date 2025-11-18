@@ -125,8 +125,6 @@ export interface Cancha {
   tipoSuperficie: string
   precioPorHora: number
   activa: boolean
-  latitude?: number // Geographic coordinates for Google Maps
-  longitude?: number // Geographic coordinates for Google Maps
   club: {
     id: string
     nombre: string

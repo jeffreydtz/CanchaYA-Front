@@ -6,7 +6,7 @@ import NotificationBell from '@/components/notifications/notification-bell'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { LogOut, User, Menu, X, Home, Calendar, Shield, Search, Trophy, Bell, ChevronDown, MapPin } from 'lucide-react'
+import { LogOut, User, Menu, X, Home, Calendar, Shield, Search, Trophy, Bell, ChevronDown } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useLanguage } from '@/lib/language-context'
 import apiClient from '@/lib/api-client'
@@ -52,7 +52,6 @@ export default function Navbar() {
   const navigationItems = [
     { href: '/', label: t('nav.home'), icon: Home },
     { href: '/buscar', label: 'Buscar', icon: Search },
-    { href: '/mapa-canchas', label: 'Mapa', icon: MapPin },
     { href: '/mis-reservas', label: t('nav.reservations'), icon: Calendar },
     ...(isAuthenticated ? [
       { href: '/profile', label: t('nav.profile'), icon: User }
@@ -231,12 +230,6 @@ export default function Navbar() {
                       <Link href="/mis-reservas" className="flex items-center p-3 rounded-lg hover:bg-muted cursor-pointer">
                         <Calendar className="mr-3 h-5 w-5" />
                         <span className="font-medium">{t('nav.reservations')}</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/mapa-canchas" className="flex items-center p-3 rounded-lg hover:bg-muted cursor-pointer">
-                        <MapPin className="mr-3 h-5 w-5" />
-                        <span className="font-medium">Mapa de Canchas</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
