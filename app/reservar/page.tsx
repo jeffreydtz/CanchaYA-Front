@@ -146,7 +146,6 @@ export default function ReservarPage() {
       const fechaHora = `${dateStr}T${slot.horaInicio}:00-03:00`
 
       const response = await apiClient.createReserva({
-        personaId: personaId,
         disponibilidadId: slot.disponibilidadId,
         fechaHora: fechaHora
       })
