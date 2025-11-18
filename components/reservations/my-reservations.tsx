@@ -116,13 +116,6 @@ export default function MyReservations() {
             Cancelada
           </Badge>
         )
-      case 'completada':
-        return (
-          <Badge variant="outline" className="bg-blue-100 text-blue-800">
-            <CheckCircle className="w-3 h-3 mr-1" />
-            Completada
-          </Badge>
-        )
       default:
         return (
           <Badge variant="outline">
@@ -215,10 +208,6 @@ export default function MyReservations() {
                       <TableCell>
                         <div>
                           <p className="font-medium">{canchaInfo?.nombre || 'Cancha no especificada'}</p>
-                          <p className="text-sm text-gray-600 flex items-center">
-                            <MapPin className="w-3 h-3 mr-1" />
-                            {canchaInfo?.deporte?.nombre || 'Deporte no especificado'}
-                          </p>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -293,10 +282,6 @@ export default function MyReservations() {
                   <div className="flex justify-between items-start">
                     <div>
                       <CardTitle className="text-lg">{canchaInfo?.nombre || 'Cancha no especificada'}</CardTitle>
-                      <CardDescription className="flex items-center mt-1">
-                        <MapPin className="w-3 h-3 mr-1" />
-                        {canchaInfo?.deporte?.nombre || 'Deporte no especificado'}
-                      </CardDescription>
                     </div>
                     {getStatusBadge(reservation.estado)}
                   </div>

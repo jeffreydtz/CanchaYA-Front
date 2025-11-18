@@ -132,7 +132,6 @@ export default function CourtDetail() {
       }
 
       const response = await apiClient.createReserva({
-        personaId: personaId,
         disponibilidadId: matchingDisponibilidad.id,
         fechaHora: fechaHora
       })

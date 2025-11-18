@@ -94,11 +94,11 @@ export default function PersonaAvatar({
         } else {
           toast.error(response.error)
         }
-      } else {
+      } else if ('data' in response && response.data) {
         toast.success('Avatar actualizado correctamente')
 
         // Get the new avatar URL from response
-        const newAvatarUrl = response.data?.avatarUrl || response.data?.persona?.avatarUrl
+        const newAvatarUrl = (response.data as any).avatarUrl || (response.data as any).persona?.avatarUrl
 
         if (newAvatarUrl && onAvatarUpdated) {
           onAvatarUpdated(newAvatarUrl)

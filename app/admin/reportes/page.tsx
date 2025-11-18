@@ -109,7 +109,7 @@ const fetchReportData = async (period: string): Promise<ReportData> => {
     const ocupacionHorarios = ocupacionHorariosRes.data || []
 
     // Filter confirmed reservations
-    const confirmedReservations = reservas.filter(r => r.estado === 'confirmada' || r.estado === 'completada')
+    const confirmedReservations = reservas.filter(r => r.estado === 'confirmada')
 
     // Calculate total revenue
     const totalRevenue = confirmedReservations.reduce((sum, r) => {

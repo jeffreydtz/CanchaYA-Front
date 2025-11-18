@@ -109,7 +109,7 @@ export default function DashboardPage() {
                 <li><Link href="/" className="text-gray-700 dark:text-gray-300 hover:text-gold transition-all duration-300 hover:translate-x-1 inline-block font-luxury">→ Inicio</Link></li>
                 <li><Link href="/buscar" className="text-gray-700 dark:text-gray-300 hover:text-gold transition-all duration-300 hover:translate-x-1 inline-block font-luxury">→ Buscar Canchas</Link></li>
                 <li><Link href="/mis-reservas" className="text-gray-700 dark:text-gray-300 hover:text-gold transition-all duration-300 hover:translate-x-1 inline-block font-luxury">→ Mis Reservas</Link></li>
-                <li><Link href="/competitivo" className="text-gray-700 dark:text-gray-300 hover:text-gold transition-all duration-300 hover:translate-x-1 inline-block font-luxury">→ Competitivo</Link></li>
+                <li><Link href="/desafios" className="text-gray-700 dark:text-gray-300 hover:text-gold transition-all duration-300 hover:translate-x-1 inline-block font-luxury">→ Desafíos</Link></li>
               </ul>
             </div>
 

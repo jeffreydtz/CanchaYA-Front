@@ -210,14 +210,14 @@ export default function CanchaDetailPage() {
       const day = String(selectedDate.getDate()).padStart(2, '0')
       const fechaHora = `${year}-${month}-${day}T${selectedTime}:00-03:00`
 
-      // 3. Call createReserva with { personaId, disponibilidadId, fechaHora }
+      // 3. Call createReserva with { disponibilidadId, fechaHora }
+      // Note: personaId is extracted from JWT token by backend
       if (!personaId) {
         toast.error('No se encontró tu información de persona. Por favor, vuelve a iniciar sesión.')
         return
       }
 
       const response = await apiClient.createReserva({
-        personaId: personaId,
         disponibilidadId: matchingDisponibilidad.id,
         fechaHora: fechaHora
       })

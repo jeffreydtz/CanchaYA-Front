@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -11,14 +12,23 @@ import { ChallengeCard } from './challenge-card'
 import { CreateChallengeDialog } from './create-challenge-dialog'
 import { Trophy, Plus, Loader2 } from 'lucide-react'
 
-type ChallengeFilter = 'all' | 'created' | 'invited' | 'playing' | 'finalized'
+type ChallengeFilter = 'all' | 'creados' | 'invitaciones' | 'jugando' | 'finalizados'
 
 export default function ChallengesList() {
   const { user } = useAuth()
+  const searchParams = useSearchParams()
   const [challenges, setChallenges] = useState<Desafio[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [activeFilter, setActiveFilter] = useState<ChallengeFilter>('all')
+
+  useEffect(() => {
+    // Check URL params for initial filter
+    const tabParam = searchParams.get('tab')
+    if (tabParam && ['all', 'creados', 'invitaciones', 'jugando', 'finalizados'].includes(tabParam)) {
+      setActiveFilter(tabParam as ChallengeFilter)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     loadChallenges()
@@ -94,24 +104,24 @@ export default function ChallengesList() {
     const personaId = user.id
 
     switch (activeFilter) {
-      case 'created':
+      case 'creados':
         // Challenges created by me
         return challenges.filter(c => c.creador.id === personaId)
 
-      case 'invited':
+      case 'invitaciones':
         // Challenges where I'm invited (in invitadosDesafiados)
         return challenges.filter(c =>
           c.invitadosDesafiados.some(p => p.id === personaId)
         )
 
-      case 'playing':
+      case 'jugando':
         // Challenges where I'm playing (in jugadoresCreador or jugadoresDesafiados)
         return challenges.filter(c =>
           c.jugadoresCreador.some(p => p.id === personaId) ||
           c.jugadoresDesafiados.some(p => p.id === personaId)
         )
 
-      case 'finalized':
+      case 'finalizados':
         // Finalized challenges where I participated
         return challenges.filter(c =>
           c.estado === 'Finalizado' &&
@@ -136,7 +146,7 @@ export default function ChallengesList() {
 
   // Count challenges for each filter
   const getCounts = () => {
-    if (!user?.id) return { all: 0, created: 0, invited: 0, playing: 0, finalized: 0 }
+    if (!user?.id) return { all: 0, creados: 0, invitaciones: 0, jugando: 0, finalizados: 0 }
 
     const personaId = user.id
 
@@ -147,13 +157,13 @@ export default function ChallengesList() {
         c.jugadoresDesafiados.some(p => p.id === personaId) ||
         c.invitadosDesafiados.some(p => p.id === personaId)
       ).length,
-      created: challenges.filter(c => c.creador.id === personaId).length,
-      invited: challenges.filter(c => c.invitadosDesafiados.some(p => p.id === personaId)).length,
-      playing: challenges.filter(c =>
+      creados: challenges.filter(c => c.creador.id === personaId).length,
+      invitaciones: challenges.filter(c => c.invitadosDesafiados.some(p => p.id === personaId)).length,
+      jugando: challenges.filter(c =>
         c.jugadoresCreador.some(p => p.id === personaId) ||
         c.jugadoresDesafiados.some(p => p.id === personaId)
       ).length,
-      finalized: challenges.filter(c =>
+      finalizados: challenges.filter(c =>
         c.estado === 'Finalizado' &&
         (c.creador.id === personaId ||
          c.jugadoresCreador.some(p => p.id === personaId) ||
@@ -204,17 +214,17 @@ export default function ChallengesList() {
           <TabsTrigger value="all">
             Todos ({counts.all})
           </TabsTrigger>
-          <TabsTrigger value="created">
-            Creados ({counts.created})
+          <TabsTrigger value="creados">
+            Creados ({counts.creados})
           </TabsTrigger>
-          <TabsTrigger value="invited">
-            Invitaciones ({counts.invited})
+          <TabsTrigger value="invitaciones">
+            Invitaciones ({counts.invitaciones})
           </TabsTrigger>
-          <TabsTrigger value="playing">
-            Jugando ({counts.playing})
+          <TabsTrigger value="jugando">
+            Jugando ({counts.jugando})
           </TabsTrigger>
-          <TabsTrigger value="finalized">
-            Finalizados ({counts.finalized})
+          <TabsTrigger value="finalizados">
+            Finalizados ({counts.finalizados})
           </TabsTrigger>
         </TabsList>
 
@@ -236,14 +246,14 @@ export default function ChallengesList() {
                   <div className="text-center">
                     <p className="font-medium">No hay desafíos</p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {activeFilter === 'invited' && 'No tienes invitaciones pendientes'}
-                      {activeFilter === 'created' && 'Crea tu primer desafío'}
-                      {activeFilter === 'playing' && 'No estás jugando ningún desafío activo'}
-                      {activeFilter === 'finalized' && 'No tienes desafíos finalizados'}
+                      {activeFilter === 'invitaciones' && 'No tienes invitaciones pendientes'}
+                      {activeFilter === 'creados' && 'Crea tu primer desafío'}
+                      {activeFilter === 'jugando' && 'No estás jugando ningún desafío activo'}
+                      {activeFilter === 'finalizados' && 'No tienes desafíos finalizados'}
                       {activeFilter === 'all' && 'Crea tu primer desafío para comenzar'}
                     </p>
                   </div>
-                  {(activeFilter === 'created' || activeFilter === 'all') && (
+                  {(activeFilter === 'creados' || activeFilter === 'all') && (
                     <Button onClick={() => setShowCreateDialog(true)} className="mt-4">
                       <Plus className="h-4 w-4 mr-2" />
                       Crear desafío

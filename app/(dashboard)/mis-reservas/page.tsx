@@ -71,8 +71,6 @@ function ReservationCard({ reserva, onCancel, onConfirm, onUpdate }: {
         return <AlertCircle className="h-5 w-5 text-blue-500" />
       case 'cancelada':
         return <XCircle className="h-5 w-5 text-red-500" />
-      case 'completada':
-        return <CheckCircle className="h-5 w-5 text-blue-500" />
       default:
         return <AlertCircle className="h-5 w-5 text-gray-500" />
     }
@@ -86,8 +84,6 @@ function ReservationCard({ reserva, onCancel, onConfirm, onUpdate }: {
         return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-200 dark:border-blue-800'
       case 'cancelada':
         return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-200 dark:border-red-800'
-      case 'completada':
-        return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-200 dark:border-blue-800'
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/20 dark:text-gray-200 dark:border-gray-800'
     }
@@ -264,7 +260,7 @@ function ReservationCard({ reserva, onCancel, onConfirm, onUpdate }: {
                 
                 {/* Create Challenge Button - Only for confirmed reservations */}
                 {reserva.estado.toLowerCase() === 'confirmada' && isUpcoming && (
-                  <Link href={`/competitivo?action=create&reservaId=${reserva.id}`}>
+                  <Link href="/desafios">
                     <Button size="sm" variant="outline" className="border-purple-300 text-purple-700 hover:bg-purple-50 dark:border-purple-600 dark:text-purple-300 dark:hover:bg-purple-900/20">
                       <Trophy className="h-3 w-3 mr-1" />
                       Crear Desafío
@@ -349,14 +345,14 @@ function LoadingSkeleton() {
 }
 
 export default function MisReservasPage() {
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, personaId } = useAuth()
   const [reservas, setReservas] = useState<Reserva[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState('all')
 
   useEffect(() => {
-    if (!isAuthenticated || !user?.personaId) return
+    if (!isAuthenticated || !personaId) return
 
     const fetchReservas = async () => {
       setLoading(true)
@@ -364,10 +360,10 @@ export default function MisReservasPage() {
       try {
         const response = await apiClient.getReservas()
         if (response.data) {
-          // Filter reservations by current user's personaId
+          // Filter reservations by current user's persona id
           // Backend returns all reservations, frontend filters by user
           const userReservas = response.data.filter(
-            (reserva: Reserva) => reserva.persona.id === user.personaId
+            (reserva: Reserva) => reserva.persona.id === personaId
           )
           setReservas(userReservas)
         } else {
@@ -381,7 +377,7 @@ export default function MisReservasPage() {
     }
 
     fetchReservas()
-  }, [isAuthenticated, user?.personaId])
+  }, [isAuthenticated, personaId])
 
   const handleCancelReservation = (reservaId: string) => {
     setReservas(prev => prev.filter(r => r.id !== reservaId))
@@ -544,7 +540,7 @@ export default function MisReservasPage() {
                   <p className="text-gray-600 mb-4">
                     {activeTab === 'all' ? 'Comienza reservando tu primera cancha deportiva.' :
                      activeTab === 'upcoming' ? 'Reserva una cancha para tus próximos partidos.' :
-                     activeTab === 'past' ? 'Aquí aparecerán tus reservas completadas.' :
+                     activeTab === 'past' ? 'Aquí aparecerán tus reservas pasadas.' :
                      'Aquí aparecerán las reservas que hayas cancelado.'}
                   </p>
                   <Link href="/">

@@ -152,8 +152,8 @@ const fetchDashboardData = async (filters?: Record<string, any> | null): Promise
       }
     }
 
-    // Filter confirmed and completed reservations
-    const confirmedReservations = reservas.filter(r => r.estado === 'confirmada' || r.estado === 'completada')
+    // Filter confirmed reservations
+    const confirmedReservations = reservas.filter(r => r.estado === 'confirmada')
 
     // Get today's confirmed reservations
     const today = startOfDay(new Date())

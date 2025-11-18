@@ -135,7 +135,7 @@ export function ClubAnalyticsCard({
         )
 
         const confirmedReservas = clubReservas.filter(
-          (r: Reserva) => r.estado === 'confirmada' || r.estado === 'completada'
+          (r: Reserva) => r.estado === 'confirmada'
         )
 
         const ingresos = confirmedReservas.reduce((sum: number, r: Reserva) => {

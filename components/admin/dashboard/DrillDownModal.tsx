@@ -92,6 +92,7 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
   const [loading, setLoading] = useState(false)
   const [analytics, setAnalytics] = useState<DetailedAnalytics | null>(null)
   const [activeTab, setActiveTab] = useState('overview')
+  const [canchas, setCanchas] = useState<any[]>([])
 
   useEffect(() => {
     if (isOpen && data) {
@@ -115,8 +116,11 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
       }
 
       const reservas = reservasRes.data || []
-      const canchas = canchasRes.data || []
+      const canchasData = canchasRes.data || []
       const clubs = clubsRes.data || []
+
+      // Store canchas in state for use in handleExportData
+      setCanchas(canchasData)
 
       // Filter reservations based on drill-down type
       let filteredReservations: ReservationDetail[] = []
@@ -129,7 +133,7 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
           break
 
         case 'club':
-          const clubCanchas = canchas.filter(c => c.club?.id === data.id)
+          const clubCanchas = canchasData.filter(c => c.club?.id === data.id)
           const clubCanchaIds = clubCanchas.map(c => c.id)
           filteredReservations = reservas.filter(
             r => r.disponibilidad?.cancha?.id && clubCanchaIds.includes(r.disponibilidad.cancha.id)
@@ -156,8 +160,10 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
           break
 
         case 'deporte':
+          const deporteCanchas = canchasData.filter(c => c.deporte?.nombre === data.name)
+          const deporteCanchaIds = deporteCanchas.map(c => c.id)
           filteredReservations = reservas.filter(
-            r => r.disponibilidad?.cancha?.deporte?.nombre === data.name
+            r => r.disponibilidad?.cancha?.id && deporteCanchaIds.includes(r.disponibilidad.cancha.id)
           )
           break
 
@@ -167,11 +173,11 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
 
       // Calculate analytics
       const confirmedReservations = filteredReservations.filter(
-        r => r.estado === 'confirmada' || r.estado === 'completada'
+        r => r.estado === 'confirmada'
       )
 
       const totalRevenue = confirmedReservations.reduce((sum, r) => {
-        const cancha = canchas.find(c => c.id === r.disponibilidad?.cancha?.id)
+        const cancha = canchasData.find(c => c.id === r.disponibilidad?.cancha?.id)
         return sum + Number(cancha?.precioPorHora || 0)
       }, 0)
 
@@ -192,7 +198,7 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
       filteredReservations.forEach(r => {
         const day = new Date(r.fechaHora).getDay()
         const existing = dailyMap.get(day) || { cantidad: 0, ingresos: 0 }
-        const cancha = canchas.find(c => c.id === r.disponibilidad?.cancha?.id)
+        const cancha = canchasData.find(c => c.id === r.disponibilidad?.cancha?.id)
         const revenue = Number(cancha?.precioPorHora || 0)
         dailyMap.set(day, {
           cantidad: existing.cantidad + 1,
@@ -211,7 +217,7 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
         const userId = r.persona.id
         const userName = r.persona.nombre
         const existing = userMap.get(userId) || { reservas: 0, gasto: 0 }
-        const cancha = canchas.find(c => c.id === r.disponibilidad?.cancha?.id)
+        const cancha = canchasData.find(c => c.id === r.disponibilidad?.cancha?.id)
         const cost = Number(cancha?.precioPorHora || 0)
         userMap.set(userName, {
           reservas: existing.reservas + 1,
@@ -232,7 +238,7 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
       confirmedReservations.forEach(r => {
         const date = format(new Date(r.fechaHora), 'dd/MM')
         const existing = periodMap.get(date) || 0
-        const cancha = canchas.find(c => c.id === r.disponibilidad?.cancha?.id)
+        const cancha = canchasData.find(c => c.id === r.disponibilidad?.cancha?.id)
         periodMap.set(date, existing + (cancha?.precioPorHora || 0))
       })
       const revenueByPeriod = Array.from(periodMap.entries()).map(([periodo, ingresos]) => ({
@@ -266,13 +272,16 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
   const handleExportData = () => {
     if (!analytics || !data) return
 
-    const exportData = analytics.reservations.map(r => ({
-      'Fecha': format(new Date(r.fechaHora), 'dd/MM/yyyy HH:mm', { locale: es }),
-      'Cancha': r.disponibilidad?.cancha?.nombre || 'N/A',
-      'Deporte': r.disponibilidad?.cancha?.deporte?.nombre || 'N/A',
-      'Usuario': r.persona?.nombre || 'N/A',
-      'Estado': r.estado
-    }))
+    const exportData = analytics.reservations.map(r => {
+      const cancha = canchas.find(c => c.id === r.disponibilidad?.cancha?.id)
+      return {
+        'Fecha': format(new Date(r.fechaHora), 'dd/MM/yyyy HH:mm', { locale: es }),
+        'Cancha': r.disponibilidad?.cancha?.nombre || 'N/A',
+        'Deporte': cancha?.deporte?.nombre || 'N/A',
+        'Usuario': r.persona?.nombre || 'N/A',
+        'Estado': r.estado
+      }
+    })
 
     const filename = `drill-down-${data.type}-${data.name.replace(/\s+/g, '-')}-${format(new Date(), 'yyyy-MM-dd')}.csv`
     const result = downloadCSV(exportData, filename)
@@ -526,7 +535,9 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {analytics.reservations.map((reservation) => (
+                        {analytics.reservations.map((reservation) => {
+                          const reservacionCancha = canchas.find(c => c.id === reservation.disponibilidad?.cancha?.id)
+                          return (
                           <TableRow key={reservation.id}>
                             <TableCell className="font-medium">
                               {format(new Date(reservation.fechaHora), 'dd/MM/yyyy HH:mm', { locale: es })}
@@ -537,7 +548,7 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
                                   {reservation.disponibilidad?.cancha?.nombre || 'N/A'}
                                 </div>
                                 <div className="text-xs text-gray-500">
-                                  {reservation.disponibilidad?.cancha?.deporte?.nombre || 'N/A'}
+                                  {reservacionCancha?.deporte?.nombre || 'N/A'}
                                 </div>
                               </div>
                             </TableCell>
@@ -554,7 +565,7 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
                             <TableCell>
                               <Badge
                                 variant={
-                                  reservation.estado === 'confirmada' || reservation.estado === 'completada'
+                                  reservation.estado === 'confirmada'
                                     ? 'default'
                                     : reservation.estado === 'cancelada'
                                     ? 'destructive'
@@ -565,7 +576,8 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
                               </Badge>
                             </TableCell>
                           </TableRow>
-                        ))}
+                          )
+                        })}
                       </TableBody>
                     </Table>
                   </div>
