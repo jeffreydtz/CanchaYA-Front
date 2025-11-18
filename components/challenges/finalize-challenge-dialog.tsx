@@ -54,7 +54,7 @@ export function FinalizeChallengeDialog({
         data.valoracion = valoracion
       }
 
-      const response = await apiClient.finalizarDesafio(challenge.id, data)
+      const response = await apiClient.finalizarDesafio(challenge?.id || '', data)
 
       if (response.error) {
         // Check for specific error messages
@@ -101,7 +101,7 @@ export function FinalizeChallengeDialog({
                 <Label htmlFor="creador" className="flex-1 cursor-pointer">
                   <div className="font-medium">Equipo Creador</div>
                   <div className="text-sm text-muted-foreground">
-                    {challenge.jugadoresCreador.map(j => `${j.nombre} ${j.apellido}`).join(', ')}
+                    {(challenge?.jugadoresCreador || []).map(j => `${j?.nombre} ${j?.apellido}`).join(', ') || 'Solo capitán'}
                   </div>
                 </Label>
               </div>
@@ -110,8 +110,8 @@ export function FinalizeChallengeDialog({
                 <Label htmlFor="desafiado" className="flex-1 cursor-pointer">
                   <div className="font-medium">Equipo Desafiado</div>
                   <div className="text-sm text-muted-foreground">
-                    {challenge.jugadoresDesafiados.length > 0
-                      ? challenge.jugadoresDesafiados.map(j => `${j.nombre} ${j.apellido}`).join(', ')
+                    {(challenge?.jugadoresDesafiados || []).length > 0
+                      ? (challenge?.jugadoresDesafiados || []).map(j => `${j?.nombre} ${j?.apellido}`).join(', ')
                       : 'Sin jugadores'}
                   </div>
                 </Label>

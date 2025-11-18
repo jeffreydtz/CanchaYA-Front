@@ -30,14 +30,14 @@ export function ChallengeCard({
   const [isLoading, setIsLoading] = useState(false)
 
   // Check user role in this challenge
-  const isCreator = challenge.creador.id === currentPersonaId
-  const isInvited = challenge.invitadosDesafiados.some(p => p.id === currentPersonaId)
-  const isJugadorCreador = challenge.jugadoresCreador.some(p => p.id === currentPersonaId)
-  const isJugadorDesafiado = challenge.jugadoresDesafiados.some(p => p.id === currentPersonaId)
+  const isCreator = challenge?.creador?.id === currentPersonaId
+  const isInvited = (challenge?.invitadosDesafiados || []).some(p => p?.id === currentPersonaId)
+  const isJugadorCreador = (challenge?.jugadoresCreador || []).some(p => p?.id === currentPersonaId)
+  const isJugadorDesafiado = (challenge?.jugadoresDesafiados || []).some(p => p?.id === currentPersonaId)
   const isParticipant = isCreator || isJugadorCreador || isJugadorDesafiado
 
   // Check if reservation is in the past
-  const reservationDate = new Date(challenge.reserva.fechaHora)
+  const reservationDate = new Date(challenge?.reserva?.fechaHora || new Date())
   const isPast = reservationDate < new Date()
 
   // Determine which side can add players
@@ -90,13 +90,13 @@ export function ChallengeCard({
           <div className="flex-1">
             <CardTitle className="text-lg flex items-center gap-2">
               <Trophy className="h-5 w-5 text-yellow-600" />
-              {challenge.deporte.nombre}
+              {challenge?.deporte?.nombre || 'Desafío'}
             </CardTitle>
             <div className="text-sm text-muted-foreground mt-1">
-              Creado por {challenge.creador.nombre} {challenge.creador.apellido}
+              Creado por {challenge?.creador?.nombre} {challenge?.creador?.apellido}
             </div>
           </div>
-          {getEstadoBadge(challenge.estado)}
+          {getEstadoBadge(challenge?.estado || 'Pendiente')}
         </div>
       </CardHeader>
 
@@ -105,15 +105,15 @@ export function ChallengeCard({
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm">
             <Calendar className="h-4 w-4 text-muted-foreground" />
-            <span>{formatDate(challenge.reserva.fechaHora)}</span>
+            <span>{challenge?.reserva?.fechaHora ? formatDate(challenge.reserva.fechaHora) : 'Fecha no disponible'}</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
             <Clock className="h-4 w-4 text-muted-foreground" />
-            <span>{formatTime(challenge.reserva.fechaHora)}</span>
+            <span>{challenge?.reserva?.fechaHora ? formatTime(challenge.reserva.fechaHora) : 'Hora no disponible'}</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
             <MapPin className="h-4 w-4 text-muted-foreground" />
-            <span>{challenge.reserva.disponibilidad?.cancha?.nombre || 'Cancha'}</span>
+            <span>{challenge?.reserva?.disponibilidad?.cancha?.nombre || 'Cancha'}</span>
           </div>
         </div>
 
@@ -126,10 +126,10 @@ export function ChallengeCard({
               Equipo Creador
             </div>
             <div className="space-y-1">
-              {challenge.jugadoresCreador.map(jugador => (
-                <div key={jugador.id} className="text-sm">
-                  {jugador.nombre} {jugador.apellido}
-                  {jugador.id === challenge.creador.id && (
+              {(challenge?.jugadoresCreador || []).map(jugador => (
+                <div key={jugador?.id} className="text-sm">
+                  {jugador?.nombre} {jugador?.apellido}
+                  {jugador?.id === challenge?.creador?.id && (
                     <Badge variant="outline" className="ml-1 text-xs">Capitán</Badge>
                   )}
                 </div>
@@ -145,18 +145,18 @@ export function ChallengeCard({
             </div>
             <div className="space-y-1">
               {/* Invited players */}
-              {challenge.invitadosDesafiados.map(invitado => (
-                <div key={invitado.id} className="text-sm text-muted-foreground italic">
-                  {invitado.nombre} {invitado.apellido} (invitado)
+              {(challenge?.invitadosDesafiados || []).map(invitado => (
+                <div key={invitado?.id} className="text-sm text-muted-foreground italic">
+                  {invitado?.nombre} {invitado?.apellido} (invitado)
                 </div>
               ))}
               {/* Accepted players */}
-              {challenge.jugadoresDesafiados.map(jugador => (
-                <div key={jugador.id} className="text-sm">
-                  {jugador.nombre} {jugador.apellido}
+              {(challenge?.jugadoresDesafiados || []).map(jugador => (
+                <div key={jugador?.id} className="text-sm">
+                  {jugador?.nombre} {jugador?.apellido}
                 </div>
               ))}
-              {challenge.jugadoresDesafiados.length === 0 && challenge.invitadosDesafiados.length === 0 && (
+              {(challenge?.jugadoresDesafiados || []).length === 0 && (challenge?.invitadosDesafiados || []).length === 0 && (
                 <div className="text-sm text-muted-foreground">Sin jugadores</div>
               )}
             </div>
@@ -164,25 +164,25 @@ export function ChallengeCard({
         </div>
 
         {/* Result if finalized */}
-        {challenge.estado === 'Finalizado' && challenge.resultado && (
+        {challenge?.estado === 'Finalizado' && challenge?.resultado && (
           <div className="pt-4 border-t">
             <div className="flex items-center justify-between">
               <div className="text-sm font-semibold">Resultado: {challenge.resultado}</div>
-              {challenge.ganadorLado && (
+              {challenge?.ganadorLado && (
                 <Badge variant="default" className="bg-yellow-100 text-yellow-800">
                   Ganador: {challenge.ganadorLado === 'creador' ? 'Equipo Creador' : 'Equipo Desafiado'}
                 </Badge>
               )}
             </div>
-            {(challenge.valoracionCreador || challenge.valoracionDesafiado) && (
+            {(challenge?.valoracionCreador || challenge?.valoracionDesafiado) && (
               <div className="flex items-center gap-4 mt-2 text-sm">
-                {challenge.valoracionCreador && (
+                {challenge?.valoracionCreador && (
                   <div className="flex items-center gap-1">
                     <Star className="h-4 w-4 text-yellow-500" />
                     Creador: {challenge.valoracionCreador}/5
                   </div>
                 )}
-                {challenge.valoracionDesafiado && (
+                {challenge?.valoracionDesafiado && (
                   <div className="flex items-center gap-1">
                     <Star className="h-4 w-4 text-yellow-500" />
                     Desafiado: {challenge.valoracionDesafiado}/5
@@ -217,7 +217,7 @@ export function ChallengeCard({
           )}
 
           {/* Add players */}
-          {(canAddCreadores || canAddDesafiados) && (challenge.estado === 'Pendiente' || challenge.estado === 'Aceptado') && (
+          {(canAddCreadores || canAddDesafiados) && (challenge?.estado === 'Pendiente' || challenge?.estado === 'Aceptado') && (
             <Button
               size="sm"
               variant="outline"
@@ -238,7 +238,7 @@ export function ChallengeCard({
           )}
 
           {/* Info for past pending challenges */}
-          {isPast && challenge.estado === 'Pendiente' && (
+          {isPast && challenge?.estado === 'Pendiente' && (
             <Badge variant="secondary" className="bg-gray-100 text-gray-600">
               Desafío expirado
             </Badge>

@@ -106,38 +106,38 @@ export default function ChallengesList() {
     switch (activeFilter) {
       case 'creados':
         // Challenges created by me
-        return challenges.filter(c => c.creador.id === personaId)
+        return challenges.filter(c => c?.creador?.id === personaId)
 
       case 'invitaciones':
         // Challenges where I'm invited (in invitadosDesafiados)
         return challenges.filter(c =>
-          c.invitadosDesafiados.some(p => p.id === personaId)
+          (c?.invitadosDesafiados || []).some(p => p?.id === personaId)
         )
 
       case 'jugando':
         // Challenges where I'm playing (in jugadoresCreador or jugadoresDesafiados)
         return challenges.filter(c =>
-          c.jugadoresCreador.some(p => p.id === personaId) ||
-          c.jugadoresDesafiados.some(p => p.id === personaId)
+          (c?.jugadoresCreador || []).some(p => p?.id === personaId) ||
+          (c?.jugadoresDesafiados || []).some(p => p?.id === personaId)
         )
 
       case 'finalizados':
         // Finalized challenges where I participated
         return challenges.filter(c =>
-          c.estado === 'Finalizado' &&
-          (c.creador.id === personaId ||
-           c.jugadoresCreador.some(p => p.id === personaId) ||
-           c.jugadoresDesafiados.some(p => p.id === personaId))
+          c?.estado === 'Finalizado' &&
+          (c?.creador?.id === personaId ||
+           (c?.jugadoresCreador || []).some(p => p?.id === personaId) ||
+           (c?.jugadoresDesafiados || []).some(p => p?.id === personaId))
         )
 
       case 'all':
       default:
         // All challenges where I'm involved in any way
         return challenges.filter(c =>
-          c.creador.id === personaId ||
-          c.jugadoresCreador.some(p => p.id === personaId) ||
-          c.jugadoresDesafiados.some(p => p.id === personaId) ||
-          c.invitadosDesafiados.some(p => p.id === personaId)
+          c?.creador?.id === personaId ||
+          (c?.jugadoresCreador || []).some(p => p?.id === personaId) ||
+          (c?.jugadoresDesafiados || []).some(p => p?.id === personaId) ||
+          (c?.invitadosDesafiados || []).some(p => p?.id === personaId)
         )
     }
   }
@@ -152,22 +152,22 @@ export default function ChallengesList() {
 
     return {
       all: challenges.filter(c =>
-        c.creador.id === personaId ||
-        c.jugadoresCreador.some(p => p.id === personaId) ||
-        c.jugadoresDesafiados.some(p => p.id === personaId) ||
-        c.invitadosDesafiados.some(p => p.id === personaId)
+        c?.creador?.id === personaId ||
+        (c?.jugadoresCreador || []).some(p => p?.id === personaId) ||
+        (c?.jugadoresDesafiados || []).some(p => p?.id === personaId) ||
+        (c?.invitadosDesafiados || []).some(p => p?.id === personaId)
       ).length,
-      creados: challenges.filter(c => c.creador.id === personaId).length,
-      invitaciones: challenges.filter(c => c.invitadosDesafiados.some(p => p.id === personaId)).length,
+      creados: challenges.filter(c => c?.creador?.id === personaId).length,
+      invitaciones: challenges.filter(c => (c?.invitadosDesafiados || []).some(p => p?.id === personaId)).length,
       jugando: challenges.filter(c =>
-        c.jugadoresCreador.some(p => p.id === personaId) ||
-        c.jugadoresDesafiados.some(p => p.id === personaId)
+        (c?.jugadoresCreador || []).some(p => p?.id === personaId) ||
+        (c?.jugadoresDesafiados || []).some(p => p?.id === personaId)
       ).length,
       finalizados: challenges.filter(c =>
-        c.estado === 'Finalizado' &&
-        (c.creador.id === personaId ||
-         c.jugadoresCreador.some(p => p.id === personaId) ||
-         c.jugadoresDesafiados.some(p => p.id === personaId))
+        c?.estado === 'Finalizado' &&
+        (c?.creador?.id === personaId ||
+         (c?.jugadoresCreador || []).some(p => p?.id === personaId) ||
+         (c?.jugadoresDesafiados || []).some(p => p?.id === personaId))
       ).length,
     }
   }

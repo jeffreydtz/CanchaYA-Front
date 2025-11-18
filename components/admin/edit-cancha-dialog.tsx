@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
 import apiClient, { Cancha, Club, Deporte } from '@/lib/api-client'
-import { Loader2, MapPin, DollarSign, Building2, Trophy } from 'lucide-react'
+import { Loader2, MapPin, DollarSign, Building2, Trophy, Compass } from 'lucide-react'
 
 interface EditCanchaDialogProps {
   cancha: Cancha | null
@@ -36,6 +36,8 @@ export function EditCanchaDialog({ cancha, open, onOpenChange, onSuccess }: Edit
     activa: true,
     deporteId: '',
     clubId: '',
+    latitude: undefined as number | undefined,
+    longitude: undefined as number | undefined,
   })
 
   // Cargar clubs y deportes
@@ -67,6 +69,8 @@ export function EditCanchaDialog({ cancha, open, onOpenChange, onSuccess }: Edit
         activa: cancha.activa ?? true,
         deporteId: cancha.deporte?.id || '',
         clubId: cancha.club?.id || '',
+        latitude: (cancha as any).latitude,
+        longitude: (cancha as any).longitude,
       })
     }
   }, [cancha])
@@ -100,7 +104,20 @@ export function EditCanchaDialog({ cancha, open, onOpenChange, onSuccess }: Edit
 
     setLoading(true)
     try {
-      const response = await apiClient.updateCancha(cancha.id, formData)
+      // Prepare data for API - include coordinates if provided
+      const updateData = {
+        nombre: formData.nombre,
+        ubicacion: formData.ubicacion,
+        tipoSuperficie: formData.tipoSuperficie,
+        precioPorHora: formData.precioPorHora,
+        activa: formData.activa,
+        deporteId: formData.deporteId,
+        clubId: formData.clubId,
+        ...(formData.latitude !== undefined && { latitude: formData.latitude }),
+        ...(formData.longitude !== undefined && { longitude: formData.longitude }),
+      }
+
+      const response = await apiClient.updateCancha(cancha.id, updateData)
       
       if (response.error) {
         toast.error('Error al actualizar', {
@@ -166,6 +183,53 @@ export function EditCanchaDialog({ cancha, open, onOpenChange, onSuccess }: Edit
               className="border-gray-200 dark:border-gray-700"
               required
             />
+          </div>
+
+          {/* Coordenadas Geográficas */}
+          <div className="space-y-2 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
+            <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+              <Compass className="h-4 w-4" />
+              Coordenadas Geográficas
+            </Label>
+            <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+              Ajusta manualmente las coordenadas si el geocoding automático no fue preciso
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="latitude" className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                  Latitud
+                </Label>
+                <Input
+                  id="latitude"
+                  type="number"
+                  value={formData.latitude ?? ''}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    latitude: e.target.value ? parseFloat(e.target.value) : undefined
+                  })}
+                  placeholder="Ej: -34.6037"
+                  step="0.00001"
+                  className="border-gray-200 dark:border-gray-700"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="longitude" className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                  Longitud
+                </Label>
+                <Input
+                  id="longitude"
+                  type="number"
+                  value={formData.longitude ?? ''}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    longitude: e.target.value ? parseFloat(e.target.value) : undefined
+                  })}
+                  placeholder="Ej: -58.3816"
+                  step="0.00001"
+                  className="border-gray-200 dark:border-gray-700"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Grid de Deporte y Club */}
