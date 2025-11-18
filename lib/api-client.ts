@@ -138,6 +138,7 @@ export interface Cancha {
     id: string
     nombre: string
   }
+  fotos?: CanchaFoto[]
 }
 
 export interface DisponibilidadHorario {

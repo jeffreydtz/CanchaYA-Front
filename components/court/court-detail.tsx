@@ -10,9 +10,10 @@ import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { MapPin, DollarSign, Users, Calendar as CalendarIcon, Clock } from 'lucide-react'
 import { toast } from 'sonner'
-import apiClient, { Cancha, Horario, DisponibilidadHorario } from '@/lib/api-client'
+import apiClient, { Cancha, Horario, DisponibilidadHorario, CanchaFoto } from '@/lib/api-client'
 import { getWeekdayName, isDateDisabled, getNextAvailableDate, formatDate } from '@/lib/date-utils'
 import Image from 'next/image'
+import { CourtPhotosCarousel } from '@/components/court/court-photos-carousel'
 
 export default function CourtDetail() {
   const params = useParams()
@@ -24,6 +25,7 @@ export default function CourtDetail() {
   const [disponibilidades, setDisponibilidades] = useState<DisponibilidadHorario[]>([])
   const [loading, setLoading] = useState(true)
   const [reserving, setReserving] = useState(false)
+  const [courtFotos, setCourtFotos] = useState<CanchaFoto[]>([])
 
   const courtId = params?.id as string
 
@@ -66,6 +68,21 @@ export default function CourtDetail() {
     }
 
     loadCourtData()
+  }, [courtId])
+
+  useEffect(() => {
+    const loadFotos = async () => {
+      if (!courtId) return
+      try {
+        const response = await apiClient.getCanchaFotos(courtId)
+        if (response.data) {
+          setCourtFotos(response.data)
+        }
+      } catch (error) {
+        console.error('Error loading court fotos:', error)
+      }
+    }
+    loadFotos()
   }, [courtId])
 
   const getAvailableHours = () => {
@@ -187,16 +204,12 @@ export default function CourtDetail() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Court Image */}
-        <div className="relative h-64 lg:h-96 rounded-lg overflow-hidden bg-gray-200">
-          <Image
-            src={'/cancha.jpeg'}
-            alt={court.nombre}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          />
-        </div>
+        {/* Court Photos Carousel */}
+        <CourtPhotosCarousel
+          photos={courtFotos}
+          courtName={court.nombre}
+          className="rounded-lg overflow-hidden"
+        />
 
         {/* Court Information */}
         <div className="space-y-6">

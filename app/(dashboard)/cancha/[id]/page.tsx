@@ -33,7 +33,7 @@ import {
   Camera,
   CheckCircle
 } from 'lucide-react'
-import apiClient, { Cancha, DisponibilidadHorario } from '@/lib/api-client'
+import apiClient, { Cancha, DisponibilidadHorario, CanchaFoto } from '@/lib/api-client'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -41,6 +41,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import Navbar from '@/components/navbar/navbar'
 import { useAuth } from '@/components/auth/auth-context'
 import dynamic from 'next/dynamic'
+import { CourtPhotosCarousel } from '@/components/court/court-photos-carousel'
 
 // Importación dinámica del componente 3D (solo cliente)
 const Court3DViewer = dynamic(() => import('@/components/3d/Court3DViewer'), {
@@ -110,6 +111,7 @@ export default function CanchaDetailPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [selectedTime, setSelectedTime] = useState<string>('')
   const [reserving, setReserving] = useState(false)
+  const [canchaFotos, setCanchaFotos] = useState<CanchaFoto[]>([])
   
   const canchaId = params.id as string
 
@@ -147,6 +149,21 @@ export default function CanchaDetailPage() {
     
     fetchCanchaData()
   }, [canchaId, router])
+
+  useEffect(() => {
+    const loadFotos = async () => {
+      if (!canchaId) return
+      try {
+        const response = await apiClient.getCanchaFotos(canchaId)
+        if (response.data) {
+          setCanchaFotos(response.data)
+        }
+      } catch (error) {
+        console.error('Error fetching cancha fotos:', error)
+      }
+    }
+    loadFotos()
+  }, [canchaId])
 
   // Get available time slots for the selected date based on disponibilidades
   const getAvailableTimeSlots = (): string[] => {
@@ -358,6 +375,13 @@ export default function CanchaDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Court Photos Carousel */}
+            <CourtPhotosCarousel
+              photos={canchaFotos}
+              courtName={cancha?.nombre || ''}
+              className="rounded-xl shadow-xl"
+            />
+
             {/* Court Details Card */}
             <Card className="bg-white/80 backdrop-blur-sm border-white/20 shadow-xl">
               <CardContent className="p-8">

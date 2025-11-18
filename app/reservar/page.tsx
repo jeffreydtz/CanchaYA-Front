@@ -7,8 +7,9 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Calendar } from '@/components/ui/calendar'
 import { toast } from 'sonner'
-import apiClient, { Club, Cancha, AvailabilitySlot } from '@/lib/api-client'
+import apiClient, { Club, Cancha, AvailabilitySlot, CanchaFoto } from '@/lib/api-client'
 import { Loader2, MapPin, Trophy, Calendar as CalendarIcon, Clock, CheckCircle2 } from 'lucide-react'
+import { CourtPhotosCarousel } from '@/components/court/court-photos-carousel'
 import {
   Select,
   SelectContent,
@@ -33,6 +34,7 @@ export default function ReservarPage() {
   const [slotsLoading, setSlotsLoading] = useState(false)
   const [reserving, setReserving] = useState<string | null>(null)
   const [personaId, setPersonaId] = useState<string | null>(null)
+  const [canchaFotos, setCanchaFotos] = useState<CanchaFoto[]>([])
 
   useEffect(() => {
     const fetchPersonaId = async () => {
@@ -123,6 +125,27 @@ export default function ReservarPage() {
     }
     loadAvailability()
   }, [selectedCancha, selectedDate])
+
+  useEffect(() => {
+    const loadCanchaFotos = async () => {
+      if (!selectedCancha) {
+        setCanchaFotos([])
+        return
+      }
+
+      try {
+        const response = await apiClient.getCanchaFotos(selectedCancha)
+        if (response.data) {
+          setCanchaFotos(response.data)
+        } else {
+          setCanchaFotos([])
+        }
+      } catch (error) {
+        setCanchaFotos([])
+      }
+    }
+    loadCanchaFotos()
+  }, [selectedCancha])
 
   const handleReserve = async (slot: AvailabilitySlot) => {
     if (!personaId) {
@@ -278,6 +301,17 @@ export default function ReservarPage() {
                 )}
               </CardContent>
             </Card>
+
+            {selectedCancha && (
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Fotos de la Cancha</h3>
+                <CourtPhotosCarousel
+                  photos={canchaFotos}
+                  courtName={selectedCanchaObj?.nombre || ''}
+                  className="rounded-lg"
+                />
+              </div>
+            )}
 
             <Card className="border-gray-200 dark:border-gray-800">
               <CardHeader className="pb-3">
