@@ -48,7 +48,7 @@ export function LocationSearchMap({
   const [isSearching, setIsSearching] = useState(false)
   const [suggestions, setSuggestions] = useState<any[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
-  const searchTimeoutRef = useRef<NodeJS.Timeout>()
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Geocodificar dirección usando Nominatim (OpenStreetMap)
   const geocodeAddress = async (query: string) => {
