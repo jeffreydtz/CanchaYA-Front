@@ -12,9 +12,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from 'sonner'
 import apiClient, { Cancha, Club, Deporte } from '@/lib/api-client'
-import { Loader2, MapPin, DollarSign, Building2, Trophy } from 'lucide-react'
+import { Loader2, MapPin, DollarSign, Building2, Trophy, Map } from 'lucide-react'
+import { LocationSearchMap } from './location-search-map'
 
 interface EditCanchaDialogProps {
   cancha: Cancha | null
@@ -27,7 +29,8 @@ export function EditCanchaDialog({ cancha, open, onOpenChange, onSuccess }: Edit
   const [loading, setLoading] = useState(false)
   const [clubs, setClubs] = useState<Club[]>([])
   const [deportes, setDeportes] = useState<Deporte[]>([])
-  
+  const [locationTab, setLocationTab] = useState<'manual' | 'map'>('manual')
+
   const [formData, setFormData] = useState({
     nombre: '',
     ubicacion: '',
@@ -37,6 +40,8 @@ export function EditCanchaDialog({ cancha, open, onOpenChange, onSuccess }: Edit
     deporteId: '',
     clubId: '',
   })
+
+  const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null)
 
   // Cargar clubs y deportes
   useEffect(() => {
@@ -152,20 +157,49 @@ export function EditCanchaDialog({ cancha, open, onOpenChange, onSuccess }: Edit
             />
           </div>
 
-          {/* Ubicación */}
+          {/* Ubicación con tabs */}
           <div className="space-y-2">
-            <Label htmlFor="ubicacion" className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+            <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
               <MapPin className="h-4 w-4" />
               Ubicación *
             </Label>
-            <Input
-              id="ubicacion"
-              value={formData.ubicacion}
-              onChange={(e) => setFormData({ ...formData, ubicacion: e.target.value })}
-              placeholder="Ej: Av. Principal 123, Rosario"
-              className="border-gray-200 dark:border-gray-700"
-              required
-            />
+
+            <Tabs value={locationTab} onValueChange={(v) => setLocationTab(v as 'manual' | 'map')} className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="manual">Texto</TabsTrigger>
+                <TabsTrigger value="map" className="flex items-center gap-2">
+                  <Map className="h-4 w-4" />
+                  Mapa
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="manual" className="space-y-3 mt-3">
+                <Input
+                  value={formData.ubicacion}
+                  onChange={(e) => setFormData({ ...formData, ubicacion: e.target.value })}
+                  placeholder="Ej: Av. Principal 123, Rosario"
+                  className="border-gray-200 dark:border-gray-700"
+                  required
+                />
+                {coordinates && (
+                  <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
+                    <p>Coordenadas: {coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}</p>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="map" className="mt-3">
+                <LocationSearchMap
+                  initialAddress={formData.ubicacion}
+                  initialLat={coordinates?.lat}
+                  initialLng={coordinates?.lng}
+                  onLocationSelect={(location) => {
+                    setFormData({ ...formData, ubicacion: location.address })
+                    setCoordinates({ lat: location.latitude, lng: location.longitude })
+                  }}
+                />
+              </TabsContent>
+            </Tabs>
           </div>
 
           {/* Grid de Deporte y Club */}

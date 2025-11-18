@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useRef, useState } from 'react'
+import { Suspense, useRef, useState, useEffect } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, PerspectiveCamera, Environment, ContactShadows } from '@react-three/drei'
 import { SoccerCourt, TennisCourt, PadelCourt, BasketballCourt, VolleyballCourt } from './CourtModels'
@@ -97,6 +97,7 @@ function LoadingFallback() {
 export function Court3DViewer({ sport, className = '' }: Court3DViewerProps) {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [autoRotate, setAutoRotate] = useState(false)
+  const [contextLost, setContextLost] = useState(false)
   const canvasRef = useRef<HTMLDivElement>(null)
 
   const toggleFullscreen = () => {
@@ -118,6 +119,7 @@ export function Court3DViewer({ sport, className = '' }: Court3DViewerProps) {
     if (normalized.includes('vóley') || normalized.includes('voley')) return 'Vóley'
     return sport
   }
+
 
   return (
     <Card className={`overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700 ${className}`}>
@@ -160,11 +162,42 @@ export function Court3DViewer({ sport, className = '' }: Court3DViewerProps) {
 
         {/* Canvas 3D */}
         <div className="w-full h-[400px] md:h-[500px]">
-          <Canvas shadows>
-            <Suspense fallback={null}>
-              <Scene sport={sport} />
-            </Suspense>
-          </Canvas>
+          {!contextLost ? (
+            <Canvas
+              shadows
+              dpr={[1, 1.5]}
+              gl={{
+                antialias: true,
+                alpha: true,
+                preserveDrawingBuffer: false,
+                failIfMajorPerformanceCaveat: false
+              }}
+              onCreated={(state) => {
+                state.gl.info.autoReset = true
+                state.gl.domElement.addEventListener('webglcontextlost', (e: Event) => {
+                  e.preventDefault()
+                  setContextLost(true)
+                  console.warn('WebGL context lost in Court3DViewer')
+                })
+              }}
+            >
+              <Suspense fallback={null}>
+                <Scene sport={sport} />
+              </Suspense>
+            </Canvas>
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-900 to-gray-800">
+              <div className="text-center space-y-4">
+                <p className="text-white text-sm">Contexto 3D perdido</p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-4 py-2 bg-cyan-500 text-white rounded hover:bg-cyan-600 transition-colors text-sm"
+                >
+                  Recargar página
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer con instrucciones */}
