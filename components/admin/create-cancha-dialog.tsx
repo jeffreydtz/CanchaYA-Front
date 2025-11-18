@@ -100,7 +100,12 @@ export function CreateCanchaDialog({ open, onOpenChange, onSuccess }: CreateCanc
 
     setLoading(true)
     try {
-      const response = await apiClient.createCancha(formData)
+      // Preparar datos con coordenadas opcionales
+      const submitData = {
+        ...formData,
+        ...(coordinates && { latitud: coordinates.lat, longitud: coordinates.lng })
+      }
+      const response = await apiClient.createCancha(submitData)
 
       if (response.error) {
         toast.error('Error al crear', {

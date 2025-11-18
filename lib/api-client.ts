@@ -122,6 +122,8 @@ export interface Cancha {
   id: string // UUID
   nombre: string
   ubicacion: string
+  latitud?: number // WGS84 (-90 to 90), puede ser null
+  longitud?: number // WGS84 (-180 to 180), puede ser null
   tipoSuperficie: string
   precioPorHora: number
   activa: boolean
@@ -721,6 +723,7 @@ const apiClient = {
 
   /**
    * Crear cancha - POST /canchas (admin only)
+   * Campos opcionales: latitud, longitud (WGS84)
    */
   createCancha: (data: {
     nombre: string
@@ -729,6 +732,8 @@ const apiClient = {
     precioPorHora: number
     deporteId: string
     clubId: string
+    latitud?: number // WGS84 opcional (-90 to 90)
+    longitud?: number // WGS84 opcional (-180 to 180)
   }) =>
     apiRequest<Cancha>('/canchas', {
       method: 'POST',

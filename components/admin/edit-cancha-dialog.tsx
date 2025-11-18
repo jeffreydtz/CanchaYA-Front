@@ -73,6 +73,12 @@ export function EditCanchaDialog({ cancha, open, onOpenChange, onSuccess }: Edit
         deporteId: cancha.deporte?.id || '',
         clubId: cancha.club?.id || '',
       })
+      // Cargar coordenadas si existen
+      if (cancha.latitud && cancha.longitud) {
+        setCoordinates({ lat: cancha.latitud, lng: cancha.longitud })
+      } else {
+        setCoordinates(null)
+      }
     }
   }, [cancha])
 
@@ -105,8 +111,13 @@ export function EditCanchaDialog({ cancha, open, onOpenChange, onSuccess }: Edit
 
     setLoading(true)
     try {
-      const response = await apiClient.updateCancha(cancha.id, formData)
-      
+      // Preparar datos con coordenadas opcionales
+      const submitData = {
+        ...formData,
+        ...(coordinates && { latitud: coordinates.lat, longitud: coordinates.lng })
+      }
+      const response = await apiClient.updateCancha(cancha.id, submitData)
+
       if (response.error) {
         toast.error('Error al actualizar', {
           description: response.error
@@ -117,7 +128,7 @@ export function EditCanchaDialog({ cancha, open, onOpenChange, onSuccess }: Edit
       toast.success('¡Cancha actualizada!', {
         description: `La cancha "${formData.nombre}" ha sido actualizada exitosamente.`
       })
-      
+
       onSuccess()
       onOpenChange(false)
     } catch (error: any) {
