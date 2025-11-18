@@ -46,35 +46,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Inicializa el estado de autenticación leyendo el token y decodificando el usuario
   useEffect(() => {
     if (typeof window === 'undefined') return
-    const token = getCookie('token')
-    if (token) {
-      try {
-        const decoded: any = jwtDecode(token)
-        // Garantiza que los campos requeridos existan
-        const userData: User = {
-          id: decoded.id,
-          nombre: decoded.nombre || decoded.email.split('@')[0] || 'Usuario',
-          email: decoded.email,
-          rol: decoded.rol === 'ADMINISTRADOR' || decoded.rol === 'admin' ? 'admin' : 'usuario',
-          activo: decoded.activo ?? true,
-          fechaCreacion: decoded.fechaCreacion ?? new Date().toISOString(),
+
+    const initializeAuth = async () => {
+      const token = getCookie('token')
+      if (token) {
+        try {
+          const decoded: any = jwtDecode(token)
+          // Garantiza que los campos requeridos existan
+          const userData: User = {
+            id: decoded.id,
+            nombre: decoded.nombre || decoded.email.split('@')[0] || 'Usuario',
+            email: decoded.email,
+            rol: decoded.rol === 'ADMINISTRADOR' || decoded.rol === 'admin' ? 'admin' : 'usuario',
+            activo: decoded.activo ?? true,
+            fechaCreacion: decoded.fechaCreacion ?? new Date().toISOString(),
+          }
+          setUser(userData)
+          setPersonaId(decoded.personaId || null)
+          setUserId(decoded.id || null)
+
+          // Fetch persona data to get avatar URL on initial load
+          if (decoded.personaId) {
+            try {
+              const personaResponse = await apiClient.getPersona(decoded.personaId)
+              if (personaResponse.data && personaResponse.data.avatarUrl) {
+                console.log('Avatar URL fetched on initial load:', personaResponse.data.avatarUrl)
+                setUser((prevUser) =>
+                  prevUser ? { ...prevUser, avatarUrl: personaResponse.data.avatarUrl } : null
+                )
+              }
+            } catch (error) {
+              console.error('Error fetching persona data for avatar on init:', error)
+              // Continue even if persona fetch fails
+            }
+          }
+        } catch (e) {
+          setUser(null)
+          setPersonaId(null)
+          setUserId(null)
+          deleteCookie('token')
         }
-        setUser(userData)
-        setPersonaId(decoded.personaId || null)
-        setUserId(decoded.id || null)
-      } catch (e) {
+      } else {
         setUser(null)
         setPersonaId(null)
         setUserId(null)
-        deleteCookie('token')
       }
-    } else {
-      setUser(null)
-      setPersonaId(null)
-      setUserId(null)
+      setLoading(false)
+      setInitialLoad(false)
     }
-    setLoading(false)
-    setInitialLoad(false)
+
+    initializeAuth()
   }, [])
 
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -125,6 +146,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setPersonaId(decoded.personaId || null)
           setUserId(decoded.id || null)
           console.log('User set in context successfully:', userData)
+
+          // Fetch persona data to get avatar URL
+          if (decoded.personaId) {
+            try {
+              const personaResponse = await apiClient.getPersona(decoded.personaId)
+              if (personaResponse.data && personaResponse.data.avatarUrl) {
+                console.log('Avatar URL fetched after login:', personaResponse.data.avatarUrl)
+                setUser((prevUser) =>
+                  prevUser ? { ...prevUser, avatarUrl: personaResponse.data.avatarUrl } : null
+                )
+              }
+            } catch (error) {
+              console.error('Error fetching persona data for avatar:', error)
+              // Continue even if persona fetch fails
+            }
+          }
 
           return true
         } catch (e) {
@@ -177,21 +214,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = async () => {
     if (typeof window === 'undefined') return
-    
+
     console.log('Refreshing user...')
     const token = getCookie('token')
     console.log('Token from cookie:', token ? 'exists' : 'not found')
-    
+
     if (!token) {
       console.log('No token found, setting user to null')
       setUser(null)
       return
     }
-    
+
     try {
       const decoded: any = jwtDecode(token)
       console.log('Token decoded successfully:', decoded)
-      
+
       const userData: User = {
         id: decoded.id,
         nombre: decoded.nombre || decoded.email.split('@')[0] || 'Usuario',
@@ -200,9 +237,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         activo: decoded.activo ?? true,
         fechaCreacion: decoded.fechaCreacion ?? new Date().toISOString(),
       }
-      
+
       setUser(userData)
       console.log('User refreshed:', userData)
+
+      // Fetch persona data to get avatar URL
+      if (decoded.personaId) {
+        try {
+          const personaResponse = await apiClient.getPersona(decoded.personaId)
+          if (personaResponse.data && personaResponse.data.avatarUrl) {
+            console.log('Avatar URL fetched:', personaResponse.data.avatarUrl)
+            setUser((prevUser) =>
+              prevUser ? { ...prevUser, avatarUrl: personaResponse.data.avatarUrl } : null
+            )
+          }
+        } catch (error) {
+          console.error('Error fetching persona data for avatar:', error)
+          // Continue even if persona fetch fails
+        }
+      }
     } catch (e) {
       console.error('Error decoding token on refresh:', e)
       setUser(null)
