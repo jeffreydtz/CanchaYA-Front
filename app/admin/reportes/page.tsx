@@ -37,6 +37,10 @@ interface ReportData {
   totalRevenue: number
   profitMargin: number
   occupancyRate: number
+  revenueChangeVsPreviousMonth: number
+  reservationsChangeVsPreviousMonth: number
+  previousMonthRevenue: number
+  previousMonthReservations: number
 }
 
 // Colores para deportes
@@ -243,6 +247,18 @@ const fetchReportData = async (period: string): Promise<ReportData> => {
         }
       })
 
+    // Calculate changes vs previous month
+    const currentMonth = monthlyRevenueData[monthlyRevenueData.length - 1]
+    const previousMonth = monthlyRevenueData[monthlyRevenueData.length - 2]
+
+    const revenueChangeVsPreviousMonth = previousMonth?.revenue > 0
+      ? ((currentMonth.revenue - previousMonth.revenue) / previousMonth.revenue) * 100
+      : 0
+
+    const reservationsChangeVsPreviousMonth = previousMonth?.reservations > 0
+      ? ((currentMonth.reservations - previousMonth.reservations) / previousMonth.reservations) * 100
+      : 0
+
     return {
       monthlyRevenueData,
       weeklyData,
@@ -252,7 +268,11 @@ const fetchReportData = async (period: string): Promise<ReportData> => {
       totalReservations: confirmedReservations.length,
       totalRevenue,
       profitMargin: 28.5, // Would need historical data to calculate
-      occupancyRate: Math.round(occupancyRate * 10) / 10
+      occupancyRate: Math.round(occupancyRate * 10) / 10,
+      revenueChangeVsPreviousMonth: Math.round(revenueChangeVsPreviousMonth * 10) / 10,
+      reservationsChangeVsPreviousMonth: Math.round(reservationsChangeVsPreviousMonth * 10) / 10,
+      previousMonthRevenue: previousMonth?.revenue || 0,
+      previousMonthReservations: previousMonth?.reservations || 0
     }
   } catch (error) {
     console.error('Error fetching report data:', error)
@@ -299,16 +319,24 @@ export default function AdminReportsPage() {
     )
   }
 
-  const { totalReservations, totalRevenue, profitMargin, occupancyRate, monthlyRevenueData, weeklyData, hourlyRevenueData, sportData, locationData } = data
+  const { totalReservations, totalRevenue, profitMargin, occupancyRate, monthlyRevenueData, weeklyData, hourlyRevenueData, sportData, locationData, revenueChangeVsPreviousMonth, reservationsChangeVsPreviousMonth, previousMonthRevenue, previousMonthReservations } = data
+
+  // Calculate revenue change amount
+  const revenueDifference = totalRevenue - previousMonthRevenue
+  const revenueDifferenceFormatted = revenueDifference >= 1000
+    ? `$${(revenueDifference / 1000).toFixed(1)}K`
+    : `$${Math.round(revenueDifference).toLocaleString()}`
+
+  const reservationsDifference = totalReservations - previousMonthReservations
 
   const overviewCards = [
     {
       id: 'revenue',
       title: 'Ingresos totales',
       value: totalRevenue >= 1000 ? `$${(totalRevenue / 1000).toFixed(1)}K` : `$${totalRevenue.toLocaleString()}`,
-      description: '+$45K vs mes anterior',
-      delta: '+12.5%',
-      trend: 'up',
+      description: `${revenueChangeVsPreviousMonth >= 0 ? '+' : ''}${revenueDifferenceFormatted} vs mes anterior`,
+      delta: `${revenueChangeVsPreviousMonth >= 0 ? '+' : ''}${revenueChangeVsPreviousMonth.toFixed(1)}%`,
+      trend: revenueChangeVsPreviousMonth >= 0 ? 'up' : 'down',
       icon: DollarSign,
       iconClasses: 'bg-indigo-100 text-indigo-600',
     },
@@ -316,9 +344,9 @@ export default function AdminReportsPage() {
       id: 'reservations',
       title: 'Reservas totales',
       value: totalReservations.toLocaleString(),
-      description: '+156 vs mes anterior',
-      delta: '+8.3%',
-      trend: 'up',
+      description: `${reservationsDifference >= 0 ? '+' : ''}${Math.abs(reservationsDifference)} vs mes anterior`,
+      delta: `${reservationsChangeVsPreviousMonth >= 0 ? '+' : ''}${reservationsChangeVsPreviousMonth.toFixed(1)}%`,
+      trend: reservationsChangeVsPreviousMonth >= 0 ? 'up' : 'down',
       icon: Calendar,
       iconClasses: 'bg-sky-100 text-sky-600',
     },
