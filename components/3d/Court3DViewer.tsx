@@ -48,19 +48,19 @@ function Scene({ sport }: { sport: string }) {
       />
       
       {/* Luces */}
-      <ambientLight intensity={0.6} />
-      <directionalLight 
-        position={[10, 20, 10]} 
-        intensity={1.2} 
+      <ambientLight intensity={0.7} />
+      <directionalLight
+        position={[10, 20, 10]}
+        intensity={1.2}
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
       />
       <directionalLight position={[-10, 10, -10]} intensity={0.5} />
       <pointLight position={[0, 10, 0]} intensity={0.5} />
-      
-      {/* Ambiente */}
-      <Environment preset="city" />
+
+      {/* Ambiente - usando preset local sin recursos externos */}
+      <Environment preset="sunset" />
       
       {/* Cancha según deporte */}
       <CourtSelector sport={sport} />
