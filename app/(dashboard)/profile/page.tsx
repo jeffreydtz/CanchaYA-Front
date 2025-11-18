@@ -140,62 +140,32 @@ function ProfileForm() {
   }
 
   const handleAvatarUpload = async () => {
-    if (!avatarFile || !user) return
+    if (!avatarFile || !personaId) return
 
     setUploadingAvatar(true)
     try {
-      const formData = new FormData()
-      formData.append('file', avatarFile)
+      const response = await apiClient.uploadPersonaAvatar(personaId, avatarFile)
 
-      // Upload to your backend endpoint that handles Cloudinary upload
-      // Try PATCH method first, then POST if that fails
-      let response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/usuarios/${user.id}/avatar`, {
-        method: 'PATCH',
-        body: formData,
-        headers: {
-          'Authorization': `Bearer ${document.cookie.split('token=')[1]?.split(';')[0]}`,
-        },
-      })
-
-      // If PATCH fails with 405, try POST
-      if (!response.ok && response.status === 405) {
-        console.log('PATCH failed, trying POST method')
-        response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/usuarios/${user.id}/avatar`, {
-          method: 'POST',
-          body: formData,
-          headers: {
-            'Authorization': `Bearer ${document.cookie.split('token=')[1]?.split(';')[0]}`,
-          },
-        })
+      if (response.error) {
+        // Handle specific error codes
+        if (response.status === 403) {
+          toast.error('No tienes permiso para actualizar este avatar')
+        } else if (response.status === 404) {
+          toast.error('Persona no encontrada')
+        } else if (response.status === 400) {
+          toast.error('Archivo inválido. Debe ser JPEG o PNG menor a 5MB')
+        } else {
+          toast.error(response.error)
+        }
+      } else {
+        toast.success('Avatar actualizado correctamente')
+        await refreshUser()
+        setAvatarFile(null)
+        setAvatarPreview(null)
       }
-
-      // If still fails, try PUT
-      if (!response.ok && response.status === 405) {
-        console.log('POST failed, trying PUT method')
-        response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/usuarios/${user.id}/avatar`, {
-          method: 'PUT',
-          body: formData,
-          headers: {
-            'Authorization': `Bearer ${document.cookie.split('token=')[1]?.split(';')[0]}`,
-          },
-        })
-      }
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('Avatar upload failed:', response.status, errorText)
-        throw new Error(`Error al subir avatar: ${response.status} ${response.statusText}`)
-      }
-
-      const result = await response.json()
-
-      toast.success('Avatar actualizado correctamente')
-      await refreshUser()
-      setAvatarFile(null)
-      setAvatarPreview(null)
     } catch (error) {
       console.error('Error uploading avatar:', error)
-      toast.error(error instanceof Error ? error.message : 'Error al subir el avatar')
+      toast.error('Error al subir el avatar')
     } finally {
       setUploadingAvatar(false)
     }

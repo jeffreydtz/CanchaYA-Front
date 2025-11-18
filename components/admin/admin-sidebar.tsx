@@ -101,6 +101,12 @@ const menuItems = [
     description: "Gestión de usuarios"
   },
   {
+    title: "Personas",
+    url: "/admin/personas",
+    icon: UserCog,
+    description: "Gestión de perfiles de personas"
+  },
+  {
     title: "Reportes",
     url: "/admin/reportes",
     icon: FileText,
