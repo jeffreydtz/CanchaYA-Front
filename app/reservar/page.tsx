@@ -40,10 +40,21 @@ export default function ReservarPage() {
     if (token) {
       try {
         const decoded: any = jwtDecode(token)
+        console.log('JWT Token decoded:', {
+          personaId: decoded.personaId,
+          userId: decoded.userId,
+          email: decoded.email,
+          allFields: decoded
+        })
         setPersonaId(decoded.personaId || null)
+        if (!decoded.personaId) {
+          console.warn('⚠️ personaId is missing from JWT token!')
+        }
       } catch (error) {
         console.error('Error decoding token:', error)
       }
+    } else {
+      console.warn('⚠️ No token found in cookies')
     }
   }, [])
 
@@ -149,16 +160,26 @@ export default function ReservarPage() {
       const day = String(selectedDate.getDate()).padStart(2, '0')
       const fechaHora = `${year}-${month}-${day}T${hours}:${minutes}:00-03:00`
 
-      console.log('Creating reservation with:', {
-        disponibilidadId: slot.disponibilidadId,
-        fechaHora,
-        horaInicio: slot.horaInicio,
-        selectedDate: selectedDate.toISOString()
-      })
-
-      const response = await apiClient.createReserva({
+      const requestPayload = {
         disponibilidadId: slot.disponibilidadId,
         fechaHora: fechaHora
+      }
+
+      console.log('Creating reservation with:', {
+        payload: requestPayload,
+        personaId: personaId,
+        horaInicio: slot.horaInicio,
+        selectedDate: selectedDate.toISOString(),
+        selectedDateDayOfWeek: selectedDate.getDay(),
+        fullSlotData: slot
+      })
+
+      const response = await apiClient.createReserva(requestPayload)
+
+      console.log('Response from backend:', {
+        error: response.error,
+        status: response.status,
+        fullResponse: response
       })
 
       if (response.error) {
