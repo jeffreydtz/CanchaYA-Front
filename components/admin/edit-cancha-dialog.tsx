@@ -73,9 +73,15 @@ export function EditCanchaDialog({ cancha, open, onOpenChange, onSuccess }: Edit
         deporteId: cancha.deporte?.id || '',
         clubId: cancha.club?.id || '',
       })
-      // Cargar coordenadas si existen
+      // Cargar coordenadas si existen, convertir a números
       if (cancha.latitud && cancha.longitud) {
-        setCoordinates({ lat: cancha.latitud, lng: cancha.longitud })
+        const lat = typeof cancha.latitud === 'string' ? parseFloat(cancha.latitud) : cancha.latitud
+        const lng = typeof cancha.longitud === 'string' ? parseFloat(cancha.longitud) : cancha.longitud
+        if (!isNaN(lat) && !isNaN(lng)) {
+          setCoordinates({ lat, lng })
+        } else {
+          setCoordinates(null)
+        }
       } else {
         setCoordinates(null)
       }
@@ -193,7 +199,7 @@ export function EditCanchaDialog({ cancha, open, onOpenChange, onSuccess }: Edit
                   className="border-gray-200 dark:border-gray-700"
                   required
                 />
-                {coordinates && (
+                {coordinates && typeof coordinates.lat === 'number' && typeof coordinates.lng === 'number' && (
                   <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
                     <p>Coordenadas: {coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}</p>
                   </div>
@@ -203,8 +209,8 @@ export function EditCanchaDialog({ cancha, open, onOpenChange, onSuccess }: Edit
               <TabsContent value="map" className="mt-3">
                 <LocationSearchMap
                   initialAddress={formData.ubicacion}
-                  initialLat={coordinates?.lat}
-                  initialLng={coordinates?.lng}
+                  initialLat={coordinates?.lat && typeof coordinates.lat === 'number' ? coordinates.lat : undefined}
+                  initialLng={coordinates?.lng && typeof coordinates.lng === 'number' ? coordinates.lng : undefined}
                   onLocationSelect={(location) => {
                     setFormData({ ...formData, ubicacion: location.address })
                     setCoordinates({ lat: location.latitude, lng: location.longitude })
