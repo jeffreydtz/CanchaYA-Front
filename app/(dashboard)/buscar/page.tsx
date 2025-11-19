@@ -245,7 +245,22 @@ export default function BuscarPage() {
         ])
 
         if (canchasResponse.data) {
-          setCanchas(canchasResponse.data)
+          // Load photos for all canchas
+          const canchasWithPhotos = await Promise.all(
+            canchasResponse.data.map(async (cancha) => {
+              try {
+                const fotosResponse = await apiClient.getCanchaFotos(cancha.id)
+                return {
+                  ...cancha,
+                  fotos: fotosResponse.data || []
+                }
+              } catch (error) {
+                console.error(`Error loading photos for cancha ${cancha.id}:`, error)
+                return cancha
+              }
+            })
+          )
+          setCanchas(canchasWithPhotos)
         }
         if (clubsResponse.data) {
           setClubes(clubsResponse.data)
@@ -299,7 +314,22 @@ export default function BuscarPage() {
     try {
       const response = await apiClient.getCanchas()
       if (response.data) {
-        let filtered = response.data
+        // Load photos for all canchas
+        const canchasWithPhotos = await Promise.all(
+          response.data.map(async (cancha) => {
+            try {
+              const fotosResponse = await apiClient.getCanchaFotos(cancha.id)
+              return {
+                ...cancha,
+                fotos: fotosResponse.data || []
+              }
+            } catch (error) {
+              console.error(`Error loading photos for cancha ${cancha.id}:`, error)
+              return cancha
+            }
+          })
+        )
+        let filtered = canchasWithPhotos
 
         // Filtrar por búsqueda de texto
         if (filters.search) {
