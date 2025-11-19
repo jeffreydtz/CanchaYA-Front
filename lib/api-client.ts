@@ -71,6 +71,20 @@ export interface AuthMeResponse {
   exp: number
 }
 
+/**
+ * JWT Payload structure from backend
+ * Contains role information and optional club IDs for scoped access
+ */
+export interface JWTPayload {
+  id: string // User ID (UUID)
+  rol: 'admin' | 'admin-club' | 'usuario' // User role
+  personaId: string // Person ID associated with user
+  email: string // User email
+  clubIds?: string[] // Array of club IDs if user is admin-club (optional)
+  iat: number // Issued at timestamp
+  exp: number // Expiration timestamp
+}
+
 export interface Persona {
   id: string
   nombre: string
@@ -94,13 +108,14 @@ export interface UserLegacy {
   nombre: string
   email: string
   telefono?: string
-  rol: 'usuario' | 'admin'
+  rol: 'usuario' | 'admin' | 'admin-club' // Updated to include admin-club role
   activo: boolean
   deudaPendiente?: number
   estadoCuenta?: 'activo' | 'bloqueado'
   fechaCreacion: string
   avatarUrl?: string
   apellido?: string
+  clubIds?: string[] // Array of club IDs for admin-club users
 }
 
 export interface Club {

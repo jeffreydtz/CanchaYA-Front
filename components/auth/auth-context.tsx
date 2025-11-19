@@ -10,7 +10,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { getCookie, setCookie, deleteCookie, setAuthTokens, getRefreshToken } from '@/lib/auth'
-import apiClient, { UserLegacy, AuthMeResponse } from '@/lib/api-client'
+import apiClient, { UserLegacy, AuthMeResponse, JWTPayload } from '@/lib/api-client'
 import { toast } from 'sonner'
 import { jwtDecode } from 'jwt-decode'
 import { useTokenRefresh } from '@/hooks/use-token-refresh'
@@ -24,14 +24,33 @@ interface AuthContextType {
   logout: () => Promise<void>
   isAuthenticated: boolean
   isAdmin: boolean
+  isAdminClub: boolean // New flag for admin-club role
+  isSuperAdmin: boolean // True if admin (global), false if admin-club
   loading: boolean
   refreshUser: () => Promise<void>
   personaId: string | null // Added for backend API compatibility
   userId: string | null     // User ID from JWT
+  clubIds: string[] // Array of club IDs for scoped access (admin-club users)
+  userRole: 'admin' | 'admin-club' | 'usuario' | null // Complete role information
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+/**
+ * Helper function to decode JWT and extract role and clubIds
+ */
+function decodeJWTToken(token: string): { role: string; clubIds: string[] } | null {
+  try {
+    const decoded = jwtDecode<JWTPayload>(token)
+    return {
+      role: decoded.rol,
+      clubIds: decoded.clubIds || [],
+    }
+  } catch (e) {
+    console.error('Error decoding JWT token:', e)
+    return null
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -39,6 +58,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [initialLoad, setInitialLoad] = useState(true)
   const [personaId, setPersonaId] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
+  const [clubIds, setClubIds] = useState<string[]>([])
+  const [userRole, setUserRole] = useState<'admin' | 'admin-club' | 'usuario' | null>(null)
 
   // Enable automatic token refresh
   useTokenRefresh()
@@ -51,19 +72,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const token = getCookie('token')
       if (token) {
         try {
-          const decoded: any = jwtDecode(token)
+          const decoded = jwtDecode<JWTPayload>(token)
+          const roleInfo = decodeJWTToken(token)
+
           // Garantiza que los campos requeridos existan
           const userData: User = {
             id: decoded.id,
-            nombre: decoded.nombre || decoded.email.split('@')[0] || 'Usuario',
+            nombre: decoded.email.split('@')[0] || 'Usuario',
             email: decoded.email,
-            rol: decoded.rol === 'ADMINISTRADOR' || decoded.rol === 'admin' ? 'admin' : 'usuario',
-            activo: decoded.activo ?? true,
-            fechaCreacion: decoded.fechaCreacion ?? new Date().toISOString(),
+            rol: decoded.rol, // Use decoded role directly from JWT
+            activo: true,
+            fechaCreacion: new Date().toISOString(),
+            clubIds: roleInfo?.clubIds || [], // Add clubIds from JWT
           }
           setUser(userData)
           setPersonaId(decoded.personaId || null)
           setUserId(decoded.id || null)
+          setUserRole(decoded.rol)
+          setClubIds(roleInfo?.clubIds || [])
 
           // Fetch persona data to get avatar URL on initial load
           if (decoded.personaId) {
@@ -84,12 +110,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(null)
           setPersonaId(null)
           setUserId(null)
+          setUserRole(null)
+          setClubIds([])
           deleteCookie('token')
         }
       } else {
         setUser(null)
         setPersonaId(null)
         setUserId(null)
+        setUserRole(null)
+        setClubIds([])
       }
       setLoading(false)
       setInitialLoad(false)
@@ -117,7 +147,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setAuthTokens(accessToken, refreshToken)
 
         try {
-          const decoded: any = jwtDecode(accessToken)
+          const decoded = jwtDecode<JWTPayload>(accessToken)
+          const roleInfo = decodeJWTToken(accessToken)
 
           // Validate that required fields exist
           if (!decoded.id || !decoded.email) {
@@ -126,16 +157,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           const userData: User = {
             id: decoded.id,
-            nombre: decoded.nombre || decoded.email.split('@')[0] || 'Usuario',
+            nombre: decoded.email.split('@')[0] || 'Usuario',
             email: decoded.email,
-            rol: decoded.rol === 'admin' ? 'admin' : 'usuario',
-            activo: decoded.activo ?? true,
+            rol: decoded.rol,
+            activo: true,
             fechaCreacion: decoded.iat ? new Date(decoded.iat * 1000).toISOString() : new Date().toISOString(),
+            clubIds: roleInfo?.clubIds || [],
           }
 
           setUser(userData)
           setPersonaId(decoded.personaId || null)
           setUserId(decoded.id || null)
+          setUserRole(decoded.rol)
+          setClubIds(roleInfo?.clubIds || [])
 
           // Fetch persona data to get avatar URL
           if (decoded.personaId) {
@@ -184,12 +218,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    // Clear client-side tokens
+    // Clear client-side tokens and auth state
     deleteCookie('token')
     deleteCookie('refreshToken')
     setUser(null)
     setPersonaId(null)
     setUserId(null)
+    setUserRole(null)
+    setClubIds([])
     toast.success('Sesión cerrada correctamente')
 
     if (typeof window !== 'undefined') {
@@ -207,23 +243,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!token) {
       console.log('No token found, setting user to null')
       setUser(null)
+      setUserRole(null)
+      setClubIds([])
       return
     }
 
     try {
-      const decoded: any = jwtDecode(token)
+      const decoded = jwtDecode<JWTPayload>(token)
+      const roleInfo = decodeJWTToken(token)
       console.log('Token decoded successfully:', decoded)
 
       const userData: User = {
         id: decoded.id,
-        nombre: decoded.nombre || decoded.email.split('@')[0] || 'Usuario',
+        nombre: decoded.email.split('@')[0] || 'Usuario',
         email: decoded.email,
-        rol: decoded.rol === 'ADMINISTRADOR' || decoded.rol === 'admin' ? 'admin' : 'usuario',
-        activo: decoded.activo ?? true,
-        fechaCreacion: decoded.fechaCreacion ?? new Date().toISOString(),
+        rol: decoded.rol,
+        activo: true,
+        fechaCreacion: new Date().toISOString(),
+        clubIds: roleInfo?.clubIds || [],
       }
 
       setUser(userData)
+      setUserRole(decoded.rol)
+      setClubIds(roleInfo?.clubIds || [])
       console.log('User refreshed:', userData)
 
       // Fetch persona data to get avatar URL
@@ -245,12 +287,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       console.error('Error decoding token on refresh:', e)
       setUser(null)
+      setUserRole(null)
+      setClubIds([])
       deleteCookie('token')
     }
   }
 
   const isAuthenticated = !!user
   const isAdmin = user?.rol === 'admin'
+  const isAdminClub = user?.rol === 'admin-club'
+  const isSuperAdmin = user?.rol === 'admin' // True for global admin
 
   const value: AuthContextType = {
     user,
@@ -258,10 +304,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logout,
     isAuthenticated,
     isAdmin,
+    isAdminClub,
+    isSuperAdmin,
     loading,
     refreshUser,
     personaId,
     userId,
+    clubIds,
+    userRole,
   }
 
   // Only show loading spinner on initial page load, not during navigation

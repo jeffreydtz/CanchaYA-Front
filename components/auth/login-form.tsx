@@ -27,7 +27,7 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>
 
 export function LoginForm() {
-  const { login, user } = useAuth()
+  const { login, user, userRole } = useAuth()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -56,7 +56,15 @@ export function LoginForm() {
         })
 
         // Redirect based on role
-        const redirectPath = user?.rol === 'admin' ? '/admin/dashboard' : '/'
+        let redirectPath = '/'
+        if (userRole === 'admin') {
+          redirectPath = '/admin/dashboard' // Global admin - full access
+        } else if (userRole === 'admin-club') {
+          redirectPath = '/admin/dashboard' // Club-specific admin - filtered access
+        } else if (userRole === 'usuario') {
+          redirectPath = '/' // Regular user
+        }
+
         router.push(redirectPath)
       } else {
         toast.error('Error al iniciar sesión', {
