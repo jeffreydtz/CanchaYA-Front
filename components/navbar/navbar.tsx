@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useAuth } from '@/components/auth/auth-context'
+import { useChallengesNotifications } from '@/components/challenges/challenges-context'
 import NotificationBell from '@/components/notifications/notification-bell'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -9,15 +10,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { LogOut, User, Menu, X, Home, Calendar, Shield, Search, Trophy, Bell, ChevronDown } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useLanguage } from '@/lib/language-context'
-import apiClient from '@/lib/api-client'
 import { Badge } from '@/components/ui/badge'
 
 export default function Navbar() {
   const { user, isAuthenticated, isAdmin, logout } = useAuth()
+  const { pendingChallengesCount } = useChallengesNotifications()
   const { t } = useLanguage()
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [pendingChallenges, setPendingChallenges] = useState(0)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -26,28 +26,6 @@ export default function Navbar() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
-
-  // Fetch pending challenges count
-  useEffect(() => {
-    if (isAuthenticated) {
-      const fetchPendingChallenges = async () => {
-        try {
-          const response = await apiClient.getDesafios()
-          if (response.data) {
-            // Count only pending/invitation challenges (estado === 'Pendiente')
-            const pending = response.data.filter(d => d.estado === 'Pendiente').length
-            setPendingChallenges(pending)
-          }
-        } catch (error) {
-          console.error('Error fetching challenges:', error)
-        }
-      }
-      fetchPendingChallenges()
-      // Refresh every 30 seconds
-      const interval = setInterval(fetchPendingChallenges, 30000)
-      return () => clearInterval(interval)
-    }
-  }, [isAuthenticated])
 
   const navigationItems = [
     { href: '/', label: t('nav.home'), icon: Home },
@@ -117,9 +95,9 @@ export default function Navbar() {
                     <div className="absolute inset-0 bg-gradient-to-r from-gold/0 via-gold/10 to-gold/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     <Trophy className="h-5 w-5 relative z-10 group-hover:animate-float-smooth" />
                     <span className="relative z-10 tracking-wide">Desafíos</span>
-                    {pendingChallenges > 0 && (
+                    {pendingChallengesCount > 0 && (
                       <Badge variant="destructive" className="relative z-10 ml-1 px-2 py-0 h-5">
-                        {pendingChallenges}
+                        {pendingChallengesCount}
                       </Badge>
                     )}
                     <ChevronDown className="h-4 w-4 relative z-10 opacity-70" />
@@ -128,8 +106,8 @@ export default function Navbar() {
                 <DropdownMenuContent align="start" className="w-56">
                   <DropdownMenuLabel className="flex items-center justify-between">
                     <span>Desafíos</span>
-                    {pendingChallenges > 0 && (
-                      <Badge variant="destructive">{pendingChallenges} Pendientes</Badge>
+                    {pendingChallengesCount > 0 && (
+                      <Badge variant="destructive">{pendingChallengesCount} Pendientes</Badge>
                     )}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
@@ -143,8 +121,8 @@ export default function Navbar() {
                     <Link href="/desafios?tab=invitaciones" className="flex items-center p-3 rounded-lg hover:bg-muted cursor-pointer">
                       <Bell className="mr-3 h-5 w-5" />
                       <span className="font-medium">Invitaciones Pendientes</span>
-                      {pendingChallenges > 0 && (
-                        <Badge variant="secondary" className="ml-auto">{pendingChallenges}</Badge>
+                      {pendingChallengesCount > 0 && (
+                        <Badge variant="secondary" className="ml-auto">{pendingChallengesCount}</Badge>
                       )}
                     </Link>
                   </DropdownMenuItem>

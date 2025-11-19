@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from 'sonner'
 import apiClient, { Desafio } from '@/lib/api-client'
 import { useAuth } from '@/components/auth/auth-context'
+import { useChallengesNotifications } from './challenges-context'
 import { ChallengeCard } from './challenge-card'
 import { CreateChallengeDialog } from './create-challenge-dialog'
 import { Trophy, Plus, Loader2 } from 'lucide-react'
@@ -16,6 +17,7 @@ type ChallengeFilter = 'all' | 'creados' | 'invitaciones' | 'jugando' | 'finaliz
 
 export default function ChallengesList() {
   const { user } = useAuth()
+  const { notifyChallengePendingCountChanged } = useChallengesNotifications()
   const searchParams = useSearchParams()
   const [challenges, setChallenges] = useState<Desafio[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -74,6 +76,7 @@ export default function ChallengesList() {
       }
 
       toast.success('Desafío aceptado exitosamente')
+      notifyChallengePendingCountChanged()
       loadChallenges()
     } catch (error) {
       console.error('Error accepting challenge:', error)
@@ -90,6 +93,7 @@ export default function ChallengesList() {
       }
 
       toast.success('Desafío rechazado')
+      notifyChallengePendingCountChanged()
       loadChallenges()
     } catch (error) {
       console.error('Error rejecting challenge:', error)

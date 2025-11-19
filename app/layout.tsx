@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import { AuthProvider } from '@/components/auth/auth-context'
+import { ChallengesProvider } from '@/components/challenges/challenges-context'
 import { NotificationProvider } from '@/components/notifications/notification-provider'
 import { LanguageProvider } from '@/lib/language-context'
 import { Toaster } from '@/components/ui/sonner'
@@ -30,10 +31,12 @@ export default function RootLayout({
         >
           <LanguageProvider>
             <AuthProvider>
-              <NotificationProvider>
-                {children}
-                <Toaster />
-              </NotificationProvider>
+              <ChallengesProvider>
+                <NotificationProvider>
+                  {children}
+                  <Toaster />
+                </NotificationProvider>
+              </ChallengesProvider>
             </AuthProvider>
           </LanguageProvider>
         </ThemeProvider>
