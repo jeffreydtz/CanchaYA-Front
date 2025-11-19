@@ -109,6 +109,8 @@ export interface Club {
   direccion: string
   telefono?: string
   email?: string
+  latitud?: number // WGS84 (-90 to 90) - ubicación geográfica del club
+  longitud?: number // WGS84 (-180 to 180) - ubicación geográfica del club
   fechaCreacion: string
 }
 
@@ -121,9 +123,7 @@ export interface Deporte {
 export interface Cancha {
   id: string // UUID
   nombre: string
-  ubicacion: string
-  latitud?: number // WGS84 (-90 to 90), puede ser null
-  longitud?: number // WGS84 (-180 to 180), puede ser null
+  descripcion: string // Descripción simple de la ubicación dentro del predio (ej: "Cancha 3, sector norte")
   tipoSuperficie: string
   precioPorHora: number
   activa: boolean
@@ -133,6 +133,8 @@ export interface Cancha {
     telefono?: string
     email?: string
     direccion?: string
+    latitud?: number // Ubicación geográfica del club
+    longitud?: number // Ubicación geográfica del club
   }
   deporte: {
     id: string
@@ -746,17 +748,15 @@ const apiClient = {
 
   /**
    * Crear cancha - POST /canchas (admin only)
-   * Campos opcionales: latitud, longitud (WGS84)
+   * La ubicación geográfica viene del club, esta descripción es solo texto
    */
   createCancha: (data: {
     nombre: string
-    ubicacion: string
+    descripcion: string // Descripción simple de la ubicación dentro del predio
     tipoSuperficie: string
     precioPorHora: number
     deporteId: string
     clubId: string
-    latitud?: number // WGS84 opcional (-90 to 90)
-    longitud?: number // WGS84 opcional (-180 to 180)
   }) =>
     apiRequest<Cancha>('/canchas', {
       method: 'POST',
@@ -834,6 +834,8 @@ const apiClient = {
     direccion: string;
     telefono?: string;
     email?: string;
+    latitud?: number; // WGS84 (-90 to 90)
+    longitud?: number; // WGS84 (-180 to 180)
   }) =>
     apiRequest<Club>('/clubes', {
       method: 'POST',

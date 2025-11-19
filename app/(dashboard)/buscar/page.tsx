@@ -146,7 +146,7 @@ function CourtCard({ cancha }: { cancha: Cancha }) {
           <div className="text-sm text-gray-600 dark:text-gray-300">
             <p className="flex items-center mb-1">
               <MapPin className="h-3 w-3 mr-1" />
-              {cancha.ubicacion}
+              {cancha.descripcion}
             </p>
             {cancha.club?.telefono && (
               <p className="flex items-center mb-1">
@@ -336,7 +336,7 @@ export default function BuscarPage() {
           filtered = filtered.filter(cancha =>
             cancha.nombre?.toLowerCase().includes(filters.search.toLowerCase()) ||
             cancha.club?.nombre?.toLowerCase().includes(filters.search.toLowerCase()) ||
-            cancha.ubicacion?.toLowerCase().includes(filters.search.toLowerCase())
+            cancha.descripcion?.toLowerCase().includes(filters.search.toLowerCase())
           )
         }
 
@@ -350,10 +350,10 @@ export default function BuscarPage() {
           filtered = filtered.filter(cancha => cancha.club?.id === filters.club)
         }
 
-        // Filtrar por ubicación
+        // Filtrar por descripción de ubicación
         if (filters.ubicacion) {
           filtered = filtered.filter(cancha =>
-            cancha.ubicacion?.toLowerCase().includes(filters.ubicacion.toLowerCase())
+            cancha.descripcion?.toLowerCase().includes(filters.ubicacion.toLowerCase())
           )
         }
 
@@ -379,15 +379,16 @@ export default function BuscarPage() {
         }
 
         // Filtrar por distancia (si el usuario ha permitido geolocalización)
+        // La distancia se calcula desde la ubicación del club (no de la cancha)
         if (filters.distancia && userLocation && userLocation.latitude && userLocation.longitude) {
           const maxDistance = parseFloat(filters.distancia)
           filtered = filtered.filter(cancha => {
-            if (!cancha.latitud || !cancha.longitud) return false
+            if (!cancha.club?.latitud || !cancha.club?.longitud) return false
             const distance = calculateDistance(
               userLocation.latitude,
               userLocation.longitude,
-              cancha.latitud,
-              cancha.longitud
+              cancha.club.latitud,
+              cancha.club.longitud
             )
             return distance <= maxDistance
           })

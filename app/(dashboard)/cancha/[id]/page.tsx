@@ -54,6 +54,16 @@ const Court3DViewer = dynamic(() => import('@/components/3d/Court3DViewer'), {
   ),
 })
 
+// Dynamic import for map component
+const ClubLocationMap = dynamic(() => import('@/components/map/club-location-map'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[400px] bg-gray-200 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+      <div className="text-gray-600 dark:text-gray-400">Cargando ubicación del club...</div>
+    </div>
+  ),
+})
+
 const timeSlots = [
   '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', 
   '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', 
@@ -400,9 +410,9 @@ export default function CanchaDetailPage() {
                           <MapPin className="h-5 w-5 text-white" />
                         </div>
                         <div>
-                          <h3 className="font-semibold text-blue-900 dark:text-blue-100">Ubicación</h3>
+                          <h3 className="font-semibold text-blue-900 dark:text-blue-100">Ubicación en el Predio</h3>
                           <p className="text-blue-700 dark:text-blue-200 text-sm mt-1">
-                            {cancha.ubicacion}
+                            {cancha.descripcion}
                           </p>
                         </div>
                       </div>
@@ -453,6 +463,26 @@ export default function CanchaDetailPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Club Location Map */}
+            {cancha.club?.latitud && cancha.club?.longitud && (
+              <Card className="bg-white/80 backdrop-blur-sm border-white/20 shadow-xl">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold flex items-center gap-2">
+                    <MapPin className="h-6 w-6 text-primary" />
+                    Ubicación del Club: {cancha.club.nombre}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <ClubLocationMap
+                    latitude={cancha.club.latitud}
+                    longitude={cancha.club.longitud}
+                    clubName={cancha.club.nombre}
+                    address={cancha.club.direccion}
+                  />
+                </CardContent>
+              </Card>
+            )}
 
             {/* Vista 3D de la Cancha */}
             <div className="mt-6">

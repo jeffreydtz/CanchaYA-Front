@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area, HeatMap, ScatterChart, Scatter } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area, ScatterChart, Scatter } from 'recharts'
 import {
   Users,
   Calendar,
@@ -451,13 +451,13 @@ export function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={400}>
-                <LineChart data={revenueData}>
+                <LineChart data={reservasData}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
+                  <XAxis dataKey="fecha" />
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="revenue" stroke="#22c55e" strokeWidth={3} />
+                  <Line type="monotone" dataKey="total" stroke="#22c55e" strokeWidth={3} />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
@@ -491,23 +491,23 @@ export function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {recentActivity.map((activity, index) => (
-                    <div key={index} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50">
-                      <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">
-                          {activity.type === 'reservation' && 'Nueva reserva'}
-                          {activity.type === 'cancellation' && 'Cancelación'}
-                          {activity.type === 'payment' && 'Pago procesado'}
-                          {activity.type === 'registration' && 'Nuevo usuario'}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {activity.user} {activity.court && `- ${activity.court}`} {activity.amount}
-                        </p>
+                  {topJugadores && topJugadores.length > 0 ? (
+                    topJugadores.map((player, index) => (
+                      <div key={index} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50">
+                        <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">
+                            Top Jugador #{player.ranking}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {player.nombre} - {player.email}
+                          </p>
+                        </div>
                       </div>
-                      <span className="text-xs text-muted-foreground">{activity.time}</span>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500 text-center py-4">No hay datos disponibles</p>
+                  )}
                 </div>
               </CardContent>
             </Card>

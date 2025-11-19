@@ -11,11 +11,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from 'sonner'
 import apiClient, { Club, Deporte } from '@/lib/api-client'
-import { Loader2, MapPin, DollarSign, Building2, Trophy, Map } from 'lucide-react'
-import { LocationSearchMap } from './location-search-map'
+import { Loader2, Building2, Trophy, FileText, DollarSign } from 'lucide-react'
 
 interface CreateCanchaDialogProps {
   open: boolean
@@ -27,18 +25,15 @@ export function CreateCanchaDialog({ open, onOpenChange, onSuccess }: CreateCanc
   const [loading, setLoading] = useState(false)
   const [clubs, setClubs] = useState<Club[]>([])
   const [deportes, setDeportes] = useState<Deporte[]>([])
-  const [locationTab, setLocationTab] = useState<'manual' | 'map'>('manual')
 
   const [formData, setFormData] = useState({
     nombre: '',
-    ubicacion: '',
+    descripcion: '',
     tipoSuperficie: '',
     precioPorHora: 0,
     deporteId: '',
     clubId: '',
   })
-
-  const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null)
 
   // Cargar clubs y deportes
   useEffect(() => {
@@ -63,14 +58,12 @@ export function CreateCanchaDialog({ open, onOpenChange, onSuccess }: CreateCanc
   const resetForm = () => {
     setFormData({
       nombre: '',
-      ubicacion: '',
+      descripcion: '',
       tipoSuperficie: '',
       precioPorHora: 0,
       deporteId: '',
       clubId: '',
     })
-    setCoordinates(null)
-    setLocationTab('manual')
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -81,8 +74,8 @@ export function CreateCanchaDialog({ open, onOpenChange, onSuccess }: CreateCanc
       toast.error('El nombre es requerido')
       return
     }
-    if (!formData.ubicacion.trim()) {
-      toast.error('La ubicación es requerida')
+    if (!formData.descripcion.trim()) {
+      toast.error('La descripción es requerida')
       return
     }
     if (formData.precioPorHora <= 0) {
@@ -100,12 +93,7 @@ export function CreateCanchaDialog({ open, onOpenChange, onSuccess }: CreateCanc
 
     setLoading(true)
     try {
-      // Preparar datos con coordenadas opcionales
-      const submitData = {
-        ...formData,
-        ...(coordinates && { latitud: coordinates.lat, longitud: coordinates.lng })
-      }
-      const response = await apiClient.createCancha(submitData)
+      const response = await apiClient.createCancha(formData)
 
       if (response.error) {
         toast.error('Error al crear', {
@@ -161,49 +149,23 @@ export function CreateCanchaDialog({ open, onOpenChange, onSuccess }: CreateCanc
             />
           </div>
 
-          {/* Ubicación con tabs */}
+          {/* Descripción de la ubicación dentro del predio */}
           <div className="space-y-2">
-            <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              Ubicación *
+            <Label htmlFor="descripcion" className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Descripción de Ubicación *
             </Label>
-
-            <Tabs value={locationTab} onValueChange={(v) => setLocationTab(v as 'manual' | 'map')} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="manual">Texto</TabsTrigger>
-                <TabsTrigger value="map" className="flex items-center gap-2">
-                  <Map className="h-4 w-4" />
-                  Mapa
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="manual" className="space-y-3 mt-3">
-                <Input
-                  value={formData.ubicacion}
-                  onChange={(e) => setFormData({ ...formData, ubicacion: e.target.value })}
-                  placeholder="Ej: Av. Principal 123, Rosario"
-                  className="border-gray-200 dark:border-gray-700"
-                  required
-                />
-                {coordinates && (
-                  <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-                    <p>Coordenadas: {coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}</p>
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="map" className="mt-3">
-                <LocationSearchMap
-                  initialAddress={formData.ubicacion}
-                  initialLat={coordinates?.lat}
-                  initialLng={coordinates?.lng}
-                  onLocationSelect={(location) => {
-                    setFormData({ ...formData, ubicacion: location.address })
-                    setCoordinates({ lat: location.latitude, lng: location.longitude })
-                  }}
-                />
-              </TabsContent>
-            </Tabs>
+            <Input
+              id="descripcion"
+              value={formData.descripcion}
+              onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
+              placeholder="Ej: Cancha 3, sector norte del predio"
+              className="border-gray-200 dark:border-gray-700"
+              required
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Descripción de la ubicación dentro del predio del club. La ubicación geográfica viene del club.
+            </p>
           </div>
 
           {/* Grid de Deporte y Club */}
