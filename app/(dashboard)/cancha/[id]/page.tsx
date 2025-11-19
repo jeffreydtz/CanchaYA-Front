@@ -412,7 +412,7 @@ export default function CanchaDetailPage() {
                         <div>
                           <h3 className="font-semibold text-blue-900 dark:text-blue-100">Ubicación en el Predio</h3>
                           <p className="text-blue-700 dark:text-blue-200 text-sm mt-1">
-                            {cancha.descripcion}
+                            {cancha.ubicacion}
                           </p>
                         </div>
                       </div>

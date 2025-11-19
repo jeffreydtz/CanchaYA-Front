@@ -114,7 +114,7 @@ function CourtCard({ court, index, rating = 4.5 }: CourtCardProps) {
         {/* Location */}
         <div className="flex items-center text-gray-600 dark:text-gray-300">
           <MapPin className="h-4 w-4 mr-2 text-primary" />
-          <span className="text-sm line-clamp-1">{court.descripcion}</span>
+          <span className="text-sm line-clamp-1">{court.ubicacion}</span>
         </div>
 
         {/* Sport type */}

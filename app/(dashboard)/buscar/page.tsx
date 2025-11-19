@@ -146,7 +146,7 @@ function CourtCard({ cancha }: { cancha: Cancha }) {
           <div className="text-sm text-gray-600 dark:text-gray-300">
             <p className="flex items-center mb-1">
               <MapPin className="h-3 w-3 mr-1" />
-              {cancha.descripcion}
+              {cancha.ubicacion}
             </p>
             {cancha.club?.telefono && (
               <p className="flex items-center mb-1">
@@ -336,7 +336,7 @@ export default function BuscarPage() {
           filtered = filtered.filter(cancha =>
             cancha.nombre?.toLowerCase().includes(filters.search.toLowerCase()) ||
             cancha.club?.nombre?.toLowerCase().includes(filters.search.toLowerCase()) ||
-            cancha.descripcion?.toLowerCase().includes(filters.search.toLowerCase())
+            cancha.ubicacion?.toLowerCase().includes(filters.search.toLowerCase())
           )
         }
 
@@ -350,10 +350,10 @@ export default function BuscarPage() {
           filtered = filtered.filter(cancha => cancha.club?.id === filters.club)
         }
 
-        // Filtrar por descripción de ubicación
+        // Filtrar por ubicación dentro del predio
         if (filters.ubicacion) {
           filtered = filtered.filter(cancha =>
-            cancha.descripcion?.toLowerCase().includes(filters.ubicacion.toLowerCase())
+            cancha.ubicacion?.toLowerCase().includes(filters.ubicacion.toLowerCase())
           )
         }
 

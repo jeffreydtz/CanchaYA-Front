@@ -224,7 +224,7 @@ export default function CourtDetail() {
             <div className="flex items-center space-x-4 text-gray-600 mb-4">
               <div className="flex items-center">
                 <MapPin className="w-4 h-4 mr-1" />
-                <span>{court.descripcion}</span>
+                <span>{court.ubicacion}</span>
               </div>
               <div className="flex items-center">
                 <DollarSign className="w-4 h-4 mr-1" />

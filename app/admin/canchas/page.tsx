@@ -66,7 +66,7 @@ function AdminCourtsPage() {
   const filteredCourts = courts.filter(court =>
     court.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (court.deporte?.nombre?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-    (court.descripcion?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+    (court.ubicacion?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   )
 
   const handleEditCourt = (court: Cancha) => {

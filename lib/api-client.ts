@@ -123,7 +123,7 @@ export interface Deporte {
 export interface Cancha {
   id: string // UUID
   nombre: string
-  descripcion: string // Descripción simple de la ubicación dentro del predio (ej: "Cancha 3, sector norte")
+  ubicacion: string // Ubicación dentro del club (ej: "Cancha 3, sector norte", "Techada, al fondo a la derecha")
   tipoSuperficie: string
   precioPorHora: number
   activa: boolean
@@ -748,11 +748,11 @@ const apiClient = {
 
   /**
    * Crear cancha - POST /canchas (admin only)
-   * La ubicación geográfica viene del club, esta descripción es solo texto
+   * La ubicación geográfica viene del club, ubicacion es solo texto descriptivo
    */
   createCancha: (data: {
     nombre: string
-    descripcion: string // Descripción simple de la ubicación dentro del predio
+    ubicacion: string // Ubicación dentro del club (ej: "Techada, al fondo a la derecha")
     tipoSuperficie: string
     precioPorHora: number
     deporteId: string

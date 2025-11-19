@@ -28,7 +28,7 @@ export function CreateCanchaDialog({ open, onOpenChange, onSuccess }: CreateCanc
 
   const [formData, setFormData] = useState({
     nombre: '',
-    descripcion: '',
+    ubicacion: '',
     tipoSuperficie: '',
     precioPorHora: 0,
     deporteId: '',
@@ -58,7 +58,7 @@ export function CreateCanchaDialog({ open, onOpenChange, onSuccess }: CreateCanc
   const resetForm = () => {
     setFormData({
       nombre: '',
-      descripcion: '',
+      ubicacion: '',
       tipoSuperficie: '',
       precioPorHora: 0,
       deporteId: '',
@@ -74,8 +74,8 @@ export function CreateCanchaDialog({ open, onOpenChange, onSuccess }: CreateCanc
       toast.error('El nombre es requerido')
       return
     }
-    if (!formData.descripcion.trim()) {
-      toast.error('La descripción es requerida')
+    if (!formData.ubicacion.trim()) {
+      toast.error('La ubicación es requerida')
       return
     }
     if (formData.precioPorHora <= 0) {
@@ -149,22 +149,22 @@ export function CreateCanchaDialog({ open, onOpenChange, onSuccess }: CreateCanc
             />
           </div>
 
-          {/* Descripción de la ubicación dentro del predio */}
+          {/* Ubicación dentro del predio */}
           <div className="space-y-2">
-            <Label htmlFor="descripcion" className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+            <Label htmlFor="ubicacion" className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
               <FileText className="h-4 w-4" />
-              Descripción de Ubicación *
+              Ubicación en el Predio *
             </Label>
             <Input
-              id="descripcion"
-              value={formData.descripcion}
-              onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
-              placeholder="Ej: Cancha 3, sector norte del predio"
+              id="ubicacion"
+              value={formData.ubicacion}
+              onChange={(e) => setFormData({ ...formData, ubicacion: e.target.value })}
+              placeholder="Ej: Techada, al fondo a la derecha"
               className="border-gray-200 dark:border-gray-700"
               required
             />
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              Descripción de la ubicación dentro del predio del club. La ubicación geográfica viene del club.
+              Ubicación de la cancha dentro del predio del club (ej: piso, sector, referencias). La ubicación geográfica es del club.
             </p>
           </div>
 
