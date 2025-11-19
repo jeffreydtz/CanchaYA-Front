@@ -45,11 +45,15 @@ function CourtCard({ court, index, rating = 4.5 }: CourtCardProps) {
     >
       <div className="relative h-64 overflow-hidden">
         <Image
-          src={'/cancha.png'}
+          src={court.fotos && court.fotos.length > 0 ? court.fotos[0].url : '/cancha.png'}
           alt={court.nombre}
           fill
           className="object-cover transition-transform duration-700 group-hover:scale-110"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          onError={(e) => {
+            // Fallback a placeholder si la imagen falla
+            (e.target as HTMLImageElement).src = '/cancha.png'
+          }}
         />
         
         {/* Gradient overlay */}

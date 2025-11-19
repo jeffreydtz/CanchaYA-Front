@@ -56,14 +56,21 @@ interface SearchFilters {
 }
 
 function CourtCard({ cancha }: { cancha: Cancha }) {
+  // Usar la primera foto de la cancha si existe, sino usar el placeholder
+  const imageUrl = cancha.fotos && cancha.fotos.length > 0 ? cancha.fotos[0].url : '/cancha.png'
+
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 group">
       <div className="relative h-48 overflow-hidden">
         <Image
-          src="/cancha.png"
+          src={imageUrl}
           alt={cancha.nombre}
           fill
           className="object-cover group-hover:scale-105 transition-transform duration-300"
+          onError={(e) => {
+            // Fallback a placeholder si la imagen falla
+            (e.target as HTMLImageElement).src = '/cancha.png'
+          }}
         />
         <div className="absolute top-4 right-4">
           <Badge className="bg-primary text-white">
