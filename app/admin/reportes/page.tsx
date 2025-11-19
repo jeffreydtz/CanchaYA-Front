@@ -26,7 +26,19 @@ import { toast } from 'sonner'
 import { format, subMonths, startOfMonth, endOfMonth, subDays, startOfDay } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { downloadCSV, downloadExcel, generateFilename } from '@/lib/analytics/export'
+import { formatCurrency } from '@/lib/analytics/formatters'
 import { withErrorBoundary } from '@/components/error/with-error-boundary'
+
+// Helper function to format currency with proper abbreviations
+const formatCurrencyCompact = (value: number): string => {
+  if (value >= 1000000) {
+    return `$${(value / 1000000).toFixed(value % 1000000 === 0 ? 0 : 2)}M`
+  }
+  if (value >= 1000) {
+    return `$${Math.round(value / 1000)}K`
+  }
+  return formatCurrency(value)
+}
 
 interface ReportData {
   monthlyRevenueData: Array<{ month: string; revenue: number; reservations: number; profit: number; expenses: number }>
@@ -324,9 +336,7 @@ function AdminReportsPage() {
 
   // Calculate revenue change amount
   const revenueDifference = totalRevenue - previousMonthRevenue
-  const revenueDifferenceFormatted = revenueDifference >= 1000
-    ? `$${(revenueDifference / 1000).toFixed(1)}K`
-    : `$${Math.round(revenueDifference).toLocaleString()}`
+  const revenueDifferenceFormatted = formatCurrencyCompact(revenueDifference)
 
   const reservationsDifference = totalReservations - previousMonthReservations
 
@@ -334,7 +344,7 @@ function AdminReportsPage() {
     {
       id: 'revenue',
       title: 'Ingresos totales',
-      value: totalRevenue >= 1000 ? `$${(totalRevenue / 1000).toFixed(1)}K` : `$${totalRevenue.toLocaleString()}`,
+      value: formatCurrencyCompact(totalRevenue),
       description: `${revenueChangeVsPreviousMonth >= 0 ? '+' : ''}${revenueDifferenceFormatted} vs mes anterior`,
       delta: `${revenueChangeVsPreviousMonth >= 0 ? '+' : ''}${revenueChangeVsPreviousMonth.toFixed(1)}%`,
       trend: revenueChangeVsPreviousMonth >= 0 ? 'up' : 'down',
@@ -733,7 +743,7 @@ function AdminReportsPage() {
                     </div>
                     <div className="text-right">
                       <p className="font-semibold text-slate-900">
-                        {location.revenue >= 1000 ? `$${(location.revenue / 1000).toFixed(1)}K` : `$${location.revenue.toLocaleString()}`}
+                        {formatCurrencyCompact(location.revenue)}
                       </p>
                       <div className="mt-1 flex items-center justify-end gap-1">
                         {location.growth > 0 ? (

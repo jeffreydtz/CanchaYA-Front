@@ -221,6 +221,7 @@ export default function BuscarPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list' | '3d'>('grid')
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null)
   const [geoError, setGeoError] = useState<string | null>(null)
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
   
   // Utility function to calculate distance between two coordinates (in km)
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
@@ -468,8 +469,8 @@ export default function BuscarPage() {
               </Button>
             </div>
             
-            {/* Advanced Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Basic Filters - Always Visible */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div className="space-y-2">
                 <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100">Club</Label>
                 <Select value={filters.club} onValueChange={(value) => handleFilterChange('club', value)}>
@@ -486,7 +487,7 @@ export default function BuscarPage() {
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div className="space-y-2">
                 <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100">Ubicación</Label>
                 <Input
@@ -496,83 +497,100 @@ export default function BuscarPage() {
                   className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 font-medium"
                 />
               </div>
-              
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100">Precio Mín.</Label>
-                <Input
-                  type="number"
-                  placeholder="$0"
-                  value={filters.precioMin}
-                  onChange={(e) => handleFilterChange('precioMin', e.target.value)}
-                  className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 font-medium"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100">Precio Máx.</Label>
-                <Input
-                  type="number"
-                  placeholder="$10000"
-                  value={filters.precioMax}
-                  onChange={(e) => handleFilterChange('precioMax', e.target.value)}
-                  className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 font-medium"
-                />
-              </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100">Tipo de Superficie</Label>
-                <Select value={filters.superficie} onValueChange={(value) => handleFilterChange('superficie', value)}>
-                  <SelectTrigger className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 font-medium">
-                    <SelectValue placeholder="Seleccionar superficie" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas las superficies</SelectItem>
-                    {SUPERFICIE_TYPES.map((superficie) => (
-                      <SelectItem key={superficie} value={superficie}>
-                        {superficie}
-                      </SelectItem>
+            {/* Advanced Filters Toggle */}
+            <Button
+              variant="ghost"
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              className="w-full mb-4 text-primary font-semibold hover:bg-primary/10 flex items-center justify-center gap-2 py-2"
+            >
+              <Filter className="h-4 w-4" />
+              {showAdvancedFilters ? 'Menos filtros ▲' : 'Más filtros ▼'}
+            </Button>
+
+            {/* Advanced Filters - Collapsible */}
+            {showAdvancedFilters && (
+              <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100">Precio Mín.</Label>
+                    <Input
+                      type="number"
+                      placeholder="$0"
+                      value={filters.precioMin}
+                      onChange={(e) => handleFilterChange('precioMin', e.target.value)}
+                      className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 font-medium"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100">Precio Máx.</Label>
+                    <Input
+                      type="number"
+                      placeholder="$10000"
+                      value={filters.precioMax}
+                      onChange={(e) => handleFilterChange('precioMax', e.target.value)}
+                      className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 font-medium"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100">Tipo de Superficie</Label>
+                    <Select value={filters.superficie} onValueChange={(value) => handleFilterChange('superficie', value)}>
+                      <SelectTrigger className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 font-medium">
+                        <SelectValue placeholder="Seleccionar superficie" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todas las superficies</SelectItem>
+                        {SUPERFICIE_TYPES.map((superficie) => (
+                          <SelectItem key={superficie} value={superficie}>
+                            {superficie}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                      Distancia Máx. (km) {userLocation ? '📍' : ''}
+                    </Label>
+                    <Input
+                      type="number"
+                      placeholder="5"
+                      value={filters.distancia}
+                      onChange={(e) => handleFilterChange('distancia', e.target.value)}
+                      disabled={!userLocation}
+                      title={userLocation ? 'Tu ubicación detectada' : 'Activa la geolocalización para usar este filtro'}
+                      className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 font-medium disabled:opacity-50"
+                    />
+                  </div>
+                </div>
+
+                {/* Amenities Section */}
+                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100 block mb-3">
+                    Amenidades
+                  </Label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                    {AMENITIES.map((amenity) => (
+                      <button
+                        key={amenity}
+                        onClick={() => toggleAmenity(amenity)}
+                        className={`px-3 py-2 rounded-lg font-medium text-sm transition-all ${
+                          filters.amenities.includes(amenity)
+                            ? 'bg-primary text-white shadow-lg'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                        }`}
+                      >
+                        {amenity}
+                      </button>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </div>
+                </div>
               </div>
-
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                  Distancia Máx. (km) {userLocation ? '📍' : ''}
-                </Label>
-                <Input
-                  type="number"
-                  placeholder="5"
-                  value={filters.distancia}
-                  onChange={(e) => handleFilterChange('distancia', e.target.value)}
-                  disabled={!userLocation}
-                  title={userLocation ? 'Tu ubicación detectada' : 'Activa la geolocalización para usar este filtro'}
-                  className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 font-medium disabled:opacity-50"
-                />
-              </div>
-            </div>
-
-            {/* Amenities Section */}
-            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-              <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100 block mb-3">
-                Amenidades
-              </Label>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-                {AMENITIES.map((amenity) => (
-                  <button
-                    key={amenity}
-                    onClick={() => toggleAmenity(amenity)}
-                    className={`px-3 py-2 rounded-lg font-medium text-sm transition-all ${
-                      filters.amenities.includes(amenity)
-                        ? 'bg-primary text-white shadow-lg'
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                    }`}
-                  >
-                    {amenity}
-                  </button>
-                ))}
-              </div>
-            </div>
+            )}
 
             {/* Geolocation Status */}
             {geoError && (

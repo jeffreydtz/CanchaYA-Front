@@ -7,10 +7,10 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts'
-import { 
-  Users, 
-  Calendar, 
-  DollarSign, 
+import {
+  Users,
+  Calendar,
+  DollarSign,
   TrendingUp,
   Activity,
   Clock,
@@ -21,6 +21,18 @@ import {
   Download,
   RefreshCw
 } from 'lucide-react'
+import { formatCurrency } from '@/lib/analytics/formatters'
+
+// Helper function to format currency with proper abbreviations
+const formatCurrencyCompact = (value: number): string => {
+  if (value >= 1000000) {
+    return `$${(value / 1000000).toFixed(value % 1000000 === 0 ? 0 : 2)}M`
+  }
+  if (value >= 1000) {
+    return `$${Math.round(value / 1000)}K`
+  }
+  return formatCurrency(value)
+}
 
 // Mock data for demonstration - replace with real API data
 const revenueData = [
@@ -141,7 +153,7 @@ export function AdminDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-gray-900">${(stats.totalRevenue / 1000).toFixed(0)}K</div>
+            <div className="text-3xl font-bold text-gray-900">{formatCurrencyCompact(stats.totalRevenue)}</div>
             <div className="flex items-center space-x-2 text-sm text-gray-500 mt-2">
               <TrendingUp className="h-4 w-4 text-gray-600" />
               <span>+$45K vs mes anterior</span>
