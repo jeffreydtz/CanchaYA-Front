@@ -28,6 +28,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import { withErrorBoundary } from '@/components/error/with-error-boundary'
 
 const DIAS_SEMANA = [
   { value: 0, label: 'Domingo', short: 'Dom' },
@@ -39,7 +40,7 @@ const DIAS_SEMANA = [
   { value: 6, label: 'Sábado', short: 'Sáb' },
 ]
 
-export default function AdminDisponibilidadPage() {
+function AdminDisponibilidadPage() {
   const [canchas, setCanchas] = useState<Cancha[]>([])
   const [horarios, setHorarios] = useState<Horario[]>([])
   const [disponibilidades, setDisponibilidades] = useState<DisponibilidadHorario[]>([])
@@ -448,3 +449,5 @@ export default function AdminDisponibilidadPage() {
     </div>
   )
 }
+
+export default withErrorBoundary(AdminDisponibilidadPage, 'Gestión de Disponibilidad')

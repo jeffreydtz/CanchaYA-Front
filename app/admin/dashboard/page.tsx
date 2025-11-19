@@ -25,6 +25,7 @@ import apiClient from '@/lib/api-client'
 import { downloadExcel, generateFilename } from '@/lib/analytics/export'
 import { formatCompactNumber } from '@/lib/analytics/formatters'
 import { SPORTS_COLORS } from '@/lib/analytics/constants'
+import { withErrorBoundary } from '@/components/error/with-error-boundary'
 
 interface DashboardData {
   metrics: {
@@ -333,7 +334,7 @@ const fetchDashboardData = async (filters?: Record<string, any> | null): Promise
   }
 }
 
-export default function DashboardPage() {
+function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<DashboardData | null>(null)
   const [lastUpdate, setLastUpdate] = useState(new Date())
@@ -706,3 +707,5 @@ export default function DashboardPage() {
     </div>
   )
 }
+
+export default withErrorBoundary(DashboardPage, 'Dashboard Analytics')

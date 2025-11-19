@@ -46,6 +46,8 @@ export function CourtPhotosCarousel({ photos, courtName, className = '' }: Court
           fill
           className="object-cover"
           priority={currentPhotoIndex === 0}
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 100vw"
+          loading={currentPhotoIndex === 0 ? 'eager' : 'lazy'}
         />
 
         {/* Navigation Overlay */}
@@ -66,11 +68,12 @@ export function CourtPhotosCarousel({ photos, courtName, className = '' }: Court
               size="icon"
               variant="ghost"
               className="bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 rounded-full"
+              aria-label={`Mostrar foto anterior (${currentPhotoIndex} de ${photos.length})`}
             >
               <ChevronLeft className="h-5 w-5" />
             </Button>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2" role="group" aria-label="Navegación de fotos">
               {photos.map((_, index) => (
                 <button
                   key={index}
@@ -80,6 +83,8 @@ export function CourtPhotosCarousel({ photos, courtName, className = '' }: Court
                       ? 'w-6 bg-white'
                       : 'w-2 bg-white/50 hover:bg-white/70'
                   }`}
+                  aria-label={`Ir a la foto ${index + 1} de ${photos.length}`}
+                  aria-current={index === currentPhotoIndex ? 'true' : 'false'}
                 />
               ))}
             </div>
@@ -89,6 +94,7 @@ export function CourtPhotosCarousel({ photos, courtName, className = '' }: Court
               size="icon"
               variant="ghost"
               className="bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 rounded-full"
+              aria-label={`Mostrar siguiente foto (${(currentPhotoIndex + 2) % photos.length || photos.length} de ${photos.length})`}
             >
               <ChevronRight className="h-5 w-5" />
             </Button>

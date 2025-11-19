@@ -18,6 +18,8 @@ import { toast } from 'sonner'
 import apiClient from '@/lib/api-client'
 import { setAuthTokens } from '@/lib/auth'
 import Link from 'next/link'
+import { PasswordStrengthIndicator } from './password-strength-indicator'
+import { Eye, EyeOff } from 'lucide-react'
 
 const registerSchema = z.object({
   nombre: z.string().min(1, 'El nombre es requerido'),
@@ -41,6 +43,8 @@ export function RegisterForm() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const {
     register,
@@ -184,162 +188,58 @@ export function RegisterForm() {
 
           <div className="space-y-2">
             <Label htmlFor="password" className="text-sm font-semibold text-gray-900 dark:text-gray-100">Contraseña</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              {...register('password', {
-                onChange: (e) => setPassword(e.target.value)
-              })}
-              disabled={isLoading}
-              className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100"
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                {...register('password', {
+                  onChange: (e) => setPassword(e.target.value)
+                })}
+                disabled={isLoading}
+                className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 pr-10"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 text-gray-400 hover:text-gray-600"
+                onClick={() => setShowPassword(!showPassword)}
+                disabled={isLoading}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
+            </div>
             {errors.password && (
               <p className="text-sm text-red-600 dark:text-red-400">{errors.password.message}</p>
             )}
-            
-            {/* Indicador de requisitos con colores */}
-            <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
-              <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Requisitos de contraseña:</p>
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <div className={`h-4 w-4 rounded-full flex items-center justify-center transition-all ${
-                    passwordRequirements.minLength 
-                      ? 'bg-green-500' 
-                      : password.length > 0 
-                        ? 'bg-red-500' 
-                        : 'bg-gray-300 dark:bg-gray-600'
-                  }`}>
-                    {passwordRequirements.minLength && (
-                      <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
-                  <span className={`text-xs transition-colors ${
-                    passwordRequirements.minLength 
-                      ? 'text-green-600 dark:text-green-400 font-medium' 
-                      : password.length > 0 
-                        ? 'text-red-600 dark:text-red-400'
-                        : 'text-gray-500 dark:text-gray-400'
-                  }`}>
-                    Mínimo 8 caracteres
-                  </span>
-                </div>
 
-                <div className="flex items-center gap-2">
-                  <div className={`h-4 w-4 rounded-full flex items-center justify-center transition-all ${
-                    passwordRequirements.hasUpperCase 
-                      ? 'bg-green-500' 
-                      : password.length > 0 
-                        ? 'bg-red-500' 
-                        : 'bg-gray-300 dark:bg-gray-600'
-                  }`}>
-                    {passwordRequirements.hasUpperCase && (
-                      <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
-                  <span className={`text-xs transition-colors ${
-                    passwordRequirements.hasUpperCase 
-                      ? 'text-green-600 dark:text-green-400 font-medium' 
-                      : password.length > 0 
-                        ? 'text-red-600 dark:text-red-400'
-                        : 'text-gray-500 dark:text-gray-400'
-                  }`}>
-                    Al menos una letra mayúscula (A-Z)
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <div className={`h-4 w-4 rounded-full flex items-center justify-center transition-all ${
-                    passwordRequirements.hasLowerCase 
-                      ? 'bg-green-500' 
-                      : password.length > 0 
-                        ? 'bg-red-500' 
-                        : 'bg-gray-300 dark:bg-gray-600'
-                  }`}>
-                    {passwordRequirements.hasLowerCase && (
-                      <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
-                  <span className={`text-xs transition-colors ${
-                    passwordRequirements.hasLowerCase 
-                      ? 'text-green-600 dark:text-green-400 font-medium' 
-                      : password.length > 0 
-                        ? 'text-red-600 dark:text-red-400'
-                        : 'text-gray-500 dark:text-gray-400'
-                  }`}>
-                    Al menos una letra minúscula (a-z)
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <div className={`h-4 w-4 rounded-full flex items-center justify-center transition-all ${
-                    passwordRequirements.hasNumber 
-                      ? 'bg-green-500' 
-                      : password.length > 0 
-                        ? 'bg-red-500' 
-                        : 'bg-gray-300 dark:bg-gray-600'
-                  }`}>
-                    {passwordRequirements.hasNumber && (
-                      <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
-                  <span className={`text-xs transition-colors ${
-                    passwordRequirements.hasNumber 
-                      ? 'text-green-600 dark:text-green-400 font-medium' 
-                      : password.length > 0 
-                        ? 'text-red-600 dark:text-red-400'
-                        : 'text-gray-500 dark:text-gray-400'
-                  }`}>
-                    Al menos un número (0-9)
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <div className={`h-4 w-4 rounded-full flex items-center justify-center transition-all ${
-                    passwordRequirements.hasSymbol 
-                      ? 'bg-green-500' 
-                      : password.length > 0 
-                        ? 'bg-red-500' 
-                        : 'bg-gray-300 dark:bg-gray-600'
-                  }`}>
-                    {passwordRequirements.hasSymbol && (
-                      <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
-                  <span className={`text-xs transition-colors ${
-                    passwordRequirements.hasSymbol 
-                      ? 'text-green-600 dark:text-green-400 font-medium' 
-                      : password.length > 0 
-                        ? 'text-red-600 dark:text-red-400'
-                        : 'text-gray-500 dark:text-gray-400'
-                  }`}>
-                    Al menos un símbolo especial (!@#$%^&*)
-                  </span>
-                </div>
-              </div>
-            </div>
+            {/* Password Strength Indicator */}
+            <PasswordStrengthIndicator password={password} showRequirements={true} size="md" />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="confirmPassword" className="text-sm font-semibold text-gray-900 dark:text-gray-100">Confirmar contraseña</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              placeholder="••••••••"
-              {...register('confirmPassword')}
-              disabled={isLoading}
-              className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100"
-            />
+            <div className="relative">
+              <Input
+                id="confirmPassword"
+                type={showConfirmPassword ? 'text' : 'password'}
+                placeholder="••••••••"
+                {...register('confirmPassword')}
+                disabled={isLoading}
+                className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 pr-10"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 text-gray-400 hover:text-gray-600"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                disabled={isLoading}
+              >
+                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
+            </div>
             {errors.confirmPassword && (
               <p className="text-sm text-red-600 dark:text-red-400">{errors.confirmPassword.message}</p>
             )}

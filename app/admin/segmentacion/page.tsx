@@ -8,8 +8,9 @@ import { AnalyticsLegend } from '@/components/analytics/AnalyticsLegend';
 import type { UserSegmentData } from '@/lib/analytics/types';
 import { toast } from 'sonner';
 import { downloadCSV, generateFilename } from '@/lib/analytics/export';
+import { withErrorBoundary } from '@/components/error/with-error-boundary';
 
-export default function SegmentacionPage() {
+function SegmentacionPage() {
   const [segmentData, setSegmentData] = useState<UserSegmentData[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -207,6 +208,8 @@ export default function SegmentacionPage() {
     </div>
   );
 }
+
+export default withErrorBoundary(SegmentacionPage, 'Segmentación de Usuarios')
 
 // Action Card Component
 interface ActionCardProps {

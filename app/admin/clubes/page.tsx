@@ -28,8 +28,9 @@ import { toast } from 'sonner'
 import apiClient, { Club } from '@/lib/api-client'
 import { CreateClubDialog } from '@/components/admin/create-club-dialog'
 import { EditClubDialog } from '@/components/admin/edit-club-dialog'
+import { withErrorBoundary } from '@/components/error/with-error-boundary'
 
-export default function AdminClubesPage() {
+function AdminClubesPage() {
   const [clubs, setClubs] = useState<Club[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
@@ -291,3 +292,5 @@ export default function AdminClubesPage() {
     </>
   )
 }
+
+export default withErrorBoundary(AdminClubesPage, 'Gestión de Clubes')

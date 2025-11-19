@@ -30,8 +30,9 @@ import apiClient, { Cancha } from '@/lib/api-client'
 import { EditCanchaDialog } from '@/components/admin/edit-cancha-dialog'
 import { CreateCanchaDialog } from '@/components/admin/create-cancha-dialog'
 import { CanchaPhotosManager } from '@/components/admin/cancha-photos-manager'
+import { withErrorBoundary } from '@/components/error/with-error-boundary'
 
-export default function AdminCourtsPage() {
+function AdminCourtsPage() {
   const [courts, setCourts] = useState<Cancha[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
@@ -361,3 +362,5 @@ export default function AdminCourtsPage() {
     </>
   )
 }
+
+export default withErrorBoundary(AdminCourtsPage, 'Gestión de Canchas')

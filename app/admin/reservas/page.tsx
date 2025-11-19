@@ -7,8 +7,9 @@ import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Search } from 'lucide-react'
 import apiClient, { Reserva } from '@/lib/api-client'
+import { withErrorBoundary } from '@/components/error/with-error-boundary'
 
-export default function AdminReservationsPage() {
+function AdminReservationsPage() {
   const [reservations, setReservations] = useState<Reserva[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
@@ -137,4 +138,6 @@ export default function AdminReservationsPage() {
       </Card>
     </div>
   )
-} 
+}
+
+export default withErrorBoundary(AdminReservationsPage, 'Gestión de Reservas')

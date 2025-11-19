@@ -53,7 +53,34 @@ interface SearchFilters {
   precioMin: string
   precioMax: string
   rating: string
+  distancia: string
+  superficie: string
+  amenities: string[]
 }
+
+interface UserLocation {
+  latitude: number
+  longitude: number
+}
+
+// Superficie types (adjust based on backend data)
+const SUPERFICIE_TYPES = [
+  'Césped Natural',
+  'Césped Sintético',
+  'Cemento',
+  'Arcilla',
+  'Parquet'
+]
+
+// Common amenities
+const AMENITIES = [
+  'Vestuarios',
+  'Estacionamiento',
+  'Canchas de Práctica',
+  'Bar/Cafetería',
+  'WiFi',
+  'Iluminación Nocturna'
+]
 
 function CourtCard({ cancha }: { cancha: Cancha }) {
   // Usar la primera foto de la cancha si existe, sino usar el placeholder
@@ -180,17 +207,34 @@ export default function BuscarPage() {
     ubicacion: '',
     precioMin: '',
     precioMax: '',
-    rating: '0'
+    rating: '0',
+    distancia: '',
+    superficie: 'all',
+    amenities: []
   })
-  
+
   const [canchas, setCanchas] = useState<Cancha[]>([])
   const [clubs, setClubes] = useState<Club[]>([])
   const [deportes, setDeportes] = useState<Deporte[]>([])
   const [loading, setLoading] = useState(true)
   const [searching, setSearching] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'list' | '3d'>('grid')
+  const [userLocation, setUserLocation] = useState<UserLocation | null>(null)
+  const [geoError, setGeoError] = useState<string | null>(null)
   
-  // Load initial data
+  // Utility function to calculate distance between two coordinates (in km)
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371 // Earth's radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180
+    const dLon = (lon2 - lon1) * Math.PI / 180
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    return R * c
+  }
+
+  // Load initial data and request geolocation
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
@@ -200,7 +244,7 @@ export default function BuscarPage() {
           apiClient.getClubes(),
           apiClient.getDeportes()
         ])
-        
+
         if (canchasResponse.data) {
           setCanchas(canchasResponse.data)
         }
@@ -217,31 +261,56 @@ export default function BuscarPage() {
         setLoading(false)
       }
     }
-    
+
+    // Request geolocation if available
+    if (typeof navigator !== 'undefined' && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          })
+          setGeoError(null)
+        },
+        (error) => {
+          console.warn('Geolocation error:', error)
+          setGeoError('No se pudo obtener tu ubicación')
+        }
+      )
+    }
+
     fetchData()
   }, [])
   
-  const handleFilterChange = (key: keyof SearchFilters, value: string) => {
+  const handleFilterChange = (key: keyof SearchFilters, value: string | string[]) => {
     setFilters(prev => ({ ...prev, [key]: value }))
   }
-  
+
+  const toggleAmenity = (amenity: string) => {
+    setFilters(prev => ({
+      ...prev,
+      amenities: prev.amenities.includes(amenity)
+        ? prev.amenities.filter(a => a !== amenity)
+        : [...prev.amenities, amenity]
+    }))
+  }
+
   const handleSearch = async () => {
     setSearching(true)
     try {
-      // Simular búsqueda filtrada
       const response = await apiClient.getCanchas()
       if (response.data) {
         let filtered = response.data
-        
+
         // Filtrar por búsqueda de texto
         if (filters.search) {
-          filtered = filtered.filter(cancha => 
+          filtered = filtered.filter(cancha =>
             cancha.nombre?.toLowerCase().includes(filters.search.toLowerCase()) ||
             cancha.club?.nombre?.toLowerCase().includes(filters.search.toLowerCase()) ||
             cancha.ubicacion?.toLowerCase().includes(filters.search.toLowerCase())
           )
         }
-        
+
         // Filtrar por deporte
         if (filters.deporte !== 'all') {
           filtered = filtered.filter(cancha => cancha.deporte?.id === filters.deporte)
@@ -251,28 +320,66 @@ export default function BuscarPage() {
         if (filters.club !== 'all') {
           filtered = filtered.filter(cancha => cancha.club?.id === filters.club)
         }
-        
+
         // Filtrar por ubicación
         if (filters.ubicacion) {
-          filtered = filtered.filter(cancha => 
+          filtered = filtered.filter(cancha =>
             cancha.ubicacion?.toLowerCase().includes(filters.ubicacion.toLowerCase())
           )
         }
-        
+
         // Filtrar por precio mínimo
         if (filters.precioMin && parseFloat(filters.precioMin) > 0) {
-          filtered = filtered.filter(cancha => 
+          filtered = filtered.filter(cancha =>
             cancha.precioPorHora >= parseFloat(filters.precioMin)
           )
         }
-        
+
         // Filtrar por precio máximo
         if (filters.precioMax && parseFloat(filters.precioMax) > 0) {
-          filtered = filtered.filter(cancha => 
+          filtered = filtered.filter(cancha =>
             cancha.precioPorHora <= parseFloat(filters.precioMax)
           )
         }
-        
+
+        // Filtrar por tipo de superficie
+        if (filters.superficie !== 'all') {
+          filtered = filtered.filter(cancha =>
+            cancha.tipoSuperficie?.toLowerCase() === filters.superficie.toLowerCase()
+          )
+        }
+
+        // Filtrar por distancia (si el usuario ha permitido geolocalización)
+        if (filters.distancia && userLocation && userLocation.latitude && userLocation.longitude) {
+          const maxDistance = parseFloat(filters.distancia)
+          filtered = filtered.filter(cancha => {
+            if (!cancha.latitud || !cancha.longitud) return false
+            const distance = calculateDistance(
+              userLocation.latitude,
+              userLocation.longitude,
+              cancha.latitud,
+              cancha.longitud
+            )
+            return distance <= maxDistance
+          })
+        }
+
+        // Filtrar por amenidades (si alguna está seleccionada)
+        if (filters.amenities.length > 0) {
+          // Note: This requires backend support for amenities field in Cancha model
+          // For now, we'll do a simple mock filter
+          filtered = filtered.filter(cancha => {
+            // Mock implementation - check if cancha has certain characteristics
+            const hasAmenities = filters.amenities.some(amenity => {
+              if (amenity === 'Iluminación Nocturna' && cancha.activa) return true
+              if (amenity === 'Estacionamiento' && cancha.club?.direccion) return true
+              // Add more logic as needed based on actual data structure
+              return false
+            })
+            return hasAmenities || filters.amenities.length === 0
+          })
+        }
+
         setCanchas(filtered)
       }
     } catch (error) {
@@ -291,7 +398,10 @@ export default function BuscarPage() {
       ubicacion: '',
       precioMin: '',
       precioMax: '',
-      rating: '0'
+      rating: '0',
+      distancia: '',
+      superficie: 'all',
+      amenities: []
     })
   }
 
@@ -408,8 +518,69 @@ export default function BuscarPage() {
                   className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 font-medium"
                 />
               </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100">Tipo de Superficie</Label>
+                <Select value={filters.superficie} onValueChange={(value) => handleFilterChange('superficie', value)}>
+                  <SelectTrigger className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 font-medium">
+                    <SelectValue placeholder="Seleccionar superficie" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas las superficies</SelectItem>
+                    {SUPERFICIE_TYPES.map((superficie) => (
+                      <SelectItem key={superficie} value={superficie}>
+                        {superficie}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  Distancia Máx. (km) {userLocation ? '📍' : ''}
+                </Label>
+                <Input
+                  type="number"
+                  placeholder="5"
+                  value={filters.distancia}
+                  onChange={(e) => handleFilterChange('distancia', e.target.value)}
+                  disabled={!userLocation}
+                  title={userLocation ? 'Tu ubicación detectada' : 'Activa la geolocalización para usar este filtro'}
+                  className="rounded-lg bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100 font-medium disabled:opacity-50"
+                />
+              </div>
             </div>
-            
+
+            {/* Amenities Section */}
+            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <Label className="text-sm font-semibold text-gray-900 dark:text-gray-100 block mb-3">
+                Amenidades
+              </Label>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                {AMENITIES.map((amenity) => (
+                  <button
+                    key={amenity}
+                    onClick={() => toggleAmenity(amenity)}
+                    className={`px-3 py-2 rounded-lg font-medium text-sm transition-all ${
+                      filters.amenities.includes(amenity)
+                        ? 'bg-primary text-white shadow-lg'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    {amenity}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Geolocation Status */}
+            {geoError && (
+              <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                <p className="text-sm text-yellow-700 dark:text-yellow-400">{geoError}</p>
+              </div>
+            )}
+
             {/* Filter Actions */}
             <div className="flex justify-between items-center mt-4">
               <Button variant="ghost" onClick={clearFilters} className="text-gray-600 dark:text-gray-300 font-medium hover:text-destructive dark:hover:text-destructive">

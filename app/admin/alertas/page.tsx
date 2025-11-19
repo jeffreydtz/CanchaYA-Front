@@ -6,8 +6,9 @@ import { Plus, AlertTriangle, CheckCircle, Info } from 'lucide-react';
 import { AlertConfig, AlertListItem } from '@/components/analytics/AlertConfig';
 import type { Alert } from '@/lib/analytics/types';
 import { toast } from 'sonner';
+import { withErrorBoundary } from '@/components/error/with-error-boundary';
 
-export default function AlertasPage() {
+function AlertasPage() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [editingAlert, setEditingAlert] = useState<Alert | null>(null);
@@ -214,3 +215,5 @@ export default function AlertasPage() {
     </div>
   );
 }
+
+export default withErrorBoundary(AlertasPage, 'Gestión de Alertas')

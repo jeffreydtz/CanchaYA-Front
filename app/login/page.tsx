@@ -7,14 +7,15 @@ import { useAuth } from '@/components/auth/auth-context'
 
 export default function LoginPage() {
   const router = useRouter()
-  const { isAuthenticated, loading } = useAuth()
+  const { isAuthenticated, loading, user } = useAuth()
 
   useEffect(() => {
-    // If already authenticated, redirect to home
+    // If already authenticated, redirect based on role
     if (!loading && isAuthenticated) {
-      router.push('/')
+      const redirectPath = user?.rol === 'admin' ? '/admin/dashboard' : '/'
+      router.push(redirectPath)
     }
-  }, [isAuthenticated, loading, router])
+  }, [isAuthenticated, loading, user, router])
 
   // Show nothing while checking auth or redirecting
   if (loading || isAuthenticated) {

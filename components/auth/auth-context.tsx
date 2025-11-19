@@ -70,7 +70,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             try {
               const personaResponse = await apiClient.getPersona(decoded.personaId)
               if (personaResponse.data?.avatarUrl) {
-                console.log('Avatar URL fetched on initial load:', personaResponse.data.avatarUrl)
                 const avatarUrl = personaResponse.data.avatarUrl
                 setUser((prevUser) =>
                   prevUser ? { ...prevUser, avatarUrl } : null
@@ -102,13 +101,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setLoading(true)
-      console.log('Attempting login for:', email)
 
       const response = await apiClient.login({ email, password })
-      console.log('Login response:', response)
 
       if (response.error) {
-        console.error('Login error from API:', response.error)
         toast.error(response.error)
         return false
       }
@@ -117,20 +113,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { accessToken, refreshToken } = response.data || {}
 
       if (accessToken && refreshToken) {
-        console.log('Tokens received, saving...')
-
         // Save both tokens
         setAuthTokens(accessToken, refreshToken)
 
-        console.log('Tokens saved, decoding access token...')
-
         try {
           const decoded: any = jwtDecode(accessToken)
-          console.log('Token decoded successfully:', decoded)
 
           // Validate that required fields exist
           if (!decoded.id || !decoded.email) {
-            console.error('Missing required fields in token:', decoded)
             throw new Error('Token missing required fields')
           }
 
@@ -146,29 +136,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(userData)
           setPersonaId(decoded.personaId || null)
           setUserId(decoded.id || null)
-          console.log('User set in context successfully:', userData)
 
           // Fetch persona data to get avatar URL
           if (decoded.personaId) {
             try {
               const personaResponse = await apiClient.getPersona(decoded.personaId)
               if (personaResponse.data?.avatarUrl) {
-                console.log('Avatar URL fetched after login:', personaResponse.data.avatarUrl)
                 const avatarUrl = personaResponse.data.avatarUrl
                 setUser((prevUser) =>
                   prevUser ? { ...prevUser, avatarUrl } : null
                 )
               }
             } catch (error) {
-              console.error('Error fetching persona data for avatar:', error)
               // Continue even if persona fetch fails
             }
           }
 
           return true
         } catch (e) {
-          console.error('Error decoding token:', e)
-          console.error('Token that failed to decode:', accessToken)
           setUser(null)
           deleteCookie('token')
           deleteCookie('refreshToken')
@@ -177,11 +162,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      console.error('No tokens in response')
       toast.error('Error en la autenticación')
       return false
     } catch (error) {
-      console.error('Login error:', error)
       toast.error('Error del servidor. Intenta nuevamente.')
       return false
     } finally {

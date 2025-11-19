@@ -27,7 +27,7 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>
 
 export function LoginForm() {
-  const { login } = useAuth()
+  const { login, user } = useAuth()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -46,29 +46,25 @@ export function LoginForm() {
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
-    console.log('Form submit - attempting login for:', data.email)
-    
+
     try {
       const success = await login(data.email, data.password)
-      console.log('Login attempt result:', success)
-      
+
       if (success) {
         toast.success('¡Bienvenido de vuelta!', {
           description: 'Has iniciado sesión exitosamente.',
         })
-        
-        console.log('Login successful, redirecting...')
-        // Use router.push for smooth client-side navigation
-        router.push('/')
+
+        // Redirect based on role
+        const redirectPath = user?.rol === 'admin' ? '/admin/dashboard' : '/'
+        router.push(redirectPath)
       } else {
-        console.log('Login failed - credentials invalid or server error')
         toast.error('Error al iniciar sesión', {
           description: 'Verifica tus credenciales e intenta nuevamente.',
         })
         setIsLoading(false)
       }
     } catch (error) {
-      console.error('Login error in form:', error)
       toast.error('Error al iniciar sesión', {
         description: 'Verifica tus credenciales e intenta nuevamente.',
       })

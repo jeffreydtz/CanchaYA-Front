@@ -35,8 +35,9 @@ import { Eye, Trash2, Search, User } from 'lucide-react'
 import apiClient, { Persona } from '@/lib/api-client'
 import { toast } from 'sonner'
 import PersonaProfile from '@/components/personas/persona-profile'
+import { withErrorBoundary } from '@/components/error/with-error-boundary'
 
-export default function AdminPersonasPage() {
+function AdminPersonasPage() {
   const [personas, setPersonas] = useState<Persona[]>([])
   const [filteredPersonas, setFilteredPersonas] = useState<Persona[]>([])
   const [searchTerm, setSearchTerm] = useState('')
@@ -293,3 +294,5 @@ export default function AdminPersonasPage() {
     </div>
   )
 }
+
+export default withErrorBoundary(AdminPersonasPage, 'Gestión de Personas')

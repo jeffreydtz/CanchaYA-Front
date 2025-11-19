@@ -16,8 +16,9 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Edit, Trash2 } from "lucide-react"
 import apiClient, { User } from '@/lib/api-client'
+import { withErrorBoundary } from '@/components/error/with-error-boundary'
 
-export default function AdminUsersPage() {
+function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [roleFilter, setRoleFilter] = useState<string>("all")
@@ -163,4 +164,6 @@ export default function AdminUsersPage() {
       </Card>
     </div>
   )
-} 
+}
+
+export default withErrorBoundary(AdminUsersPage, 'Gestión de Usuarios')

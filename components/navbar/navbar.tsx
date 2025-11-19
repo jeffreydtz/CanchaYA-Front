@@ -269,11 +269,13 @@ export default function Navbar() {
               variant="ghost"
               size="icon-sm"
               className={`md:hidden ${
-                isScrolled 
-                  ? 'text-gray-700 dark:text-gray-200' 
+                isScrolled
+                  ? 'text-gray-700 dark:text-gray-200'
                   : 'text-white'
               }`}
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label={isMobileMenuOpen ? 'Cerrar menú' : 'Abrir menú'}
+              aria-expanded={isMobileMenuOpen}
             >
               {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>

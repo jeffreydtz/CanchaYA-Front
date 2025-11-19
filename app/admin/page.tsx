@@ -3,8 +3,9 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { RefreshCw } from "lucide-react"
+import { withErrorBoundary } from "@/components/error/with-error-boundary"
 
-export default function AdminPage() {
+function AdminPage() {
   const router = useRouter()
 
   useEffect(() => {
@@ -21,3 +22,5 @@ export default function AdminPage() {
     </div>
   )
 }
+
+export default withErrorBoundary(AdminPage, 'Admin Redirect')

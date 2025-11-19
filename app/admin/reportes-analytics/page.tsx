@@ -10,8 +10,9 @@ import { toast } from 'sonner';
 import { downloadCSV, downloadExcel, generateFilename } from '@/lib/analytics/export';
 import { fetchDashboardData } from '@/lib/analytics/data-aggregator';
 import { REPORT_CONFIG } from '@/lib/analytics/config';
+import { withErrorBoundary } from '@/components/error/with-error-boundary';
 
-export default function ReportesAnalyticsPage() {
+function ReportesAnalyticsPage() {
   const [reports, setReports] = useState<Report[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -321,6 +322,8 @@ export default function ReportesAnalyticsPage() {
     </div>
   );
 }
+
+export default withErrorBoundary(ReportesAnalyticsPage, 'Reportes Analytics')
 
 // Helper function to get most used report type
 function getMostUsedType(reports: Report[]): string {

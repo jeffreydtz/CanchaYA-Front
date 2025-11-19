@@ -82,6 +82,8 @@ function CourtCard({ court, index, rating = 4.5 }: CourtCardProps) {
             e.preventDefault()
             setIsFavorite(!isFavorite)
           }}
+          aria-label={isFavorite ? `Quitar ${court.nombre} de favoritos` : `Agregar ${court.nombre} a favoritos`}
+          aria-pressed={isFavorite}
         >
           <Heart className={`h-5 w-5 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
         </Button>

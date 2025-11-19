@@ -42,6 +42,7 @@ import Navbar from '@/components/navbar/navbar'
 import { useAuth } from '@/components/auth/auth-context'
 import dynamic from 'next/dynamic'
 import { CourtPhotosCarousel } from '@/components/court/court-photos-carousel'
+import { RatingDisplay } from '@/components/ratings/rating-display'
 
 // Importación dinámica del componente 3D (solo cliente)
 const Court3DViewer = dynamic(() => import('@/components/3d/Court3DViewer'), {
@@ -456,6 +457,17 @@ export default function CanchaDetailPage() {
             {/* Vista 3D de la Cancha */}
             <div className="mt-6">
               <Court3DViewer sport={cancha.deporte?.nombre || 'Fútbol'} />
+            </div>
+
+            {/* Ratings Display */}
+            <div className="mt-6">
+              <RatingDisplay
+                objectiveType="cancha"
+                objectiveId={cancha.id}
+                title="Valoraciones y Opiniones"
+                showCreateButton={isAuthenticated}
+                maxHeight="max-h-[700px]"
+              />
             </div>
 
             {/* Amenities */}

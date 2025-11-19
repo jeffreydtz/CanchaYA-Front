@@ -26,6 +26,7 @@ import { toast } from 'sonner'
 import { format, subMonths, startOfMonth, endOfMonth, subDays, startOfDay } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { downloadCSV, downloadExcel, generateFilename } from '@/lib/analytics/export'
+import { withErrorBoundary } from '@/components/error/with-error-boundary'
 
 interface ReportData {
   monthlyRevenueData: Array<{ month: string; revenue: number; reservations: number; profit: number; expenses: number }>
@@ -280,7 +281,7 @@ const fetchReportData = async (period: string): Promise<ReportData> => {
   }
 }
 
-export default function AdminReportsPage() {
+function AdminReportsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState('month')
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<ReportData | null>(null)
@@ -833,3 +834,5 @@ export default function AdminReportsPage() {
     </div>
   )
 }
+
+export default withErrorBoundary(AdminReportsPage, 'Reportes Administrativos')
