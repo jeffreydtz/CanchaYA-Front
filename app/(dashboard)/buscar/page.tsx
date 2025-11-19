@@ -34,6 +34,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import Navbar from '@/components/navbar/navbar'
 import dynamic from 'next/dynamic'
+import { CourtImage } from '@/components/court/court-image'
 
 // Importación dinámica del mapa 3D
 const LocationMap3D = dynamic(() => import('@/components/3d/LocationMap3D'), {
@@ -84,20 +85,17 @@ const AMENITIES = [
 
 function CourtCard({ cancha }: { cancha: Cancha }) {
   // Usar la primera foto de la cancha si existe, sino usar el placeholder
-  const imageUrl = cancha.fotos && cancha.fotos.length > 0 ? cancha.fotos[0].url : '/cancha.png'
+  const imageUrl = cancha.fotos && cancha.fotos.length > 0 ? cancha.fotos[0].url : undefined
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 group">
-      <div className="relative h-48 overflow-hidden">
-        <Image
+      <div className="relative h-48 overflow-hidden bg-gray-200 dark:bg-gray-700">
+        <CourtImage
           src={imageUrl}
           alt={cancha.nombre}
           fill
-          className="object-cover group-hover:scale-105 transition-transform duration-300"
-          onError={(e) => {
-            // Fallback a placeholder si la imagen falla
-            (e.target as HTMLImageElement).src = '/cancha.png'
-          }}
+          className="group-hover:scale-105 transition-transform duration-300"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
         <div className="absolute top-4 right-4">
           <Badge className="bg-primary text-white">

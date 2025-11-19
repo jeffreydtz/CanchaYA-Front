@@ -10,11 +10,11 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Star, MapPin, Clock, Heart, Users, Wifi, Car, Coffee } from 'lucide-react'
-import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import apiClient, { Cancha } from '@/lib/api-client'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSearch } from '@/lib/search-context'
+import { CourtImage } from '@/components/court/court-image'
 
 interface CourtCardProps {
   court: Cancha
@@ -43,17 +43,13 @@ function CourtCard({ court, index, rating = 4.5 }: CourtCardProps) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative h-64 overflow-hidden">
-        <Image
-          src={court.fotos && court.fotos.length > 0 ? court.fotos[0].url : '/cancha.png'}
+      <div className="relative h-64 overflow-hidden bg-gray-200 dark:bg-gray-700">
+        <CourtImage
+          src={court.fotos && court.fotos.length > 0 ? court.fotos[0].url : undefined}
           alt={court.nombre}
           fill
-          className="object-cover transition-transform duration-700 group-hover:scale-110"
+          className="transition-transform duration-700 group-hover:scale-110"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          onError={(e) => {
-            // Fallback a placeholder si la imagen falla
-            (e.target as HTMLImageElement).src = '/cancha.png'
-          }}
         />
         
         {/* Gradient overlay */}
