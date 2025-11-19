@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area, HeatMap, ScatterChart, Scatter } from 'recharts'
 import {
   Users,
   Calendar,
@@ -19,9 +19,11 @@ import {
   ArrowUpRight,
   Filter,
   Download,
-  RefreshCw
+  RefreshCw,
+  AlertCircle
 } from 'lucide-react'
-import { formatCurrency } from '@/lib/analytics/formatters'
+import { formatCurrency, formatNumber } from '@/lib/analytics/formatters'
+import apiClient, { AdminResumen, TopJugador, CanchaMasUsada, PersonaConDeuda, ReservasAggregate } from '@/lib/api-client'
 
 // Helper function to format currency with proper abbreviations
 const formatCurrencyCompact = (value: number): string => {
@@ -34,15 +36,25 @@ const formatCurrencyCompact = (value: number): string => {
   return formatCurrency(value)
 }
 
-// Mock data for demonstration - replace with real API data
-const revenueData = [
-  { month: 'Ene', revenue: 45000, reservations: 120, users: 89 },
-  { month: 'Feb', revenue: 52000, reservations: 140, users: 95 },
-  { month: 'Mar', revenue: 48000, reservations: 135, users: 92 },
-  { month: 'Abr', revenue: 61000, reservations: 165, users: 108 },
-  { month: 'May', revenue: 55000, reservations: 150, users: 102 },
-  { month: 'Jun', revenue: 67000, reservations: 180, users: 115 },
-]
+// Default mock data for demonstration
+const defaultMockData = {
+  resumen: {
+    totalUsuarios: 1255,
+    totalReservas: 3890,
+    totalCanchas: 45,
+    deudaTotalPendiente: 125000
+  },
+  topJugadores: [
+    { personaId: '1', nombre: 'Juan Pérez', email: 'juan@example.com', ranking: 1 },
+    { personaId: '2', nombre: 'María García', email: 'maria@example.com', ranking: 2 },
+    { personaId: '3', nombre: 'Carlos López', email: 'carlos@example.com', ranking: 3 },
+  ],
+  canchasMasUsadas: [
+    { canchaId: '1', nombre: 'Cancha Central', totalReservas: 89 },
+    { canchaId: '2', nombre: 'Polideportivo Norte', totalReservas: 76 },
+    { canchaId: '3', nombre: 'Complejo Sur', totalReservas: 65 },
+  ]
+}
 
 const hourlyData = [
   { hour: '08:00', reservations: 12 },
@@ -55,43 +67,87 @@ const hourlyData = [
   { hour: '22:00', reservations: 18 },
 ]
 
-const sportData = [
-  { name: 'Fútbol', value: 45, color: '#2563eb' },
-  { name: 'Baloncesto', value: 30, color: '#dc2626' },
-  { name: 'Tenis', value: 15, color: '#16a34a' },
-  { name: 'Pádel', value: 10, color: '#8b5cf6' }
-]
-
-const topCourts = [
-  { name: 'Cancha Central', reservations: 89, revenue: 12500, rating: 4.8, status: 'active' },
-  { name: 'Polideportivo Norte', reservations: 76, revenue: 9800, rating: 4.6, status: 'active' },
-  { name: 'Complejo Sur', reservations: 65, revenue: 8200, rating: 4.4, status: 'maintenance' },
-  { name: 'Club Atlético', reservations: 58, revenue: 7600, rating: 4.2, status: 'active' },
-]
-
-const recentActivity = [
-  { type: 'reservation', user: 'Juan Pérez', court: 'Cancha Central', time: '2 min ago', status: 'confirmed' },
-  { type: 'cancellation', user: 'María García', court: 'Polideportivo Norte', time: '5 min ago', status: 'cancelled' },
-  { type: 'payment', user: 'Carlos López', amount: '$85', time: '10 min ago', status: 'completed' },
-  { type: 'registration', user: 'Ana Martínez', time: '15 min ago', status: 'active' },
-]
-
 export function AdminDashboard() {
-  const [loading, setLoading] = useState(false)
-  const [period, setPeriod] = useState('7d')
-  const [stats, setStats] = useState({
-    totalReservations: 1255,
-    totalRevenue: 328500,
-    activeUsers: 892,
-    occupancyRate: 78.5,
-    growthRate: 12.5,
-    cancellationRate: 8.2
-  })
+  const [loading, setLoading] = useState(true)
+  const [period, setPeriod] = useState('30d')
+  const [resumen, setResumen] = useState<AdminResumen | null>(null)
+  const [topJugadores, setTopJugadores] = useState<TopJugador[]>([])
+  const [canchasMasUsadas, setCanchasMasUsadas] = useState<CanchaMasUsada[]>([])
+  const [personasConDeuda, setPersonasConDeuda] = useState<PersonaConDeuda[]>([])
+  const [reservasData, setReservasData] = useState<ReservasAggregate[]>([])
+  const [error, setError] = useState<string | null>(null)
 
-  const refreshData = async () => {
+  useEffect(() => {
+    fetchDashboardData()
+  }, [period])
+
+  const fetchDashboardData = async () => {
     setLoading(true)
-    // Simulate API call
-    setTimeout(() => setLoading(false), 1000)
+    setError(null)
+
+    try {
+      // Calculate date range based on period
+      const endDate = new Date()
+      const startDate = new Date()
+
+      if (period === '7d') {
+        startDate.setDate(endDate.getDate() - 7)
+      } else if (period === '30d') {
+        startDate.setDate(endDate.getDate() - 30)
+      } else if (period === '90d') {
+        startDate.setDate(endDate.getDate() - 90)
+      } else {
+        startDate.setFullYear(endDate.getFullYear() - 1)
+      }
+
+      const fromDate = startDate.toISOString().split('T')[0]
+      const toDate = endDate.toISOString().split('T')[0]
+
+      // Fetch all data in parallel
+      const [
+        resumenRes,
+        topJugadoresRes,
+        canchasMasUsadasRes,
+        deudaRes,
+        reservasRes
+      ] = await Promise.all([
+        apiClient.getAdminResumen(),
+        apiClient.getAdminTopJugadores(fromDate, toDate),
+        apiClient.getAdminCanchasMasUsadas(fromDate, toDate),
+        apiClient.getAdminPersonasConDeuda(),
+        apiClient.getAdminReservasAggregate('day', fromDate, toDate)
+      ])
+
+      if (!resumenRes.error && resumenRes.data) {
+        setResumen(resumenRes.data)
+      }
+      if (!topJugadoresRes.error && topJugadoresRes.data) {
+        setTopJugadores(topJugadoresRes.data.slice(0, 5))
+      }
+      if (!canchasMasUsadasRes.error && canchasMasUsadasRes.data) {
+        setCanchasMasUsadas(canchasMasUsadasRes.data.slice(0, 5))
+      }
+      if (!deudaRes.error && deudaRes.data) {
+        setPersonasConDeuda(deudaRes.data.slice(0, 5))
+      }
+      if (!reservasRes.error && reservasRes.data) {
+        setReservasData(reservasRes.data)
+      }
+
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err)
+      setError('Error al cargar los datos del dashboard')
+      // Use mock data on error
+      setResumen(defaultMockData.resumen)
+      setTopJugadores(defaultMockData.topJugadores)
+      setCanchasMasUsadas(defaultMockData.canchasMasUsadas)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const refreshData = () => {
+    fetchDashboardData()
   }
 
   return (
@@ -103,6 +159,40 @@ export function AdminDashboard() {
           <p className="text-muted-foreground text-lg">Panel de control administrativo</p>
         </div>
         <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1">
+            <Button
+              variant={period === '7d' ? 'default' : 'outline'}
+              onClick={() => setPeriod('7d')}
+              size="sm"
+              className="text-xs"
+            >
+              7d
+            </Button>
+            <Button
+              variant={period === '30d' ? 'default' : 'outline'}
+              onClick={() => setPeriod('30d')}
+              size="sm"
+              className="text-xs"
+            >
+              30d
+            </Button>
+            <Button
+              variant={period === '90d' ? 'default' : 'outline'}
+              onClick={() => setPeriod('90d')}
+              size="sm"
+              className="text-xs"
+            >
+              90d
+            </Button>
+            <Button
+              variant={period === '1y' ? 'default' : 'outline'}
+              onClick={() => setPeriod('1y')}
+              size="sm"
+              className="text-xs"
+            >
+              1a
+            </Button>
+          </div>
           <Button variant="outline" onClick={refreshData} disabled={loading} className="border-gray-200 hover:bg-gray-50">
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Actualizar
@@ -111,99 +201,90 @@ export function AdminDashboard() {
             <Download className="h-4 w-4 mr-2" />
             Exportar
           </Button>
-          <Button className="bg-gray-900 hover:bg-gray-800 text-white">
-            <Filter className="h-4 w-4 mr-2" />
-            Filtros
-          </Button>
         </div>
       </div>
 
+      {/* Error Alert */}
+      {error && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="flex items-center gap-2 p-4">
+            <AlertCircle className="h-5 w-5 text-red-600" />
+            <p className="text-sm text-red-800">{error}</p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-l-4 border-l-gray-800 bg-white shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Reservas Totales</CardTitle>
-            <div className="flex items-center space-x-2">
-              <Badge variant="secondary" className="bg-gray-100 text-gray-700 border-gray-200">
-                <ArrowUpRight className="h-3 w-3 mr-1" />
-                +12%
-              </Badge>
-              <Calendar className="h-4 w-4 text-gray-700" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{stats.totalReservations.toLocaleString()}</div>
-            <div className="flex items-center space-x-2 text-sm text-gray-500 mt-2">
-              <TrendingUp className="h-4 w-4 text-gray-600" />
-              <span>+156 vs mes anterior</span>
-            </div>
-            <Progress value={75} className="mt-3 h-2 bg-gray-100" />
-          </CardContent>
-        </Card>
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-8 bg-gray-200 rounded mb-2" />
+                <div className="h-6 bg-gray-100 rounded w-3/4" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="border-l-4 border-l-blue-600 bg-white shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">Reservas Totales</CardTitle>
+              <Calendar className="h-4 w-4 text-blue-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-gray-900">{resumen ? formatNumber(resumen.totalReservas) : '—'}</div>
+              <div className="flex items-center space-x-2 text-sm text-gray-500 mt-2">
+                <TrendingUp className="h-4 w-4 text-blue-600" />
+                <span>En el período seleccionado</span>
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card className="border-l-4 border-l-gray-700 bg-white shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Ingresos Totales</CardTitle>
-            <div className="flex items-center space-x-2">
-              <Badge variant="secondary" className="bg-gray-100 text-gray-700 border-gray-200">
-                <ArrowUpRight className="h-3 w-3 mr-1" />
-                +18%
-              </Badge>
-              <DollarSign className="h-4 w-4 text-gray-700" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{formatCurrencyCompact(stats.totalRevenue)}</div>
-            <div className="flex items-center space-x-2 text-sm text-gray-500 mt-2">
-              <TrendingUp className="h-4 w-4 text-gray-600" />
-              <span>+$45K vs mes anterior</span>
-            </div>
-            <Progress value={85} className="mt-3 h-2 bg-gray-100" />
-          </CardContent>
-        </Card>
+          <Card className="border-l-4 border-l-green-600 bg-white shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">Deuda Pendiente</CardTitle>
+              <AlertCircle className="h-4 w-4 text-red-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-gray-900">{resumen ? formatCurrencyCompact(resumen.deudaTotalPendiente) : '—'}</div>
+              <div className="flex items-center space-x-2 text-sm text-red-600 mt-2">
+                <TrendingUp className="h-4 w-4" />
+                <span>Total pendiente por cobrar</span>
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card className="border-l-4 border-l-gray-600 bg-white shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Usuarios Activos</CardTitle>
-            <div className="flex items-center space-x-2">
-              <Badge variant="secondary" className="bg-gray-100 text-gray-700 border-gray-200">
-                <ArrowUpRight className="h-3 w-3 mr-1" />
-                +8%
-              </Badge>
-              <Users className="h-4 w-4 text-gray-700" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{stats.activeUsers.toLocaleString()}</div>
-            <div className="flex items-center space-x-2 text-sm text-gray-500 mt-2">
-              <Activity className="h-4 w-4 text-gray-600" />
-              <span>+67 nuevos usuarios</span>
-            </div>
-            <Progress value={68} className="mt-3 h-2 bg-gray-100" />
-          </CardContent>
-        </Card>
+          <Card className="border-l-4 border-l-purple-600 bg-white shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">Usuarios Registrados</CardTitle>
+              <Users className="h-4 w-4 text-purple-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-gray-900">{resumen ? formatNumber(resumen.totalUsuarios) : '—'}</div>
+              <div className="flex items-center space-x-2 text-sm text-gray-500 mt-2">
+                <Activity className="h-4 w-4 text-purple-600" />
+                <span>En total en el sistema</span>
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card className="border-l-4 border-l-gray-500 bg-white shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Tasa de Ocupación</CardTitle>
-            <div className="flex items-center space-x-2">
-              <Badge variant="secondary" className="bg-gray-100 text-gray-700 border-gray-200">
-                <ArrowUpRight className="h-3 w-3 mr-1" />
-                +5%
-              </Badge>
-              <Activity className="h-4 w-4 text-gray-700" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-gray-900">{stats.occupancyRate}%</div>
-            <div className="flex items-center space-x-2 text-sm text-gray-500 mt-2">
-              <Clock className="h-4 w-4 text-gray-600" />
-              <span>Promedio semanal</span>
-            </div>
-            <Progress value={stats.occupancyRate} className="mt-3 h-2 bg-gray-100" />
-          </CardContent>
-        </Card>
-      </div>
+          <Card className="border-l-4 border-l-orange-600 bg-white shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">Canchas Disponibles</CardTitle>
+              <Trophy className="h-4 w-4 text-orange-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-gray-900">{resumen ? formatNumber(resumen.totalCanchas) : '—'}</div>
+              <div className="flex items-center space-x-2 text-sm text-gray-500 mt-2">
+                <Clock className="h-4 w-4 text-orange-600" />
+                <span>Canchas activas</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Charts Section */}
       <Tabs defaultValue="overview" className="space-y-6">
@@ -222,38 +303,45 @@ export function AdminDashboard() {
                   <TrendingUp className="h-5 w-5" />
                   Evolución de Reservas
                 </CardTitle>
-                <CardDescription>Tendencia de reservas en los últimos 6 meses</CardDescription>
+                <CardDescription>Tendencia diaria de reservas</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={350}>
-                  <AreaChart data={revenueData}>
-                    <defs>
-                      <linearGradient id="colorReservations" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                    <XAxis dataKey="month" axisLine={false} tickLine={false} />
-                    <YAxis axisLine={false} tickLine={false} />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'white', 
-                        border: '1px solid #e2e8f0', 
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                      }} 
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="reservations" 
-                      stroke="#3b82f6" 
-                      fillOpacity={1} 
-                      fill="url(#colorReservations)"
-                      strokeWidth={3}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+                {reservasData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={350}>
+                    <AreaChart data={reservasData}>
+                      <defs>
+                        <linearGradient id="colorReservations" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                      <XAxis dataKey="bucket" axisLine={false} tickLine={false} height={40} tick={{fontSize: 12}} />
+                      <YAxis axisLine={false} tickLine={false} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'white',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                        }}
+                        formatter={(value: any) => formatNumber(value)}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="total"
+                        stroke="#3b82f6"
+                        fillOpacity={1}
+                        fill="url(#colorReservations)"
+                        strokeWidth={3}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-[350px] flex items-center justify-center text-gray-500">
+                    Sin datos disponibles
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -261,30 +349,30 @@ export function AdminDashboard() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Trophy className="h-5 w-5" />
-                  Deportes Populares
+                  Top Canchas
                 </CardTitle>
-                <CardDescription>Distribución por tipo de deporte</CardDescription>
+                <CardDescription>Canchas más usadas</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={350}>
-                  <PieChart>
-                    <Pie
-                      data={sportData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }: any) => `${name} ${(Number(percent || 0) * 100).toFixed(0)}%`}
-                      outerRadius={120}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {sportData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+                <div className="space-y-3">
+                  {canchasMasUsadas.length > 0 ? (
+                    canchasMasUsadas.map((cancha, index) => (
+                      <div key={cancha.canchaId} className="flex items-center justify-between p-2 rounded-lg border-b">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-7 h-7 bg-blue-100 rounded-full flex items-center justify-center text-xs font-semibold text-blue-600">
+                            #{index + 1}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-sm">{cancha.nombre}</p>
+                            <p className="text-xs text-muted-foreground">{cancha.totalReservas} reservas</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500 text-center py-4">Sin datos</p>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -293,67 +381,62 @@ export function AdminDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
-                  Actividad por Hora
+                  <Users className="h-5 w-5" />
+                  Top Jugadores
                 </CardTitle>
-                <CardDescription>Distribución de reservas durante el día</CardDescription>
+                <CardDescription>Jugadores con mayor ranking</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={hourlyData}>
-                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                    <XAxis dataKey="hour" axisLine={false} tickLine={false} />
-                    <YAxis axisLine={false} tickLine={false} />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'white', 
-                        border: '1px solid #e2e8f0', 
-                        borderRadius: '8px' 
-                      }} 
-                    />
-                    <Bar dataKey="reservations" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+                <div className="space-y-3">
+                  {topJugadores.length > 0 ? (
+                    topJugadores.map((jugador, index) => (
+                      <div key={jugador.personaId} className="flex items-center justify-between p-2 rounded-lg border-b hover:bg-gray-50">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-7 h-7 bg-purple-100 rounded-full flex items-center justify-center text-xs font-semibold text-purple-600">
+                            #{index + 1}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-sm">{jugador.nombre}</p>
+                            <p className="text-xs text-muted-foreground">{jugador.email}</p>
+                          </div>
+                        </div>
+                        <Badge variant="outline" className="bg-purple-50">
+                          Ranking #{jugador.ranking}
+                        </Badge>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500 text-center py-4">Sin datos</p>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Star className="h-5 w-5" />
-                  Top Canchas
+                  <AlertCircle className="h-5 w-5 text-red-600" />
+                  Personas con Deuda
                 </CardTitle>
-                <CardDescription>Canchas más populares este mes</CardDescription>
+                <CardDescription>Cuentas con deuda pendiente</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {topCourts.map((court, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 rounded-lg border">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-sm font-semibold text-blue-600">
-                          #{index + 1}
+                <div className="space-y-3">
+                  {personasConDeuda.length > 0 ? (
+                    personasConDeuda.map((persona) => (
+                      <div key={persona.personaId} className="flex items-center justify-between p-3 rounded-lg border-l-4 border-l-red-400 bg-red-50">
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{persona.nombre}</p>
+                          <p className="text-xs text-muted-foreground">{persona.email}</p>
                         </div>
-                        <div>
-                          <p className="font-medium">{court.name}</p>
-                          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                            <Star className="h-3 w-3 fill-current text-gray-400" />
-                            <span>{court.rating}</span>
-                            <span>•</span>
-                            <span>{court.reservations} reservas</span>
-                          </div>
+                        <div className="text-right">
+                          <p className="font-semibold text-red-700">{formatCurrencyCompact(persona.totalDeuda)}</p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-semibold">${court.revenue.toLocaleString()}</p>
-                        <Badge 
-                          variant={court.status === 'active' ? 'default' : 'secondary'}
-                          className={court.status === 'active' ? 'bg-green-100 text-green-700' : ''}
-                        >
-                          {court.status === 'active' ? 'Activa' : 'Mantenimiento'}
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500 text-center py-4">Sin deudas pendientes</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
