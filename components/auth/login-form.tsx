@@ -18,6 +18,8 @@ import { useAuth } from './auth-context'
 import { toast } from 'sonner'
 import Link from 'next/link'
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Loader2, Shield, Sparkles } from 'lucide-react'
+import { jwtDecode } from 'jwt-decode'
+import { JWTPayload } from '@/lib/api-client'
 
 const loginSchema = z.object({
   email: z.string().email('Por favor ingresa un email válido'),
@@ -27,7 +29,7 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>
 
 export function LoginForm() {
-  const { login, user, userRole } = useAuth()
+  const { login } = useAuth()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -55,17 +57,37 @@ export function LoginForm() {
           description: 'Has iniciado sesión exitosamente.',
         })
 
-        // Redirect based on role
+        // Get token from cookie to determine role and redirect
+        const rawTokenCookie = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('token='))
+          ?.split('=')[1]
+
         let redirectPath = '/'
-        if (userRole === 'admin') {
-          redirectPath = '/admin/dashboard' // Global admin - full access
-        } else if (userRole === 'admin-club') {
-          redirectPath = '/admin/dashboard' // Club-specific admin - filtered access
-        } else if (userRole === 'usuario') {
-          redirectPath = '/' // Regular user
+
+        if (rawTokenCookie) {
+          try {
+            // Decode the cookie value since it's URL-encoded
+            const token = decodeURIComponent(rawTokenCookie)
+            const decoded = jwtDecode<JWTPayload>(token)
+            if (decoded.rol === 'admin') {
+              redirectPath = '/admin/dashboard' // Global admin - full access
+            } else if (decoded.rol === 'admin-club') {
+              redirectPath = '/admin/dashboard' // Club-specific admin - filtered access
+            } else if (decoded.rol === 'usuario') {
+              redirectPath = '/' // Regular user
+            }
+          } catch (decodeError) {
+            console.error('Error decoding token for redirect:', decodeError)
+            // Fall back to home if we can't decode
+            redirectPath = '/'
+          }
         }
 
-        router.push(redirectPath)
+        // Use a small delay to ensure auth context is updated before redirect
+        setTimeout(() => {
+          router.push(redirectPath)
+        }, 100)
       } else {
         toast.error('Error al iniciar sesión', {
           description: 'Verifica tus credenciales e intenta nuevamente.',
