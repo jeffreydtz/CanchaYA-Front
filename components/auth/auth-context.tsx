@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           // Garantiza que los campos requeridos existan
           const userData: User = {
-            id: decoded.id,
+            id: decoded.sub,
             nombre: decoded.email.split('@')[0] || 'Usuario',
             email: decoded.email,
             rol: decoded.rol, // Use decoded role directly from JWT
@@ -87,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
           setUser(userData)
           setPersonaId(decoded.personaId || null)
-          setUserId(decoded.id || null)
+          setUserId(decoded.sub || null)
           setUserRole(decoded.rol)
           setClubIds(roleInfo?.clubIds || [])
 
@@ -151,12 +151,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const roleInfo = decodeJWTToken(accessToken)
 
           // Validate that required fields exist
-          if (!decoded.id || !decoded.email) {
+          if (!decoded.sub || !decoded.email) {
             throw new Error('Token missing required fields')
           }
 
           const userData: User = {
-            id: decoded.id,
+            id: decoded.sub,
             nombre: decoded.email.split('@')[0] || 'Usuario',
             email: decoded.email,
             rol: decoded.rol,
@@ -167,7 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           setUser(userData)
           setPersonaId(decoded.personaId || null)
-          setUserId(decoded.id || null)
+          setUserId(decoded.sub || null)
           setUserRole(decoded.rol)
           setClubIds(roleInfo?.clubIds || [])
 
@@ -254,7 +254,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('Token decoded successfully:', decoded)
 
       const userData: User = {
-        id: decoded.id,
+        id: decoded.sub,
         nombre: decoded.email.split('@')[0] || 'Usuario',
         email: decoded.email,
         rol: decoded.rol,
@@ -264,6 +264,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       setUser(userData)
+      setUserId(decoded.sub || null)
       setUserRole(decoded.rol)
       setClubIds(roleInfo?.clubIds || [])
       console.log('User refreshed:', userData)

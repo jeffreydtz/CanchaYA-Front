@@ -74,9 +74,10 @@ export interface AuthMeResponse {
 /**
  * JWT Payload structure from backend
  * Contains role information and optional club IDs for scoped access
+ * Note: Backend uses 'sub' (subject) for user ID following JWT standard
  */
 export interface JWTPayload {
-  id: string // User ID (UUID)
+  sub: string // User ID (UUID) - subject claim (JWT standard)
   rol: 'admin' | 'admin-club' | 'usuario' // User role
   personaId: string // Person ID associated with user
   email: string // User email
