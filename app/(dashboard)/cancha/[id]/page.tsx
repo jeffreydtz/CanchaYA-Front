@@ -1,6 +1,9 @@
 /**
  * Court Detail Page for CanchaYA
  * Individual court view with reservation booking functionality
+ *
+ * IMPORTANT: precioPorHora validation added to prevent toFixed() errors
+ * Last updated: 2025-11-26
  */
 
 'use client'
@@ -140,9 +143,14 @@ export default function CanchaDetailPage() {
         
         if (canchaResponse.data) {
           // Ensure precioPorHora is a valid number
+          const precio = canchaResponse.data.precioPorHora
+          const precioValidado = (precio !== null && precio !== undefined && !isNaN(Number(precio)))
+            ? Number(precio)
+            : 0
+
           const validatedCancha = {
             ...canchaResponse.data,
-            precioPorHora: Number(canchaResponse.data.precioPorHora) || 0
+            precioPorHora: precioValidado
           }
           setCancha(validatedCancha)
         } else {
