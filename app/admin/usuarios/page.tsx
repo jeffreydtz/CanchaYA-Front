@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useAuth } from "@/components/auth/auth-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,22 +20,39 @@ import apiClient, { User } from '@/lib/api-client'
 import { withErrorBoundary } from '@/components/error/with-error-boundary'
 
 function AdminUsersPage() {
+  const { isAuthenticated, loading: authLoading } = useAuth()
   const [users, setUsers] = useState<User[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [roleFilter, setRoleFilter] = useState<string>("all")
   const [statusFilter, setStatusFilter] = useState<string>("all")
 
   useEffect(() => {
+    if (!isAuthenticated || authLoading) return
+
+    let isMounted = true
+
     const loadUsers = async () => {
-      const response = await apiClient.getUsuarios()
-      if (response.data) {
-        setUsers(response.data)
-      } else {
-        setUsers([])
+      try {
+        const response = await apiClient.getUsuarios()
+        if (!isMounted) return
+        if (response.data) {
+          setUsers(response.data)
+        } else {
+          setUsers([])
+        }
+      } catch (error) {
+        if (isMounted) {
+          console.error('Error loading users:', error)
+          setUsers([])
+        }
       }
     }
     loadUsers()
-  }, [])
+
+    return () => {
+      isMounted = false
+    }
+  }, [isAuthenticated, authLoading])
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.persona?.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||

@@ -352,13 +352,21 @@ export default function MisReservasPage() {
   const [activeTab, setActiveTab] = useState('all')
 
   useEffect(() => {
-    if (!isAuthenticated || !personaId) return
+    // Only fetch when fully authenticated and after personaId is available
+    if (!isAuthenticated || !personaId) {
+      setLoading(false)
+      return
+    }
+
+    let isMounted = true
 
     const fetchReservas = async () => {
       setLoading(true)
       setError(null)
       try {
         const response = await apiClient.getReservas()
+        if (!isMounted) return
+
         if (response.data) {
           // Filter reservations by current user's persona id
           // Backend returns all reservations, frontend filters by user
@@ -370,13 +378,20 @@ export default function MisReservasPage() {
           setError(response.error || 'Error al cargar las reservas')
         }
       } catch (error) {
+        if (!isMounted) return
         setError('Error de conexión al servidor')
       } finally {
-        setLoading(false)
+        if (isMounted) {
+          setLoading(false)
+        }
       }
     }
 
     fetchReservas()
+
+    return () => {
+      isMounted = false
+    }
   }, [isAuthenticated, personaId])
 
   const handleCancelReservation = (reservaId: string) => {

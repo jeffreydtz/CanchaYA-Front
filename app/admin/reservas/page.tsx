@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from 'react'
+import { useAuth } from '@/components/auth/auth-context'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -10,23 +11,46 @@ import apiClient, { Reserva } from '@/lib/api-client'
 import { withErrorBoundary } from '@/components/error/with-error-boundary'
 
 function AdminReservationsPage() {
+  const { isAuthenticated, loading: authLoading } = useAuth()
   const [reservations, setReservations] = useState<Reserva[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!isAuthenticated || authLoading) {
+      setLoading(false)
+      return
+    }
+
+    let isMounted = true
+
     const loadReservations = async () => {
       setLoading(true)
-      const response = await apiClient.getReservas()
-      if (response.data) {
-        setReservations(response.data)
-      } else {
-        setReservations([])
+      try {
+        const response = await apiClient.getReservas()
+        if (!isMounted) return
+        if (response.data) {
+          setReservations(response.data)
+        } else {
+          setReservations([])
+        }
+      } catch (error) {
+        if (isMounted) {
+          console.error('Error loading reservations:', error)
+          setReservations([])
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false)
+        }
       }
-      setLoading(false)
     }
     loadReservations()
-  }, [])
+
+    return () => {
+      isMounted = false
+    }
+  }, [isAuthenticated, authLoading])
 
   const filteredReservations = reservations.filter(reservation =>
     (reservation.disponibilidad?.cancha?.nombre?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||

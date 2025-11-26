@@ -9,8 +9,8 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import { getCookie, setCookie, deleteCookie, setAuthTokens, getRefreshToken } from '@/lib/auth'
-import apiClient, { UserLegacy, AuthMeResponse, JWTPayload } from '@/lib/api-client'
+import { getCookie, deleteCookie, setAuthTokens, getRefreshToken } from '@/lib/auth'
+import apiClient, { UserLegacy, JWTPayload } from '@/lib/api-client'
 import { toast } from 'sonner'
 import { jwtDecode } from 'jwt-decode'
 import { useTokenRefresh } from '@/hooks/use-token-refresh'
@@ -68,64 +68,82 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (typeof window === 'undefined') return
 
+    let isMounted = true
+
     const initializeAuth = async () => {
-      const token = getCookie('token')
-      if (token) {
-        try {
-          const decoded = jwtDecode<JWTPayload>(token)
-          const roleInfo = decodeJWTToken(token)
+      try {
+        const token = getCookie('token')
+        if (!isMounted) return
 
-          // Garantiza que los campos requeridos existan
-          const userData: User = {
-            id: decoded.sub,
-            nombre: decoded.email.split('@')[0] || 'Usuario',
-            email: decoded.email,
-            rol: decoded.rol, // Use decoded role directly from JWT
-            activo: true,
-            fechaCreacion: new Date().toISOString(),
-            clubIds: roleInfo?.clubIds || [], // Add clubIds from JWT
-          }
-          setUser(userData)
-          setPersonaId(decoded.personaId || null)
-          setUserId(decoded.sub || null)
-          setUserRole(decoded.rol)
-          setClubIds(roleInfo?.clubIds || [])
+        if (token) {
+          try {
+            const decoded = jwtDecode<JWTPayload>(token)
+            const roleInfo = decodeJWTToken(token)
 
-          // Fetch persona data to get avatar URL on initial load
-          if (decoded.personaId) {
-            try {
-              const personaResponse = await apiClient.getPersona(decoded.personaId)
-              if (personaResponse.data?.avatarUrl) {
-                const avatarUrl = personaResponse.data.avatarUrl
-                setUser((prevUser) =>
-                  prevUser ? { ...prevUser, avatarUrl } : null
-                )
-              }
-            } catch (error) {
-              console.error('Error fetching persona data for avatar on init:', error)
-              // Continue even if persona fetch fails
+            if (!isMounted) return
+
+            // Garantiza que los campos requeridos existan
+            const userData: User = {
+              id: decoded.sub,
+              nombre: decoded.email.split('@')[0] || 'Usuario',
+              email: decoded.email,
+              rol: decoded.rol, // Use decoded role directly from JWT
+              activo: true,
+              fechaCreacion: new Date().toISOString(),
+              clubIds: roleInfo?.clubIds || [], // Add clubIds from JWT
             }
+            setUser(userData)
+            setPersonaId(decoded.personaId || null)
+            setUserId(decoded.sub || null)
+            setUserRole(decoded.rol)
+            setClubIds(roleInfo?.clubIds || [])
+
+            // Fetch persona data to get avatar URL on initial load
+            if (decoded.personaId) {
+              try {
+                const personaResponse = await apiClient.getPersona(decoded.personaId)
+                if (!isMounted) return
+
+                if (personaResponse.data?.avatarUrl) {
+                  const avatarUrl = personaResponse.data.avatarUrl
+                  setUser((prevUser) =>
+                    prevUser ? { ...prevUser, avatarUrl } : null
+                  )
+                }
+              } catch (error) {
+                console.error('Error fetching persona data for avatar on init:', error)
+                // Continue even if persona fetch fails
+              }
+            }
+          } catch (e) {
+            console.error('Error decoding token on init:', e)
+            setUser(null)
+            setPersonaId(null)
+            setUserId(null)
+            setUserRole(null)
+            setClubIds([])
+            deleteCookie('token')
           }
-        } catch (e) {
+        } else {
           setUser(null)
           setPersonaId(null)
           setUserId(null)
           setUserRole(null)
           setClubIds([])
-          deleteCookie('token')
         }
-      } else {
-        setUser(null)
-        setPersonaId(null)
-        setUserId(null)
-        setUserRole(null)
-        setClubIds([])
+      } finally {
+        if (isMounted) {
+          setLoading(false)
+          setInitialLoad(false)
+        }
       }
-      setLoading(false)
-      setInitialLoad(false)
     }
 
     initializeAuth()
+
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   const login = async (email: string, password: string): Promise<boolean> => {

@@ -6,6 +6,7 @@
  */
 
 import { useEffect, useState } from 'react'
+import { useAuth } from '@/components/auth/auth-context'
 import { MetricCard } from '@/components/admin/dashboard/MetricCard'
 import { OccupancyChart } from '@/components/admin/dashboard/OccupancyChart'
 import { CanchaDistributionChart } from '@/components/admin/dashboard/CanchaDistributionChart'
@@ -335,6 +336,7 @@ const fetchDashboardData = async (filters?: Record<string, any> | null): Promise
 }
 
 function DashboardPage() {
+  const { isAuthenticated, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<DashboardData | null>(null)
   const [lastUpdate, setLastUpdate] = useState(new Date())
@@ -365,6 +367,8 @@ function DashboardPage() {
   }
 
   useEffect(() => {
+    if (!isAuthenticated || authLoading) return
+
     loadData()
 
     // Auto-refresh cada 5 minutos
@@ -374,7 +378,7 @@ function DashboardPage() {
 
     return () => clearInterval(interval)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [isAuthenticated, authLoading])
 
   const handleExport = () => {
     if (!data) {

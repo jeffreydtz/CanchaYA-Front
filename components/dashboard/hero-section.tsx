@@ -11,7 +11,6 @@ import { MapPin, Calendar, Zap, Shield, Trophy } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useLanguage } from '@/lib/language-context'
-import apiClient from '@/lib/api-client'
 
 // Rosario Central Easter Egg Hook
 function useRosarioCentralEasterEgg() {
@@ -62,46 +61,8 @@ export default function HeroSection() {
 
   useEffect(() => {
     setMounted(true)
-
-    // Fetch real stats from backend
-    const fetchStats = async () => {
-      try {
-        const [canchasResponse, reservasResponse, usuariosResponse, valoracionesResponse] = await Promise.all([
-          apiClient.getCanchas(),
-          apiClient.getReservas(),
-          apiClient.getUsuarios(),
-          apiClient.getValoraciones()
-        ])
-
-        // Calculate average rating from valoraciones
-        let averageRating = 4.9
-        if (valoracionesResponse.data && valoracionesResponse.data.length > 0) {
-          const totalRating = valoracionesResponse.data.reduce((sum, val) => sum + Number(val.puntaje || 0), 0)
-          const calculated = totalRating / valoracionesResponse.data.length
-          averageRating = !isNaN(calculated) && isFinite(calculated) ? Number(calculated.toFixed(1)) : 4.9
-        }
-
-        // Format user count
-        const userCount = usuariosResponse.data?.length || 0
-        const userDisplay = userCount >= 1000
-          ? `${Math.floor(userCount / 1000)}K+`
-          : `${userCount}+`
-
-        if (canchasResponse.data && reservasResponse.data) {
-          setStats({
-            courts: `${canchasResponse.data.length}+`,
-            users: userDisplay,
-            bookings: `${reservasResponse.data.length}+`,
-            rating: `${averageRating}⭐`
-          })
-        }
-      } catch (error) {
-        console.error('Error fetching stats:', error)
-        // Keep default values if API fails
-      }
-    }
-
-    fetchStats()
+    // Use default placeholder stats without making API requests
+    // This prevents unnecessary 401 errors on the public hero page
   }, [])
 
   return (
