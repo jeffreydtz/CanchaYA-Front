@@ -3,7 +3,6 @@
 import Link from 'next/link'
 import { useAuth } from '@/components/auth/auth-context'
 import { useChallengesNotifications } from '@/components/challenges/challenges-context'
-import NotificationBell from '@/components/notifications/notification-bell'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
@@ -153,7 +152,6 @@ export default function Navbar() {
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
               <>
-                <NotificationBell />
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-12 w-12 rounded-full hover:scale-110 transition-all duration-500 group">
