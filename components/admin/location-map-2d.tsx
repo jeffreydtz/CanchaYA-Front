@@ -79,11 +79,14 @@ export function LocationMap2D({ initialLat = -32.9442, initialLng = -60.6560, on
 
         // Call callback
         if (onLocationSelect) {
+          const latValue = typeof lat === 'number' && !isNaN(lat) ? lat.toFixed(6) : '0.000000'
+          const lngValue = typeof lng === 'number' && !isNaN(lng) ? lng.toFixed(6) : '0.000000'
+
           onLocationSelect({
             lat,
             lon: lng,
-            display_name: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
-            name: `${lat.toFixed(6)}, ${lng.toFixed(6)}`
+            display_name: `${latValue}, ${lngValue}`,
+            name: `${latValue}, ${lngValue}`
           })
         }
       }

@@ -55,18 +55,23 @@ export default function DynamicLeafletMap({
     }).addTo(map.current)
 
     // Add marker with club information
+    const lat = Number(latitude)
+    const lng = Number(longitude)
+    
     const popupContent = `
       <div class="p-2">
         <h3 class="font-bold text-sm">${clubName}</h3>
         ${address ? `<p class="text-xs text-gray-600">${address}</p>` : ''}
-        <p class="text-xs text-gray-500 mt-1">${latitude.toFixed(6)}, ${longitude.toFixed(6)}</p>
+        <p class="text-xs text-gray-500 mt-1">${!isNaN(lat) ? lat.toFixed(6) : '0.000000'}, ${!isNaN(lng) ? lng.toFixed(6) : '0.000000'}</p>
       </div>
     `
 
-    L.marker([latitude, longitude], { icon: markerIcon })
-      .addTo(map.current)
-      .bindPopup(popupContent, { maxWidth: 250 })
-      .openPopup()
+    if (!isNaN(lat) && !isNaN(lng)) {
+      L.marker([lat, lng], { icon: markerIcon })
+        .addTo(map.current)
+        .bindPopup(popupContent, { maxWidth: 250 })
+        .openPopup()
+    }
 
     // Cleanup
     return () => {

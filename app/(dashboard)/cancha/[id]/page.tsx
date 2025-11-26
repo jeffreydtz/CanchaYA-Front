@@ -372,7 +372,7 @@ export default function CanchaDetailPage() {
                   {cancha && cancha.precioPorHora && typeof cancha.precioPorHora === 'number' && !isNaN(cancha.precioPorHora) && (
                     <div className="flex items-center gap-2 bg-green-500/20 backdrop-blur-sm px-4 py-2 rounded-full border border-green-400/30">
                       <DollarSign className="h-5 w-5 text-green-400" />
-                      <span className="font-bold text-green-400 text-lg">${cancha.precioPorHora.toFixed(2)}/hora</span>
+                      <span className="font-bold text-green-400 text-lg">${Number(cancha.precioPorHora).toFixed(2)}/hora</span>
                     </div>
                   )}
                 </div>

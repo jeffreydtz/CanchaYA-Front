@@ -211,13 +211,13 @@ export function LocationSearchMap({
               <div className="bg-white dark:bg-gray-800 p-2 rounded">
                 <p className="text-xs text-gray-500 dark:text-gray-400">Latitud</p>
                 <p className="text-sm font-mono text-gray-900 dark:text-white">
-                  {selectedLocation.latitude.toFixed(6)}
+                  {typeof selectedLocation.latitude === 'number' ? selectedLocation.latitude.toFixed(6) : '0.000000'}
                 </p>
               </div>
               <div className="bg-white dark:bg-gray-800 p-2 rounded">
                 <p className="text-xs text-gray-500 dark:text-gray-400">Longitud</p>
                 <p className="text-sm font-mono text-gray-900 dark:text-white">
-                  {selectedLocation.longitude.toFixed(6)}
+                  {typeof selectedLocation.longitude === 'number' ? selectedLocation.longitude.toFixed(6) : '0.000000'}
                 </p>
               </div>
             </div>

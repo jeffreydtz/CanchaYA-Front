@@ -116,23 +116,26 @@ export function RatingDisplay({
     return 'bg-red-50 dark:bg-red-900/20'
   }
 
-  const StarRating = ({ rating, showValue = true }: { rating: number; showValue?: boolean }) => (
-    <div className="flex items-center gap-1">
-      {[...Array(5)].map((_, i) => (
-        <Star
-          key={i}
-          className={`h-4 w-4 ${
-            i < rating
-              ? `fill-yellow-400 ${getRatingColor(rating)}`
-              : 'text-gray-300 dark:text-gray-600'
-          }`}
-        />
-      ))}
-      {showValue && <span className="ml-1 font-semibold text-sm">
-        {typeof rating === 'number' && !isNaN(rating) ? rating.toFixed(1) : '0.0'}
-      </span>}
-    </div>
-  )
+  const StarRating = ({ rating, showValue = true }: { rating: number; showValue?: boolean }) => {
+    const numericRating = Number(rating) || 0
+    return (
+      <div className="flex items-center gap-1">
+        {[...Array(5)].map((_, i) => (
+          <Star
+            key={i}
+            className={`h-4 w-4 ${
+              i < numericRating
+                ? `fill-yellow-400 ${getRatingColor(numericRating)}`
+                : 'text-gray-300 dark:text-gray-600'
+            }`}
+          />
+        ))}
+        {showValue && <span className="ml-1 font-semibold text-sm">
+          {numericRating.toFixed(1)}
+        </span>}
+      </div>
+    )
+  }
 
   if (loading) {
     return (

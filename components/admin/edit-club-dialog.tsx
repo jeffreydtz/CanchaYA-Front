@@ -195,7 +195,7 @@ export function EditClubDialog({ club, open, onOpenChange, onSuccess }: EditClub
                 {formData.latitud && formData.longitud && (
                   <div className="text-xs text-gray-500 dark:text-gray-400 p-2 bg-gray-50 dark:bg-gray-800 rounded">
                     <p className="font-semibold mb-1">Coordenadas guardadas:</p>
-                    <p>{formData.latitud.toFixed(6)}, {formData.longitud.toFixed(6)}</p>
+                    <p>{Number(formData.latitud).toFixed(6)}, {Number(formData.longitud).toFixed(6)}</p>
                   </div>
                 )}
               </TabsContent>
