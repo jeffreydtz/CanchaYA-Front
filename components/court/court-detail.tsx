@@ -47,7 +47,12 @@ export default function CourtDetail() {
         }
 
         if (courtResponse.data) {
-          setCourt(courtResponse.data)
+          // Ensure precioPorHora is a valid number
+          const validatedCourt = {
+            ...courtResponse.data,
+            precioPorHora: Number(courtResponse.data.precioPorHora) || 0
+          }
+          setCourt(validatedCourt)
         }
 
         if (horariosResponse.data) {
@@ -228,7 +233,7 @@ export default function CourtDetail() {
               </div>
               <div className="flex items-center">
                 <DollarSign className="w-4 h-4 mr-1" />
-                <span>${court.precioPorHora}/hora</span>
+                <span>${typeof court.precioPorHora === 'number' ? court.precioPorHora.toFixed(2) : '0.00'}/hora</span>
               </div>
             </div>
 

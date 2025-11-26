@@ -161,7 +161,7 @@ function SegmentCard({ data }: SegmentCardProps) {
               <StatBox
                 icon={<Calendar className="h-4 w-4" />}
                 label="Frecuencia"
-                value={`${data.averageFrequency.toFixed(1)}/mes`}
+                value={`${typeof data.averageFrequency === 'number' && !isNaN(data.averageFrequency) ? data.averageFrequency.toFixed(1) : '0.0'}/mes`}
               />
             </div>
 

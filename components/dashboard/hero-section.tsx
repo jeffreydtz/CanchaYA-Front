@@ -77,7 +77,8 @@ export default function HeroSection() {
         let averageRating = 4.9
         if (valoracionesResponse.data && valoracionesResponse.data.length > 0) {
           const totalRating = valoracionesResponse.data.reduce((sum, val) => sum + Number(val.puntaje || 0), 0)
-          averageRating = Number((totalRating / valoracionesResponse.data.length).toFixed(1))
+          const calculated = totalRating / valoracionesResponse.data.length
+          averageRating = !isNaN(calculated) && isFinite(calculated) ? Number(calculated.toFixed(1)) : 4.9
         }
 
         // Format user count

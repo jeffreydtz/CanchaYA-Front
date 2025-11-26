@@ -58,14 +58,20 @@ export function RatingDisplay({
 
         // Calculate statistics
         if (filtered.length > 0) {
-          const average = filtered.reduce((sum, r) => sum + r.puntaje, 0) / filtered.length
+          const average = filtered.reduce((sum, r) => sum + (Number(r.puntaje) || 0), 0) / filtered.length
           const distribution: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
           filtered.forEach(r => {
-            distribution[r.puntaje]++
+            const score = Number(r.puntaje)
+            if (score >= 1 && score <= 5) {
+              distribution[Math.round(score)]++
+            }
           })
 
+          // Ensure average is a valid number
+          const validAverage = !isNaN(average) && isFinite(average) ? average : 0
+
           setStats({
-            averageRating: Math.round(average * 10) / 10,
+            averageRating: Math.round(validAverage * 10) / 10,
             totalRatings: filtered.length,
             ratingDistribution: distribution
           })
@@ -122,7 +128,9 @@ export function RatingDisplay({
           }`}
         />
       ))}
-      {showValue && <span className="ml-1 font-semibold text-sm">{rating.toFixed(1)}</span>}
+      {showValue && <span className="ml-1 font-semibold text-sm">
+        {typeof rating === 'number' && !isNaN(rating) ? rating.toFixed(1) : '0.0'}
+      </span>}
     </div>
   )
 
@@ -157,9 +165,11 @@ export function RatingDisplay({
                 <div className="flex-1 text-center md:text-left md:border-r border-gray-200 dark:border-gray-700 md:pr-8">
                   <div className="mb-4">
                     <div className={`text-5xl font-bold mb-2 ${getRatingColor(stats.averageRating)}`}>
-                      {stats.averageRating.toFixed(1)}
+                      {typeof stats.averageRating === 'number' && !isNaN(stats.averageRating) 
+                        ? stats.averageRating.toFixed(1) 
+                        : '0.0'}
                     </div>
-                    <StarRating rating={Math.round(stats.averageRating)} showValue={false} />
+                    <StarRating rating={Math.round(stats.averageRating || 0)} showValue={false} />
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
                       Basado en {stats.totalRatings} {stats.totalRatings === 1 ? 'valoración' : 'valoraciones'}
                     </p>

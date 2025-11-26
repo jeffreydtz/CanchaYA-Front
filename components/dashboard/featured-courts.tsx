@@ -107,7 +107,9 @@ function CourtCard({ court, index, rating = 4.5 }: CourtCardProps) {
           </h3>
           <div className="flex items-center bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg ml-2">
             <Star className="h-4 w-4 text-blue-500 fill-current" />
-            <span className="text-sm font-bold text-blue-700 dark:text-blue-400 ml-1">{rating.toFixed(1)}</span>
+            <span className="text-sm font-bold text-blue-700 dark:text-blue-400 ml-1">
+              {typeof rating === 'number' && !isNaN(rating) ? rating.toFixed(1) : '0.0'}
+            </span>
           </div>
         </div>
 
