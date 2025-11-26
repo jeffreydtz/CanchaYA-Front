@@ -31,6 +31,11 @@ import { withErrorBoundary } from '@/components/error/with-error-boundary'
 
 // Helper function to format currency with proper abbreviations
 const formatCurrencyCompact = (value: number): string => {
+  // Validate input
+  if (typeof value !== 'number' || isNaN(value) || !isFinite(value)) {
+    return '$0'
+  }
+  
   if (value >= 1000000) {
     return `$${(value / 1000000).toFixed(value % 1000000 === 0 ? 0 : 2)}M`
   }

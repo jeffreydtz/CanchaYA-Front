@@ -15,6 +15,11 @@ import { FORMAT_CONFIG } from './config';
  * Example: 1234567 -> "1,234,567"
  */
 export function formatNumber(value: number, decimals: number = 0): string {
+  // Validate input
+  if (typeof value !== 'number' || isNaN(value) || !isFinite(value)) {
+    return '0';
+  }
+  
   return new Intl.NumberFormat(FORMAT_CONFIG.locale, {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals
@@ -26,6 +31,11 @@ export function formatNumber(value: number, decimals: number = 0): string {
  * Example: 1234.56 -> "$1.234,56"
  */
 export function formatCurrency(value: number, showSymbol: boolean = true): string {
+  // Validate input
+  if (typeof value !== 'number' || isNaN(value) || !isFinite(value)) {
+    return showSymbol ? '$0,00' : '0,00';
+  }
+  
   const formatted = new Intl.NumberFormat(FORMAT_CONFIG.locale, {
     style: 'currency',
     currency: FORMAT_CONFIG.currency,
@@ -41,6 +51,11 @@ export function formatCurrency(value: number, showSymbol: boolean = true): strin
  * Example: 0.7534 -> "75.34%"
  */
 export function formatPercentage(value: number, decimals: number = 2): string {
+  // Validate input
+  if (typeof value !== 'number' || isNaN(value) || !isFinite(value)) {
+    return '0%';
+  }
+  
   return `${formatNumber(value, decimals)}%`;
 }
 
@@ -49,6 +64,11 @@ export function formatPercentage(value: number, decimals: number = 2): string {
  * Example: 1234567 -> "1.23M"
  */
 export function formatCompactNumber(value: number): string {
+  // Validate input
+  if (typeof value !== 'number' || isNaN(value) || !isFinite(value)) {
+    return '0';
+  }
+  
   if (value >= FORMAT_CONFIG.abbreviationThresholds.million) {
     return `${(value / FORMAT_CONFIG.abbreviationThresholds.million).toFixed(2)}M`;
   }
@@ -354,7 +374,10 @@ export function formatDuration(minutes: number): string {
  * Example: 1536 -> "1.5 KB"
  */
 export function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 Bytes';
+  // Validate input
+  if (typeof bytes !== 'number' || isNaN(bytes) || !isFinite(bytes) || bytes === 0) {
+    return '0 Bytes';
+  }
 
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];

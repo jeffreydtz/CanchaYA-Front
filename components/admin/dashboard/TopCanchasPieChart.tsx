@@ -66,6 +66,11 @@ export function TopCanchasPieChart({ data, loading, onSliceClick }: TopCanchasPi
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5
     const x = cx + radius * Math.cos(-midAngle * RADIAN)
     const y = cy + radius * Math.sin(-midAngle * RADIAN)
+    
+    // Validate percent value
+    const percentValue = typeof percent === 'number' && !isNaN(percent) && isFinite(percent) 
+      ? (percent * 100).toFixed(0) 
+      : '0'
 
     return (
       <text
@@ -76,7 +81,7 @@ export function TopCanchasPieChart({ data, loading, onSliceClick }: TopCanchasPi
         dominantBaseline="central"
         className="text-xs font-semibold"
       >
-        {`${(percent * 100).toFixed(0)}%`}
+        {`${percentValue}%`}
       </text>
     )
   }
