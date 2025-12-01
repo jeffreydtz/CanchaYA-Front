@@ -5,6 +5,7 @@ import { AuthProvider } from '@/components/auth/auth-context'
 import { ChallengesProvider } from '@/components/challenges/challenges-context'
 import { LanguageProvider } from '@/lib/language-context'
 import { Toaster } from '@/components/ui/sonner'
+import { NotificationProvider } from '@/lib/patterns/notification-observer'
 
 export const metadata: Metadata = {
   title: 'CanchaYA - Reserva de Canchas Deportivas',
@@ -28,14 +29,16 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <LanguageProvider>
-            <AuthProvider>
-              <ChallengesProvider>
-                {children}
-                <Toaster />
-              </ChallengesProvider>
-            </AuthProvider>
-          </LanguageProvider>
+          <NotificationProvider>
+            <LanguageProvider>
+              <AuthProvider>
+                <ChallengesProvider>
+                  {children}
+                  <Toaster />
+                </ChallengesProvider>
+              </AuthProvider>
+            </LanguageProvider>
+          </NotificationProvider>
         </ThemeProvider>
       </body>
     </html>

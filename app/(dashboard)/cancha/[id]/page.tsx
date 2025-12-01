@@ -46,6 +46,9 @@ import { useAuth } from '@/components/auth/auth-context'
 import dynamic from 'next/dynamic'
 import { CourtPhotosCarousel } from '@/components/court/court-photos-carousel'
 import { RatingDisplay } from '@/components/ratings/rating-display'
+import { DataFactory } from '@/lib/factories/data-factory'
+import { useNotification } from '@/lib/patterns/notification-observer'
+import { useFormatter } from '@/lib/patterns/formatter-strategy'
 
 // Importación dinámica del componente 3D (solo cliente)
 const Court3DViewer = dynamic(() => import('@/components/3d/Court3DViewer'), {
@@ -119,6 +122,13 @@ export default function CanchaDetailPage() {
   const params = useParams()
   const router = useRouter()
   const { isAuthenticated, personaId } = useAuth()
+  
+  // OBSERVER PATTERN: Usar sistema centralizado de notificaciones
+  const { notifySuccess, notifyError, notifyWarning } = useNotification()
+  
+  // STRATEGY PATTERN: Usar estrategias de formateo
+  const { formatPrice, formatDate } = useFormatter()
+  
   const [cancha, setCancha] = useState<Cancha | null>(null)
   const [loading, setLoading] = useState(true)
   const [disponibilidades, setDisponibilidades] = useState<DisponibilidadHorario[]>([])
@@ -142,19 +152,11 @@ export default function CanchaDetailPage() {
         ])
         
         if (canchaResponse.data) {
-          // Ensure precioPorHora is a valid number
-          const precio = canchaResponse.data.precioPorHora
-          const precioValidado = (precio !== null && precio !== undefined && !isNaN(Number(precio)))
-            ? Number(precio)
-            : 0
-
-          const validatedCancha = {
-            ...canchaResponse.data,
-            precioPorHora: precioValidado
-          }
+          // FACTORY PATTERN: Usar DataFactory para validar y normalizar datos
+          const validatedCancha = DataFactory.createValidatedCancha(canchaResponse.data)
           setCancha(validatedCancha)
         } else {
-          toast.error('Cancha no encontrada')
+          notifyError('Cancha no encontrada', 'La cancha que buscas no está disponible')
           router.push('/buscar')
           return
         }
@@ -164,7 +166,10 @@ export default function CanchaDetailPage() {
         }
       } catch (error) {
         console.error('Error fetching cancha:', error)
-        toast.error('Error al cargar la cancha')
+        notifyError('Error al cargar la cancha', 'Por favor, intenta nuevamente', {
+          label: 'Reintentar',
+          onClick: () => window.location.reload()
+        })
         router.push('/buscar')
       } finally {
         setLoading(false)
@@ -218,13 +223,13 @@ export default function CanchaDetailPage() {
 
   const handleReservation = async () => {
     if (!isAuthenticated) {
-      toast.error('Debes iniciar sesión para hacer una reserva')
+      notifyWarning('Sesión requerida', 'Debes iniciar sesión para hacer una reserva')
       router.push('/login')
       return
     }
 
     if (!selectedTime) {
-      toast.error('Selecciona un horario')
+      notifyWarning('Selecciona un horario', 'Debes elegir un horario disponible para continuar')
       return
     }
 
@@ -240,7 +245,7 @@ export default function CanchaDetailPage() {
       )
 
       if (!matchingDisponibilidad) {
-        toast.error('No hay disponibilidad para el horario seleccionado')
+        notifyError('Horario no disponible', 'El horario seleccionado ya no está disponible')
         return
       }
 
@@ -253,7 +258,7 @@ export default function CanchaDetailPage() {
 
       // 3. Validate personaId before creating reservation
       if (!personaId) {
-        toast.error('No se encontró tu información de persona. Por favor, vuelve a iniciar sesión.')
+        notifyError('Sesión inválida', 'No se encontró tu información. Por favor, vuelve a iniciar sesión.')
         return
       }
 
@@ -264,14 +269,17 @@ export default function CanchaDetailPage() {
       })
 
       if (response.data) {
-        toast.success('¡Reserva creada exitosamente! Recuerda confirmarla 2 horas antes del partido.')
+        notifySuccess(
+          '¡Reserva creada exitosamente!',
+          'Recuerda confirmarla 2 horas antes del partido.'
+        )
         router.push('/mis-reservas')
       } else {
-        toast.error(response.error || 'Error al crear la reserva')
+        notifyError('Error al crear la reserva', response.error || 'Intenta nuevamente')
       }
     } catch (error) {
       console.error('Error creating reservation:', error)
-      toast.error('Error al crear la reserva')
+      notifyError('Error al crear la reserva', 'Ocurrió un problema. Por favor, intenta nuevamente.')
     } finally {
       setReserving(false)
     }
@@ -372,7 +380,7 @@ export default function CanchaDetailPage() {
                   {cancha && cancha.precioPorHora && typeof cancha.precioPorHora === 'number' && !isNaN(cancha.precioPorHora) && (
                     <div className="flex items-center gap-2 bg-green-500/20 backdrop-blur-sm px-4 py-2 rounded-full border border-green-400/30">
                       <DollarSign className="h-5 w-5 text-green-400" />
-                      <span className="font-bold text-green-400 text-lg">${Number(cancha.precioPorHora).toFixed(2)}/hora</span>
+                      <span className="font-bold text-green-400 text-lg">{formatPrice(cancha.precioPorHora)}/hora</span>
                     </div>
                   )}
                 </div>
@@ -637,7 +645,7 @@ export default function CanchaDetailPage() {
                       <div className="flex justify-between items-center text-green-800 dark:text-green-200">
                         <span>Precio por hora:</span>
                         <span className="font-semibold">
-                          ${typeof cancha.precioPorHora === 'number' && !isNaN(cancha.precioPorHora) ? cancha.precioPorHora.toFixed(2) : '0.00'}
+                          {formatPrice(cancha.precioPorHora)}
                         </span>
                       </div>
                       <div className="flex justify-between items-center text-green-800 dark:text-green-200">
@@ -648,7 +656,7 @@ export default function CanchaDetailPage() {
                       <div className="flex justify-between items-center font-bold text-lg text-green-900 dark:text-green-100">
                         <span>Total:</span>
                         <span className="text-2xl">
-                          ${typeof cancha.precioPorHora === 'number' && !isNaN(cancha.precioPorHora) ? cancha.precioPorHora.toFixed(2) : '0.00'}
+                          {formatPrice(cancha.precioPorHora)}
                         </span>
                       </div>
                     </div>
