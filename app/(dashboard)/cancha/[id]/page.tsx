@@ -37,7 +37,6 @@ import {
   CheckCircle
 } from 'lucide-react'
 import apiClient, { Cancha, DisponibilidadHorario, CanchaFoto } from '@/lib/api-client'
-import { toast } from 'sonner'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Skeleton } from '@/components/ui/skeleton'

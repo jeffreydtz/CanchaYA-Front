@@ -55,7 +55,7 @@ export class DataFactory {
   /**
    * Crea una Cancha validada con todos los campos numéricos seguros
    */
-  static createValidatedCancha(data: Partial<Cancha>): Cancha {
+  static createValidatedCancha(data: any): Cancha {
     const validatedPrecio = this.validateNumeric(data.precioPorHora, 0)
     
     // Log de advertencia si el dato original era inválido
@@ -90,7 +90,7 @@ export class DataFactory {
   /**
    * Crea una Valoración validada con puntaje numérico seguro
    */
-  static createValidatedRating(data: Partial<Valoracion>): Valoracion {
+  static createValidatedRating(data: any): Valoracion {
     const validatedPuntaje = this.validateNumeric(data.puntaje, 0)
     
     // Asegurar que el puntaje esté entre 1 y 5
@@ -139,14 +139,14 @@ export class DataFactory {
   /**
    * Crea un array de Canchas validadas
    */
-  static createValidatedCanchas(data: Partial<Cancha>[]): Cancha[] {
+  static createValidatedCanchas(data: any[]): Cancha[] {
     return data.map(cancha => this.createValidatedCancha(cancha))
   }
 
   /**
    * Crea un array de Valoraciones validadas
    */
-  static createValidatedRatings(data: Partial<Valoracion>[]): Valoracion[] {
+  static createValidatedRatings(data: any[]): Valoracion[] {
     return data.map(rating => this.createValidatedRating(rating))
   }
 
