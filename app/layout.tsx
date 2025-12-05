@@ -30,14 +30,14 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <NotificationProvider>
-            <LanguageProvider>
-              <AuthProvider>
-                <ChallengesProvider>
-                  {children}
-                  <Toaster />
-                </ChallengesProvider>
-              </AuthProvider>
-            </LanguageProvider>
+          <LanguageProvider>
+            <AuthProvider>
+              <ChallengesProvider>
+                {children}
+                <Toaster />
+              </ChallengesProvider>
+            </AuthProvider>
+          </LanguageProvider>
           </NotificationProvider>
         </ThemeProvider>
       </body>

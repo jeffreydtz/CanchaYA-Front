@@ -68,9 +68,9 @@ export default function DynamicLeafletMap({
 
     if (!isNaN(lat) && !isNaN(lng)) {
       L.marker([lat, lng], { icon: markerIcon })
-        .addTo(map.current)
-        .bindPopup(popupContent, { maxWidth: 250 })
-        .openPopup()
+      .addTo(map.current)
+      .bindPopup(popupContent, { maxWidth: 250 })
+      .openPopup()
     }
 
     // Cleanup

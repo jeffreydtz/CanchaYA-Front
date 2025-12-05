@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -20,6 +21,7 @@ export default function DesafioDetailPage() {
   const id = params?.id as string
 
   const [desafio, setDesafio] = useState<Desafio | null>(null)
+  const [todosDesafios, setTodosDesafios] = useState<Desafio[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showInviteModal, setShowInviteModal] = useState(false)
@@ -43,6 +45,7 @@ export default function DesafioDetailPage() {
     }
     if (id) {
       loadDesafio()
+      loadTodosDesafios()
     }
   }, [id, router, isAuthenticated])
 
@@ -57,6 +60,13 @@ export default function DesafioDetailPage() {
       setDesafio(response.data)
     }
     setLoading(false)
+  }
+
+  const loadTodosDesafios = async () => {
+    const response = await apiClient.getDesafios()
+    if (response.data) {
+      setTodosDesafios(response.data)
+    }
   }
 
   const handleSearch = async (query: string) => {
@@ -221,10 +231,56 @@ export default function DesafioDetailPage() {
     )
   }
 
-  const renderPlayerAvatar = (persona: any, size: 'sm' | 'md' | 'lg' = 'md') => {
+  // Obtener últimos resultados reales del jugador basado en desafíos finalizados
+  const getPlayerStats = (personaIdParam: string): boolean[] => {
+    // Filtrar solo desafíos finalizados
+    const desafiosFinalizados = todosDesafios.filter(d => d.estado === 'finalizado' && d.ganador)
+    
+    // Encontrar los desafíos donde este jugador participó
+    const desafiosDelJugador = desafiosFinalizados.filter(d => {
+      const esCreador = d.creador?.id === personaIdParam
+      const esJugadorCreador = d.jugadoresCreador?.some(j => j.id === personaIdParam)
+      const esJugadorDesafiado = d.jugadoresDesafiados?.some(j => j.id === personaIdParam)
+      
+      return esCreador || esJugadorCreador || esJugadorDesafiado
+    })
+
+    // Ordenar por fecha (más recientes primero)
+    const desafiosOrdenados = desafiosDelJugador.sort((a, b) => {
+      const fechaA = a.reserva?.fechaHora ? new Date(a.reserva.fechaHora).getTime() : 0
+      const fechaB = b.reserva?.fechaHora ? new Date(b.reserva.fechaHora).getTime() : 0
+      return fechaB - fechaA // Más reciente primero
+    })
+
+    // Tomar máximo 3 resultados
+    const ultimosDesafios = desafiosOrdenados.slice(0, 3)
+
+    // Determinar si ganó cada partido
+    const resultados = ultimosDesafios.map(d => {
+      const esDelEquipoCreador = 
+        d.creador?.id === personaIdParam || 
+        d.jugadoresCreador?.some(j => j.id === personaIdParam)
+      
+      // Si es del equipo creador y el ganador es 'creador', ganó
+      // Si es del equipo desafiado y el ganador es 'desafiado', ganó
+      if (esDelEquipoCreador) {
+        return d.ganador === 'creador'
+      } else {
+        return d.ganador === 'desafiado'
+      }
+    })
+
+    return resultados
+  }
+
+  const renderPlayerAvatar = (persona: any, size: 'sm' | 'md' | 'lg' = 'md', showStats: boolean = true) => {
     if (!persona) return null
     
     const initials = `${persona.nombre?.[0] || ''}${persona.apellido?.[0] || ''}`.toUpperCase()
+    const stats = showStats ? getPlayerStats(persona.id) : []
+    const wins = stats.filter(w => w).length
+    const losses = stats.length - wins
+    
     const sizeClasses = {
       sm: 'h-8 w-8 text-xs',
       md: 'h-10 w-10 text-sm',
@@ -232,15 +288,49 @@ export default function DesafioDetailPage() {
     }
 
     return (
-      <div className="flex items-center gap-2">
-        <Avatar className={`${sizeClasses[size]} border-2 border-background ring-2 ring-primary/20`}>
-          <AvatarImage src={persona.avatarUrl || `/placeholder-user.png`} alt={`${persona.nombre} ${persona.apellido}`} />
-          <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/40 text-primary-foreground font-bold">
-            {initials}
-          </AvatarFallback>
-        </Avatar>
-        <span className="font-medium">{persona.nombre} {persona.apellido}</span>
-      </div>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex items-center gap-2 cursor-pointer">
+              <div className="relative">
+                <Avatar className={`${sizeClasses[size]} border-2 border-background ring-2 ring-primary/20 hover:ring-primary/50 transition-all`}>
+                  <AvatarImage src={persona.avatarUrl || `/placeholder-user.png`} alt={`${persona.nombre} ${persona.apellido}`} />
+                  <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/40 text-primary-foreground font-bold">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                
+                {showStats && stats.length > 0 && (
+                  <div className="absolute -bottom-1 -right-1 flex gap-0.5 z-10">
+                    {stats.slice(0, 3).map((isWin, idx) => (
+                      <div
+                        key={idx}
+                        className={`h-2 w-2 rounded-full ${
+                          isWin ? 'bg-green-500' : 'bg-red-500'
+                        } ring-1 ring-background shadow-sm`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+              <span className="font-medium">{persona.nombre} {persona.apellido}</span>
+            </div>
+          </TooltipTrigger>
+          {showStats && stats.length > 0 && (
+            <TooltipContent className="z-50 bg-popover border border-border shadow-xl">
+              <div className="space-y-1">
+                <p className="font-semibold">{persona.nombre} {persona.apellido}</p>
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-green-500 font-medium">{wins}W</span>
+                  <span className="text-muted-foreground">-</span>
+                  <span className="text-red-500 font-medium">{losses}L</span>
+                  <span className="text-muted-foreground">(últimos {stats.length})</span>
+                </div>
+              </div>
+            </TooltipContent>
+          )}
+        </Tooltip>
+      </TooltipProvider>
     )
   }
 

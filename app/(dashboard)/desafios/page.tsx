@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Trophy, Calendar, MapPin, Users, Plus, Filter, CheckCircle, XCircle, Clock, Flame, TrendingUp, TrendingDown } from 'lucide-react'
 import Image from 'next/image'
 
@@ -194,49 +195,49 @@ export default function DesafiosPage() {
     const initials = `${persona.nombre?.[0] || ''}${persona.apellido?.[0] || ''}`.toUpperCase()
     const stats = showStats ? getPlayerStats(persona.id) : []
     const wins = stats.filter(w => w).length
+    const losses = stats.length - wins
 
     return (
-      <div className="relative group">
-        <Avatar className="h-10 w-10 border-2 border-background ring-2 ring-primary/20 group-hover:ring-primary/50 transition-all">
-          <AvatarImage src={persona.avatarUrl || `/placeholder-user.png`} alt={`${persona.nombre} ${persona.apellido}`} />
-          <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/40 text-primary-foreground font-bold">
-            {initials}
-          </AvatarFallback>
-        </Avatar>
-        
-        {showStats && stats.length > 0 && (
-          <div className="absolute -bottom-1 -right-1 flex gap-0.5 z-10">
-            {stats.slice(0, 3).map((isWin, idx) => (
-              <div
-                key={idx}
-                className={`h-2 w-2 rounded-full ${
-                  isWin ? 'bg-green-500' : 'bg-red-500'
-                } ring-1 ring-background shadow-sm`}
-                title={isWin ? 'Victoria' : 'Derrota'}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Tooltip on hover - Mejorado para que no se corte */}
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-2 bg-popover border border-border text-popover-foreground text-xs rounded-md shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
-          <div className="space-y-1">
-            <p className="font-semibold">{persona.nombre} {persona.apellido}</p>
-            {showStats && stats.length > 0 && (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <span className="text-green-500 font-medium">{wins}W</span>
-                <span>-</span>
-                <span className="text-red-500 font-medium">{3 - wins}L</span>
-                <span className="text-xs">(últimos 3)</span>
-              </div>
-            )}
-          </div>
-          {/* Flecha del tooltip */}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
-            <div className="border-4 border-transparent border-t-popover"></div>
-          </div>
-        </div>
-      </div>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="relative cursor-pointer">
+              <Avatar className="h-10 w-10 border-2 border-background ring-2 ring-primary/20 hover:ring-primary/50 transition-all">
+                <AvatarImage src={persona.avatarUrl || `/placeholder-user.png`} alt={`${persona.nombre} ${persona.apellido}`} />
+                <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/40 text-primary-foreground font-bold">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              
+              {showStats && stats.length > 0 && (
+                <div className="absolute -bottom-1 -right-1 flex gap-0.5 z-10">
+                  {stats.slice(0, 3).map((isWin, idx) => (
+                    <div
+                      key={idx}
+                      className={`h-2 w-2 rounded-full ${
+                        isWin ? 'bg-green-500' : 'bg-red-500'
+                      } ring-1 ring-background shadow-sm`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          </TooltipTrigger>
+          <TooltipContent className="z-50 bg-popover border border-border shadow-xl">
+            <div className="space-y-1">
+              <p className="font-semibold">{persona.nombre} {persona.apellido}</p>
+              {showStats && stats.length > 0 && (
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-green-500 font-medium">{wins}W</span>
+                  <span className="text-muted-foreground">-</span>
+                  <span className="text-red-500 font-medium">{losses}L</span>
+                  <span className="text-muted-foreground">(últimos {stats.length})</span>
+                </div>
+              )}
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     )
   }
 

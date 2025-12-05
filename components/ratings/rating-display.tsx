@@ -119,22 +119,22 @@ export function RatingDisplay({
   const StarRating = ({ rating, showValue = true }: { rating: number; showValue?: boolean }) => {
     const numericRating = Number(rating) || 0
     return (
-      <div className="flex items-center gap-1">
-        {[...Array(5)].map((_, i) => (
-          <Star
-            key={i}
-            className={`h-4 w-4 ${
+    <div className="flex items-center gap-1">
+      {[...Array(5)].map((_, i) => (
+        <Star
+          key={i}
+          className={`h-4 w-4 ${
               i < numericRating
                 ? `fill-yellow-400 ${getRatingColor(numericRating)}`
-                : 'text-gray-300 dark:text-gray-600'
-            }`}
-          />
-        ))}
+              : 'text-gray-300 dark:text-gray-600'
+          }`}
+        />
+      ))}
         {showValue && <span className="ml-1 font-semibold text-sm">
           {numericRating.toFixed(1)}
         </span>}
-      </div>
-    )
+    </div>
+  )
   }
 
   if (loading) {
