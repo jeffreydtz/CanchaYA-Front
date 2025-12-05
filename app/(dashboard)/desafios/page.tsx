@@ -73,6 +73,8 @@ export default function DesafiosPage() {
       newFiltro.estado = 'aceptado'
     } else if (value === 'finalizados') {
       newFiltro.estado = 'finalizado'
+    } else if (value === 'cancelados') {
+      newFiltro.estado = 'cancelado'
     }
 
     setFiltro(newFiltro)
@@ -88,6 +90,8 @@ export default function DesafiosPage() {
       newFiltro.estado = 'aceptado'
     } else if (activeTab === 'finalizados') {
       newFiltro.estado = 'finalizado'
+    } else if (activeTab === 'cancelados') {
+      newFiltro.estado = 'cancelado'
     }
 
     if (value !== 'todos') {
@@ -199,7 +203,7 @@ export default function DesafiosPage() {
 
     return (
       <TooltipProvider>
-        <Tooltip>
+        <Tooltip delayDuration={200}>
           <TooltipTrigger asChild>
             <div className="relative cursor-pointer">
               <Avatar className="h-10 w-10 border-2 border-background ring-2 ring-primary/20 hover:ring-primary/50 transition-all">
@@ -223,11 +227,16 @@ export default function DesafiosPage() {
               )}
             </div>
           </TooltipTrigger>
-          <TooltipContent className="z-50 bg-popover border border-border shadow-xl">
+          <TooltipContent 
+            side="bottom" 
+            align="center"
+            sideOffset={5}
+            className="z-[100] bg-popover border border-border shadow-xl px-3 py-2"
+          >
             <div className="space-y-1">
-              <p className="font-semibold">{persona.nombre} {persona.apellido}</p>
+              <p className="font-semibold text-sm whitespace-nowrap">{persona.nombre} {persona.apellido}</p>
               {showStats && stats.length > 0 && (
-                <div className="flex items-center gap-2 text-xs">
+                <div className="flex items-center gap-2 text-xs whitespace-nowrap">
                   <span className="text-green-500 font-medium">{wins}W</span>
                   <span className="text-muted-foreground">-</span>
                   <span className="text-red-500 font-medium">{losses}L</span>
@@ -285,22 +294,26 @@ export default function DesafiosPage() {
       {/* Filtros mejorados */}
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center bg-card rounded-xl p-4 border shadow-sm">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="flex-1">
-          <TabsList className="grid w-full grid-cols-4 h-auto">
+          <TabsList className="grid w-full grid-cols-5 h-auto">
             <TabsTrigger value="todos" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <span className="hidden sm:inline">Todos</span>
               <span className="sm:hidden">📋</span>
             </TabsTrigger>
             <TabsTrigger value="pendientes" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-white">
-              <Clock className="h-4 w-4 mr-1" />
+              <Clock className="h-4 w-4 sm:mr-1" />
               <span className="hidden sm:inline">Pendientes</span>
             </TabsTrigger>
             <TabsTrigger value="aceptados" className="data-[state=active]:bg-green-500 data-[state=active]:text-white">
-              <CheckCircle className="h-4 w-4 mr-1" />
+              <CheckCircle className="h-4 w-4 sm:mr-1" />
               <span className="hidden sm:inline">Aceptados</span>
             </TabsTrigger>
             <TabsTrigger value="finalizados" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
-              <Trophy className="h-4 w-4 mr-1" />
+              <Trophy className="h-4 w-4 sm:mr-1" />
               <span className="hidden sm:inline">Finalizados</span>
+            </TabsTrigger>
+            <TabsTrigger value="cancelados" className="data-[state=active]:bg-red-500 data-[state=active]:text-white">
+              <XCircle className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Cancelados</span>
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -345,6 +358,8 @@ export default function DesafiosPage() {
             desafiosFiltrados = desafiosFiltrados.filter(d => d.estado === 'aceptado')
           } else if (activeTab === 'finalizados') {
             desafiosFiltrados = desafiosFiltrados.filter(d => d.estado === 'finalizado')
+          } else if (activeTab === 'cancelados') {
+            desafiosFiltrados = desafiosFiltrados.filter(d => d.estado === 'cancelado')
           }
 
           // Filtrar por deporte si está seleccionado

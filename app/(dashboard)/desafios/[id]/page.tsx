@@ -289,7 +289,7 @@ export default function DesafioDetailPage() {
 
     return (
       <TooltipProvider>
-        <Tooltip>
+        <Tooltip delayDuration={200}>
           <TooltipTrigger asChild>
             <div className="flex items-center gap-2 cursor-pointer">
               <div className="relative">
@@ -317,10 +317,15 @@ export default function DesafioDetailPage() {
             </div>
           </TooltipTrigger>
           {showStats && stats.length > 0 && (
-            <TooltipContent className="z-50 bg-popover border border-border shadow-xl">
+            <TooltipContent 
+              side="bottom" 
+              align="center"
+              sideOffset={5}
+              className="z-[100] bg-popover border border-border shadow-xl px-3 py-2"
+            >
               <div className="space-y-1">
-                <p className="font-semibold">{persona.nombre} {persona.apellido}</p>
-                <div className="flex items-center gap-2 text-xs">
+                <p className="font-semibold text-sm whitespace-nowrap">{persona.nombre} {persona.apellido}</p>
+                <div className="flex items-center gap-2 text-xs whitespace-nowrap">
                   <span className="text-green-500 font-medium">{wins}W</span>
                   <span className="text-muted-foreground">-</span>
                   <span className="text-red-500 font-medium">{losses}L</span>
@@ -410,14 +415,33 @@ export default function DesafioDetailPage() {
           <CardContent className="pt-6">
             <div className="grid md:grid-cols-2 gap-6">
               {/* Ubicación */}
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase">
                   <MapPin className="h-4 w-4" />
                   Ubicación
                 </div>
-                <div className="pl-6">
+                <div className="pl-6 space-y-2">
                   <p className="font-bold text-lg">{desafio.reserva?.disponibilidad?.cancha?.club?.nombre || 'Club'}</p>
                   <p className="text-muted-foreground">{desafio.reserva?.disponibilidad?.cancha?.nombre || 'Cancha'}</p>
+                  {desafio.reserva?.disponibilidad?.cancha?.club && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-2 w-full"
+                      onClick={() => {
+                        const club = desafio.reserva?.disponibilidad?.cancha?.club
+                        if (!club) return
+                        
+                        const nombre = club.nombre
+                        const direccion = (club as any).direccion || ''
+                        const query = encodeURIComponent(direccion ? `${nombre}, ${direccion}` : nombre)
+                        window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank')
+                      }}
+                    >
+                      <MapPin className="h-4 w-4 mr-2" />
+                      Ver en Mapa
+                    </Button>
+                  )}
                 </div>
               </div>
 
