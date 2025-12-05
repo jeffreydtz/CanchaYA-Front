@@ -258,31 +258,42 @@ export interface Equipo {
 
 export interface Desafio {
   id: string // UUID
-  estado: 'Pendiente' | 'Aceptado' | 'Cancelado' | 'Finalizado'
+  estado: 'pendiente' | 'aceptado' | 'cancelado' | 'finalizado'
   reserva: {
     id: string
-    fechaHora: string
-    disponibilidad: DisponibilidadHorario
+    fechaHora: string // ISO
+    disponibilidad: {
+      id: string
+      cancha: {
+        id: string
+        nombre: string
+        club: {
+          id: string
+          nombre: string
+        }
+      }
+      horario: {
+        id: string
+        horaInicio: string // "20:00:00"
+        horaFin: string
+      }
+    }
   }
   deporte: {
     id: string
     nombre: string
   }
-  creador: {
-    id: string
-    nombre: string
-    apellido: string
-    email: string
-  }
+  creador: Persona // Persona que crea el desafío
   jugadoresCreador: Persona[]
-  invitadosDesafiados: Persona[]
   jugadoresDesafiados: Persona[]
-  ganadorLado: 'creador' | 'desafiado' | null
-  resultado: string | null // e.g., "3-2"
+  invitadosCreador: Persona[]
+  invitadosDesafiados: Persona[]
+  ganador: 'creador' | 'desafiado' | null
+  golesCreador: number | null
+  golesDesafiado: number | null
   valoracionCreador: number | null  // 1-5
   valoracionDesafiado: number | null  // 1-5
   creadoEl: string // ISO Date
-  actualizadoEl: string // ISO Date
 }
 
 // DTOs para Desafíos
@@ -295,13 +306,20 @@ export interface CrearDesafioDto {
 
 export interface AgregarJugadoresDto {
   lado: 'creador' | 'desafiado'
+  accion: 'invitar' | 'remover'
   jugadoresIds: string[] // Array of Persona UUIDs
 }
 
 export interface FinalizarDesafioDto {
   ganadorLado: 'creador' | 'desafiado'
-  resultado?: string // e.g., "3-2" format: "golesCreador-golesDesafiado"
+  resultado?: string // e.g., "7-5" format: "golesCreador-golesDesafiado"
   valoracion?: number // 1-5
+}
+
+export interface FiltroDesafioDto {
+  estado?: 'pendiente' | 'aceptado' | 'finalizado' | 'cancelado'
+  deporteId?: string
+  jugadorId?: string // Only works for admin users
 }
 
 export interface Deuda {
@@ -366,28 +384,65 @@ export interface RankingEquipo {
 // Nuevas interfaces según documentación del backend
 export interface PerfilCompetitivo {
   id: string
-  personaId: string
-  deporteId: string
-  elo: number
+  usuario: {
+    id: string
+    email: string
+    persona: {
+      id: string
+      nombre: string
+      apellido: string
+    }
+  }
+  activo: boolean
+  ranking: number // ELO score
   partidosJugados: number
-  partidosGanados: number
-  partidosPerdidos: number
-  partidosEmpatados: number
-  golesAFavor: number
-  golesEnContra: number
-  rachaActual: number
-  mejorRacha: number
-  deporte?: Deporte
+  victorias: number
+  empates: number
+  derrotas: number
+  golesFavor: number
+  golesContra: number
+  racha: number // positive = win streak, negative = loss streak, 0 = neutral
 }
 
 export interface EloHistory {
   id: string
-  perfilId: string
-  eloAnterior: number
-  eloNuevo: number
-  cambio: number
-  contexto: string
-  fecha: string
+  rankingAnterior: number
+  rankingNuevo: number
+  delta: number
+  creadoEl: string // ISO date
+  desafio: {
+    id: string
+    estado: string
+  }
+}
+
+export interface RankingPublico {
+  posicion: number
+  usuarioId: string
+  nombre: string
+  apellido: string
+  ranking: number
+  partidosJugados: number
+  victorias: number
+  derrotas: number
+  empates: number
+  activo: boolean
+}
+
+export interface PerfilCompletoPublico {
+  usuarioId: string
+  nombre: string
+  apellido: string
+  ranking: number
+  activo: boolean
+  partidosJugados: number
+  victorias: number
+  empates: number
+  derrotas: number
+  golesFavor: number
+  golesContra: number
+  racha: number
+  historialElo: EloHistory[]
 }
 
 export interface NotificationSubscription {
@@ -1039,13 +1094,25 @@ const apiClient = {
 
   // ===== DESAFÍOS =====
   // NOTE: Desafios are documented in API docs under "Entidades relacionadas"
-  
+
   /**
    * Listar desafíos - GET /desafios
-   * Returns all challenges in the system with full relations
-   * Frontend should filter by personaId for user-specific views
+   * Returns challenges filtered by logged-in user (as creator, player, or invited)
+   * Query params: estado, deporteId, jugadorId (admin only)
    */
-  getDesafios: () => apiRequest<Desafio[]>('/desafios'),
+  getDesafios: (filtro?: FiltroDesafioDto) => {
+    const params = new URLSearchParams()
+    if (filtro?.estado) params.append('estado', filtro.estado)
+    if (filtro?.deporteId) params.append('deporteId', filtro.deporteId)
+    if (filtro?.jugadorId) params.append('jugadorId', filtro.jugadorId)
+    const query = params.toString() ? `?${params.toString()}` : ''
+    return apiRequest<Desafio[]>(`/desafios${query}`)
+  },
+
+  /**
+   * Obtener un desafío por ID - GET /desafios/{id}
+   */
+  getDesafio: (id: string) => apiRequest<Desafio>(`/desafios/${id}`),
 
   /**
    * Crear desafío - POST /desafios
@@ -1092,16 +1159,31 @@ const apiClient = {
    * The personaId is extracted from the JWT token
    *
    * Validations:
-   * - Person must be in invitadosDesafiados (not in jugadoresDesafiados)
+   * - Person must be in invitadosCreador or invitadosDesafiados (not already a player)
    *
    * Actions:
-   * - Removes person from invitadosDesafiados
-   * - If no one left in invitados + jugadores, estado → 'Cancelado'
+   * - Removes person from invitados list
+   * - If no one left in invitados + jugadores on desafiado side, estado → 'Cancelado'
    */
   rechazarDesafio: (id: string) =>
     apiRequest<Desafio>(`/desafios/${id}/rechazar`, {
       method: 'PATCH',
       body: JSON.stringify({})
+    }),
+
+  /**
+   * Cancelar desafío - PATCH /desafios/{id}/cancelar
+   * Cancel a challenge (creator or admin only)
+   *
+   * Permissions:
+   * - Creator of the challenge can cancel their own challenge
+   * - Admin can cancel any challenge
+   *
+   * Cannot cancel if estado is already 'finalizado' or 'cancelado'
+   */
+  cancelarDesafio: (id: string) =>
+    apiRequest<Desafio>(`/desafios/${id}/cancelar`, {
+      method: 'PATCH'
     }),
 
   /**
@@ -1394,19 +1476,19 @@ const apiClient = {
   getRankingEquipos: (deporteId: string) =>
     apiRequest<RankingEquipo[]>(`/competicion/equipos-ranking?deporteId=${deporteId}`),
 
-  // ===== FUNCIONALIDADES CRÍTICAS DEL BACKEND =====
+  // ===== PERFIL COMPETITIVO =====
 
   /**
-   * Obtener perfil competitivo del usuario - GET /perfil-competitivo
-   * Returns the competitive profile(s) for the authenticated user
-   * Creates profile if it doesn't exist
+   * Obtener MI perfil competitivo - GET /perfil-competitivo
+   * Returns the competitive profile for the authenticated user
+   * Creates profile if it doesn't exist (with initial ELO and stats at 0)
    */
-  getPerfilCompetitivo: () => apiRequest<PerfilCompetitivo[]>('/perfil-competitivo'),
+  getPerfilCompetitivo: () => apiRequest<PerfilCompetitivo>('/perfil-competitivo'),
 
   /**
-   * Actualizar perfil competitivo - PATCH /perfil-competitivo
+   * Actualizar MI perfil competitivo - PATCH /perfil-competitivo
    * Allows activating/deactivating the competitive profile
-   * When activo=false, user won't be counted for ranking calculations
+   * When activo=false, user won't appear in public ranking (but stats still accumulate)
    */
   updatePerfilCompetitivo: (data: { activo: boolean }) =>
     apiRequest<PerfilCompetitivo>('/perfil-competitivo', {
@@ -1415,14 +1497,33 @@ const apiClient = {
     }),
 
   /**
-   * Obtener ranking global - GET /ranking
+   * Ver historial de MI ELO - GET /perfil-competitivo/historial
+   * Returns chronological list of ELO changes for the authenticated user
    */
-  getRanking: (deporteId?: string) => apiRequest<PerfilCompetitivo[]>(`/ranking${deporteId ? `?deporteId=${deporteId}` : ''}`),
+  getHistorialElo: () => apiRequest<EloHistory[]>('/perfil-competitivo/historial'),
+
+  // ===== RANKING PÚBLICO =====
 
   /**
-   * Obtener perfil competitivo por usuario ID - GET /ranking/usuario/{id}
+   * Ranking general - GET /ranking
+   * Returns global ranking of all active players, ordered by ranking DESC then partidosJugados
+   * Only includes profiles with activo=true
    */
-  getRankingByUsuarioId: (id: string) => apiRequest<PerfilCompetitivo>(`/ranking/usuario/${id}`),
+  getRanking: () => apiRequest<RankingPublico[]>('/ranking'),
+
+  /**
+   * Ver perfil competitivo de un usuario específico - GET /ranking/usuario/:usuarioId
+   * Returns competitive profile with stats and recent ELO history for a specific user
+   */
+  getRankingByUsuarioId: (usuarioId: string) =>
+    apiRequest<PerfilCompletoPublico>(`/ranking/usuario/${usuarioId}`),
+
+  /**
+   * Ver MI perfil competitivo vía módulo ranking - GET /ranking/me
+   * Same as getRankingByUsuarioId but for the authenticated user
+   * Returns own competitive profile with full stats and ELO history
+   */
+  getRankingMe: () => apiRequest<PerfilCompletoPublico>('/ranking/me'),
 
 
 

@@ -488,8 +488,8 @@ function CompetitiveProfile() {
     const fetchPerfil = async () => {
       try {
         const response = await apiClient.getPerfilCompetitivo()
-        if (response.data && response.data.length > 0) {
-          setPerfil(response.data[0]) // Get first competitive profile
+        if (response.data) {
+          setPerfil(response.data)
         }
       } catch (error) {
         console.error('Error fetching competitive profile:', error)
@@ -557,8 +557,7 @@ function CompetitiveProfile() {
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100">Rating ELO</h3>
-              <p className="text-3xl font-black text-blue-800 dark:text-blue-200">{perfil.elo}</p>
-              <p className="text-sm text-blue-700 dark:text-blue-300">Deporte: {perfil.deporte?.nombre}</p>
+              <p className="text-3xl font-black text-blue-800 dark:text-blue-200">{perfil.ranking}</p>
             </div>
             <div className="p-4 bg-blue-500 rounded-full">
               <Award className="h-8 w-8 text-white" />
@@ -573,7 +572,7 @@ function CompetitiveProfile() {
               <TrendingUp className="h-4 w-4 text-green-600" />
               <span className="text-sm font-medium text-green-900 dark:text-green-100">Victorias</span>
             </div>
-            <p className="text-2xl font-bold text-green-800 dark:text-green-200">{perfil.partidosGanados}</p>
+            <p className="text-2xl font-bold text-green-800 dark:text-green-200">{perfil.victorias}</p>
           </div>
 
           <div className="bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 p-4 rounded-lg border border-red-200/50 dark:border-red-700/30">
@@ -581,7 +580,7 @@ function CompetitiveProfile() {
               <Target className="h-4 w-4 text-red-600" />
               <span className="text-sm font-medium text-red-900 dark:text-red-100">Derrotas</span>
             </div>
-            <p className="text-2xl font-bold text-red-800 dark:text-red-200">{perfil.partidosPerdidos}</p>
+            <p className="text-2xl font-bold text-red-800 dark:text-red-200">{perfil.derrotas}</p>
           </div>
 
           <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 p-4 rounded-lg border border-blue-200/50 dark:border-blue-700/30">
@@ -598,7 +597,7 @@ function CompetitiveProfile() {
               <span className="text-sm font-medium text-purple-900 dark:text-purple-100">Win Rate</span>
             </div>
             <p className="text-2xl font-bold text-purple-800 dark:text-purple-200">
-              {perfil.partidosJugados > 0 ? Math.round((perfil.partidosGanados / perfil.partidosJugados) * 100) : 0}%
+              {perfil.partidosJugados > 0 ? Math.round((perfil.victorias / perfil.partidosJugados) * 100) : 0}%
             </p>
           </div>
         </div>
@@ -608,22 +607,22 @@ function CompetitiveProfile() {
           <h4 className="font-semibold mb-3 text-gray-900 dark:text-gray-100">Rendimiento Reciente</h4>
           <div className="flex items-center gap-2">
             <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-              <div 
+              <div
                 className="h-full bg-gradient-to-r from-green-500 to-emerald-500 transition-all duration-500"
-                style={{ 
-                  width: `${perfil.partidosJugados > 0 ? (perfil.partidosGanados / perfil.partidosJugados) * 100 : 0}%` 
+                style={{
+                  width: `${perfil.partidosJugados > 0 ? (perfil.victorias / perfil.partidosJugados) * 100 : 0}%`
                 }}
               />
             </div>
             <span className="text-sm text-gray-600 dark:text-gray-300">
-              {perfil.partidosGanados}/{perfil.partidosJugados}
+              {perfil.victorias}/{perfil.partidosJugados}
             </span>
           </div>
         </div>
 
         {/* Last Updated */}
         <div className="text-xs text-gray-500 dark:text-gray-400 pt-2 border-t">
-          Perfil competitivo del deporte: {perfil.deporte?.nombre}
+          Perfil competitivo
         </div>
       </CardContent>
     </Card>

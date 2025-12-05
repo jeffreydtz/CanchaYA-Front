@@ -23,7 +23,7 @@ export function ChallengesProvider({ children }: { children: ReactNode }) {
     try {
       const response = await apiClient.getDesafios()
       if (response.data) {
-        const pending = response.data.filter(d => d.estado === 'Pendiente').length
+        const pending = response.data.filter(d => d.estado === 'pendiente').length
         setPendingChallengesCount(pending)
       }
     } catch (error) {

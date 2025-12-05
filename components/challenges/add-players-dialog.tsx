@@ -94,6 +94,7 @@ export function AddPlayersDialog({
     try {
       const response = await apiClient.agregarJugadoresDesafio(challenge.id, {
         lado: selectedSide,
+        accion: 'invitar',
         jugadoresIds: selectedPlayers.map(p => p.id),
       })
 

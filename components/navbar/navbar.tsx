@@ -143,6 +143,19 @@ export default function Navbar() {
                       <span className="font-medium">Finalizados</span>
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/perfil-competitivo" className="flex items-center p-3 rounded-lg hover:bg-muted cursor-pointer">
+                      <User className="mr-3 h-5 w-5" />
+                      <span className="font-medium">Mi Perfil Competitivo</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/ranking" className="flex items-center p-3 rounded-lg hover:bg-muted cursor-pointer">
+                      <Trophy className="mr-3 h-5 w-5 text-yellow-500" />
+                      <span className="font-medium">Ranking Global</span>
+                    </Link>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
@@ -212,6 +225,18 @@ export default function Navbar() {
                       <Link href="/desafios" className="flex items-center p-3 rounded-lg hover:bg-muted cursor-pointer">
                         <Trophy className="mr-3 h-5 w-5" />
                         <span className="font-medium">Desafíos</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/perfil-competitivo" className="flex items-center p-3 rounded-lg hover:bg-muted cursor-pointer">
+                        <Trophy className="mr-3 h-5 w-5 text-green-600" />
+                        <span className="font-medium">Perfil Competitivo</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/ranking" className="flex items-center p-3 rounded-lg hover:bg-muted cursor-pointer">
+                        <Trophy className="mr-3 h-5 w-5 text-yellow-500" />
+                        <span className="font-medium">Ranking</span>
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>

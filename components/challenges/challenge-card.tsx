@@ -46,19 +46,19 @@ export function ChallengeCard({
 
   // Can finalize if:
   // - User is a participant
-  // - Estado is 'Aceptado'
+  // - Estado is 'aceptado'
   // - Reservation is in the past
-  const canFinalize = isParticipant && challenge.estado === 'Aceptado' && isPast
+  const canFinalize = isParticipant && challenge.estado === 'aceptado' && isPast
 
   const getEstadoBadge = (estado: Desafio['estado']) => {
     switch (estado) {
-      case 'Pendiente':
+      case 'pendiente':
         return <Badge variant="outline" className="bg-yellow-100 text-yellow-800">Pendiente</Badge>
-      case 'Aceptado':
+      case 'aceptado':
         return <Badge variant="default" className="bg-green-100 text-green-800">Aceptado</Badge>
-      case 'Cancelado':
+      case 'cancelado':
         return <Badge variant="secondary" className="bg-gray-100 text-gray-800">Cancelado</Badge>
-      case 'Finalizado':
+      case 'finalizado':
         return <Badge variant="default" className="bg-blue-100 text-blue-800">Finalizado</Badge>
       default:
         return <Badge variant="outline">{estado}</Badge>
@@ -164,13 +164,13 @@ export function ChallengeCard({
         </div>
 
         {/* Result if finalized */}
-        {challenge.estado === 'Finalizado' && challenge.resultado && (
+        {challenge.estado === 'finalizado' && challenge.golesCreador !== null && challenge.golesDesafiado !== null && (
           <div className="pt-4 border-t">
             <div className="flex items-center justify-between">
-              <div className="text-sm font-semibold">Resultado: {challenge.resultado}</div>
-              {challenge.ganadorLado && (
+              <div className="text-sm font-semibold">Resultado: {challenge.golesCreador}-{challenge.golesDesafiado}</div>
+              {challenge.ganador && (
                 <Badge variant="default" className="bg-yellow-100 text-yellow-800">
-                  Ganador: {challenge.ganadorLado === 'creador' ? 'Equipo Creador' : 'Equipo Desafiado'}
+                  Ganador: {challenge.ganador === 'creador' ? 'Equipo Creador' : 'Equipo Desafiado'}
                 </Badge>
               )}
             </div>
@@ -217,7 +217,7 @@ export function ChallengeCard({
           )}
 
           {/* Add players */}
-          {(canAddCreadores || canAddDesafiados) && (challenge.estado === 'Pendiente' || challenge.estado === 'Aceptado') && (
+          {(canAddCreadores || canAddDesafiados) && (challenge.estado === 'pendiente' || challenge.estado === 'aceptado') && (
             <Button
               size="sm"
               variant="outline"
@@ -238,7 +238,7 @@ export function ChallengeCard({
           )}
 
           {/* Info for past pending challenges */}
-          {isPast && challenge.estado === 'Pendiente' && (
+          {isPast && challenge.estado === 'pendiente' && (
             <Badge variant="secondary" className="bg-gray-100 text-gray-600">
               Desafío expirado
             </Badge>

@@ -129,7 +129,7 @@ export default function ChallengesList() {
       case 'finalizados':
         // Finalized challenges where I participated
         return challenges.filter(c =>
-          c.estado === 'Finalizado' &&
+          c.estado === 'finalizado' &&
           (c.creador?.id === personaId ||
            (Array.isArray(c.jugadoresCreador) && c.jugadoresCreador.some(p => p?.id === personaId)) ||
            (Array.isArray(c.jugadoresDesafiados) && c.jugadoresDesafiados.some(p => p?.id === personaId)))
@@ -172,7 +172,7 @@ export default function ChallengesList() {
         (Array.isArray(c.jugadoresDesafiados) && c.jugadoresDesafiados.some(p => p?.id === personaId))
       ).length,
       finalizados: challenges.filter(c =>
-        c.estado === 'Finalizado' &&
+        c.estado === 'finalizado' &&
         (c.creador?.id === personaId ||
          (Array.isArray(c.jugadoresCreador) && c.jugadoresCreador.some(p => p?.id === personaId)) ||
          (Array.isArray(c.jugadoresDesafiados) && c.jugadoresDesafiados.some(p => p?.id === personaId)))
