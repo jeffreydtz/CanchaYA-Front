@@ -96,13 +96,13 @@ export default function DesafiosPage() {
   const getUserRole = (desafio: Desafio): string => {
     if (!personaId) return 'Espectador'
 
-    if (desafio.creador.id === personaId) return 'Creador'
+    if (desafio.creador?.id === personaId) return 'Creador'
 
-    if (desafio.jugadoresCreador.some(j => j.id === personaId)) return 'Equipo Creador'
-    if (desafio.jugadoresDesafiados.some(j => j.id === personaId)) return 'Equipo Desafiado'
+    if (desafio.jugadoresCreador?.some(j => j.id === personaId)) return 'Equipo Creador'
+    if (desafio.jugadoresDesafiados?.some(j => j.id === personaId)) return 'Equipo Desafiado'
 
-    if (desafio.invitadosCreador.some(i => i.id === personaId)) return 'Invitado (Creador)'
-    if (desafio.invitadosDesafiados.some(i => i.id === personaId)) return 'Invitado (Desafiado)'
+    if (desafio.invitadosCreador?.some(i => i.id === personaId)) return 'Invitado (Creador)'
+    if (desafio.invitadosDesafiados?.some(i => i.id === personaId)) return 'Invitado (Desafiado)'
 
     return 'Espectador'
   }
@@ -209,7 +209,7 @@ export default function DesafiosPage() {
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <CardTitle className="text-lg">
-                          {desafio.deporte.nombre}
+                          {desafio.deporte?.nombre || 'Sin deporte'}
                         </CardTitle>
                         {getEstadoBadge(desafio.estado)}
                       </div>
@@ -221,28 +221,28 @@ export default function DesafiosPage() {
                       <div className="flex items-center gap-2 text-sm">
                         <MapPin className="h-4 w-4 text-muted-foreground" />
                         <span>
-                          {desafio.reserva.disponibilidad.cancha.club.nombre} -{' '}
-                          {desafio.reserva.disponibilidad.cancha.nombre}
+                          {desafio.reserva?.disponibilidad?.cancha?.club?.nombre || 'Club'} -{' '}
+                          {desafio.reserva?.disponibilidad?.cancha?.nombre || 'Cancha'}
                         </span>
                       </div>
 
                       <div className="flex items-center gap-2 text-sm">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                         <span>
-                          {new Date(desafio.reserva.fechaHora).toLocaleDateString('es-AR', {
+                          {desafio.reserva?.fechaHora ? new Date(desafio.reserva.fechaHora).toLocaleDateString('es-AR', {
                             day: 'numeric',
                             month: 'long',
                             year: 'numeric',
                             hour: '2-digit',
                             minute: '2-digit'
-                          })}
+                          }) : 'Fecha no disponible'}
                         </span>
                       </div>
 
                       <div className="flex items-center gap-2 text-sm">
                         <Users className="h-4 w-4 text-muted-foreground" />
                         <span>
-                          {desafio.jugadoresCreador.length} vs {desafio.jugadoresDesafiados.length}
+                          {desafio.jugadoresCreador?.length || 0} vs {desafio.jugadoresDesafiados?.length || 0}
                         </span>
                       </div>
 
