@@ -146,17 +146,46 @@ export default function DesafiosPage() {
     }
   }
 
-  // Generar historial simulado de últimos 3 partidos (victoria/derrota)
-  // En producción, esto vendría del backend
-  const getPlayerStats = (personaId: string) => {
-    // Simulación: genera 3 resultados aleatorios pero consistentes por ID
-    const seed = personaId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
-    const results = []
-    for (let i = 0; i < 3; i++) {
-      const isWin = (seed + i) % 3 !== 0 // ~66% victorias
-      results.push(isWin)
-    }
-    return results
+  // Obtener últimos resultados reales del jugador basado en desafíos finalizados
+  const getPlayerStats = (personaId: string): boolean[] => {
+    // Filtrar solo desafíos finalizados
+    const desafiosFinalizados = desafios.filter(d => d.estado === 'finalizado' && d.ganador)
+    
+    // Encontrar los desafíos donde este jugador participó
+    const desafiosDelJugador = desafiosFinalizados.filter(d => {
+      const esCreador = d.creador?.id === personaId
+      const esJugadorCreador = d.jugadoresCreador?.some(j => j.id === personaId)
+      const esJugadorDesafiado = d.jugadoresDesafiados?.some(j => j.id === personaId)
+      
+      return esCreador || esJugadorCreador || esJugadorDesafiado
+    })
+
+    // Ordenar por fecha (más recientes primero)
+    const desafiosOrdenados = desafiosDelJugador.sort((a, b) => {
+      const fechaA = a.reserva?.fechaHora ? new Date(a.reserva.fechaHora).getTime() : 0
+      const fechaB = b.reserva?.fechaHora ? new Date(b.reserva.fechaHora).getTime() : 0
+      return fechaB - fechaA // Más reciente primero
+    })
+
+    // Tomar máximo 3 resultados
+    const ultimosDesafios = desafiosOrdenados.slice(0, 3)
+
+    // Determinar si ganó cada partido
+    const resultados = ultimosDesafios.map(d => {
+      const esDelEquipoCreador = 
+        d.creador?.id === personaId || 
+        d.jugadoresCreador?.some(j => j.id === personaId)
+      
+      // Si es del equipo creador y el ganador es 'creador', ganó
+      // Si es del equipo desafiado y el ganador es 'desafiado', ganó
+      if (esDelEquipoCreador) {
+        return d.ganador === 'creador'
+      } else {
+        return d.ganador === 'desafiado'
+      }
+    })
+
+    return resultados
   }
 
   const renderPlayerAvatar = (persona: any, showStats: boolean = true) => {
@@ -176,27 +205,36 @@ export default function DesafiosPage() {
         </Avatar>
         
         {showStats && stats.length > 0 && (
-          <div className="absolute -bottom-1 -right-1 flex gap-0.5">
+          <div className="absolute -bottom-1 -right-1 flex gap-0.5 z-10">
             {stats.slice(0, 3).map((isWin, idx) => (
               <div
                 key={idx}
                 className={`h-2 w-2 rounded-full ${
                   isWin ? 'bg-green-500' : 'bg-red-500'
-                } ring-1 ring-background`}
+                } ring-1 ring-background shadow-sm`}
                 title={isWin ? 'Victoria' : 'Derrota'}
               />
             ))}
           </div>
         )}
 
-        {/* Tooltip on hover */}
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
-          <p className="font-semibold">{persona.nombre} {persona.apellido}</p>
-          {showStats && stats.length > 0 && (
-            <p className="text-muted-foreground">
-              {wins}W - {3 - wins}L (últimos 3)
-            </p>
-          )}
+        {/* Tooltip on hover - Mejorado para que no se corte */}
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-2 bg-popover border border-border text-popover-foreground text-xs rounded-md shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+          <div className="space-y-1">
+            <p className="font-semibold">{persona.nombre} {persona.apellido}</p>
+            {showStats && stats.length > 0 && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <span className="text-green-500 font-medium">{wins}W</span>
+                <span>-</span>
+                <span className="text-red-500 font-medium">{3 - wins}L</span>
+                <span className="text-xs">(últimos 3)</span>
+              </div>
+            )}
+          </div>
+          {/* Flecha del tooltip */}
+          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
+            <div className="border-4 border-transparent border-t-popover"></div>
+          </div>
         </div>
       </div>
     )
@@ -295,25 +333,43 @@ export default function DesafiosPage() {
           </div>
         )}
 
-        {desafios.length === 0 ? (
-          <Card className="border-dashed">
-            <CardContent className="py-16 text-center">
-              <Trophy className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
-              <p className="text-xl font-semibold mb-2">No hay desafíos {activeTab !== 'todos' ? activeTab : ''}</p>
-              <p className="text-muted-foreground mb-6">
-                {activeTab === 'todos' 
-                  ? '¡Crea tu primer desafío y comienza a competir!'
-                  : 'Intenta cambiar los filtros o crea un nuevo desafío'}
-              </p>
-              <Button onClick={() => router.push('/desafios/crear')}>
-                <Plus className="h-4 w-4 mr-2" />
-                Crear Desafío
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {desafios.map((desafio) => {
+        {(() => {
+          // Aplicar filtros locales adicionales
+          let desafiosFiltrados = desafios
+
+          // Filtrar por estado si está seleccionado
+          if (activeTab === 'pendientes') {
+            desafiosFiltrados = desafiosFiltrados.filter(d => d.estado === 'pendiente')
+          } else if (activeTab === 'aceptados') {
+            desafiosFiltrados = desafiosFiltrados.filter(d => d.estado === 'aceptado')
+          } else if (activeTab === 'finalizados') {
+            desafiosFiltrados = desafiosFiltrados.filter(d => d.estado === 'finalizado')
+          }
+
+          // Filtrar por deporte si está seleccionado
+          if (selectedDeporte !== 'todos') {
+            desafiosFiltrados = desafiosFiltrados.filter(d => d.deporte?.id === selectedDeporte)
+          }
+
+          return desafiosFiltrados.length === 0 ? (
+            <Card className="border-dashed">
+              <CardContent className="py-16 text-center">
+                <Trophy className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
+                <p className="text-xl font-semibold mb-2">No hay desafíos {activeTab !== 'todos' ? activeTab : ''}</p>
+                <p className="text-muted-foreground mb-6">
+                  {activeTab === 'todos' 
+                    ? '¡Crea tu primer desafío y comienza a competir!'
+                    : 'Intenta cambiar los filtros o crea un nuevo desafío'}
+                </p>
+                <Button onClick={() => router.push('/desafios/crear')}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Crear Desafío
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {desafiosFiltrados.map((desafio) => {
               const userRole = getUserRole(desafio)
               const isInvited = userRole.includes('Invitado')
               const canAcceptReject = isInvited && desafio.estado === 'pendiente'
@@ -501,9 +557,10 @@ export default function DesafiosPage() {
                   </CardContent>
                 </Card>
               )
-            })}
-          </div>
-        )}
+              })}
+            </div>
+          )
+        })()}
       </div>
     </div>
   )

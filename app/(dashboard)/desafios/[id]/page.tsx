@@ -7,11 +7,12 @@ import { useAuth } from '@/components/auth/auth-context'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Trophy, Calendar, MapPin, Users, UserPlus, XCircle, CheckCircle, Star } from 'lucide-react'
+import { Trophy, Calendar, MapPin, Users, UserPlus, XCircle, CheckCircle, Star, ArrowLeft, Clock, Flame } from 'lucide-react'
 
 export default function DesafioDetailPage() {
   const router = useRouter()
@@ -43,7 +44,7 @@ export default function DesafioDetailPage() {
     if (id) {
       loadDesafio()
     }
-  }, [id, router])
+  }, [id, router, isAuthenticated])
 
   const loadDesafio = async () => {
     setLoading(true)
@@ -202,10 +203,56 @@ export default function DesafioDetailPage() {
     )
   }
 
+  const getEstadoBadge = (estado: string) => {
+    const config: Record<string, { variant: 'default' | 'secondary' | 'outline' | 'destructive', icon: any, label: string, color: string }> = {
+      pendiente: { variant: 'secondary', icon: Clock, label: 'PENDIENTE', color: 'bg-yellow-500' },
+      aceptado: { variant: 'default', icon: CheckCircle, label: 'ACEPTADO', color: 'bg-green-500' },
+      finalizado: { variant: 'outline', icon: Trophy, label: 'FINALIZADO', color: 'bg-blue-500' },
+      cancelado: { variant: 'destructive', icon: XCircle, label: 'CANCELADO', color: 'bg-red-500' }
+    }
+
+    const { variant, icon: Icon, label, color } = config[estado] || config.pendiente
+
+    return (
+      <Badge variant={variant} className="flex items-center gap-1">
+        <Icon className="h-3 w-3" />
+        {label}
+      </Badge>
+    )
+  }
+
+  const renderPlayerAvatar = (persona: any, size: 'sm' | 'md' | 'lg' = 'md') => {
+    if (!persona) return null
+    
+    const initials = `${persona.nombre?.[0] || ''}${persona.apellido?.[0] || ''}`.toUpperCase()
+    const sizeClasses = {
+      sm: 'h-8 w-8 text-xs',
+      md: 'h-10 w-10 text-sm',
+      lg: 'h-12 w-12 text-base'
+    }
+
+    return (
+      <div className="flex items-center gap-2">
+        <Avatar className={`${sizeClasses[size]} border-2 border-background ring-2 ring-primary/20`}>
+          <AvatarImage src={persona.avatarUrl || `/placeholder-user.png`} alt={`${persona.nombre} ${persona.apellido}`} />
+          <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/40 text-primary-foreground font-bold">
+            {initials}
+          </AvatarFallback>
+        </Avatar>
+        <span className="font-medium">{persona.nombre} {persona.apellido}</span>
+      </div>
+    )
+  }
+
   if (loading) {
     return (
       <div className="container mx-auto py-8">
-        <p>Cargando desafío...</p>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center space-y-4">
+            <Trophy className="h-12 w-12 mx-auto animate-bounce text-primary" />
+            <p className="text-muted-foreground">Cargando desafío...</p>
+          </div>
+        </div>
       </div>
     )
   }
@@ -213,10 +260,13 @@ export default function DesafioDetailPage() {
   if (error || !desafio) {
     return (
       <div className="container mx-auto py-8">
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-red-600">{error || 'Desafío no encontrado'}</p>
-            <Button onClick={() => router.push('/desafios')} className="mt-4">
+        <Card className="border-destructive">
+          <CardContent className="py-16 text-center">
+            <XCircle className="h-16 w-16 mx-auto text-destructive mb-4" />
+            <p className="text-xl font-semibold mb-2">Error al cargar el desafío</p>
+            <p className="text-muted-foreground mb-6">{error || 'Desafío no encontrado'}</p>
+            <Button onClick={() => router.push('/desafios')}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
               Volver a Desafíos
             </Button>
           </CardContent>
@@ -227,94 +277,129 @@ export default function DesafioDetailPage() {
 
   return (
     <div className="container mx-auto py-8 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Trophy className="h-8 w-8" />
-            Detalle del Desafío
-          </h1>
-          <Badge className="mt-2" variant={
-            desafio.estado === 'pendiente' ? 'secondary' :
-            desafio.estado === 'aceptado' ? 'default' :
-            desafio.estado === 'finalizado' ? 'outline' : 'destructive'
-          }>
-            {desafio.estado.toUpperCase()}
-          </Badge>
+      {/* Header mejorado con gradiente */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-primary/5 to-background p-8 border border-primary/20">
+        <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,transparent,black)]" />
+        <div className="relative flex justify-between items-start">
+          <div className="space-y-3">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => router.push('/desafios')}
+              className="mb-2"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Volver
+            </Button>
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-primary/20 rounded-xl">
+                <Trophy className="h-8 w-8 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold mb-2">Detalle del Desafío</h1>
+                <p className="text-lg text-muted-foreground">{desafio.deporte?.nombre || 'Sin deporte'}</p>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            {getEstadoBadge(desafio.estado)}
+          </div>
         </div>
-        <Button variant="outline" onClick={() => router.push('/desafios')}>
-          Volver
-        </Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Información del Partido</CardTitle>
+      {/* Información del partido y acciones */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Información del Partido - 2 columnas */}
+        <Card className="lg:col-span-2 border-2">
+          <CardHeader className="bg-gradient-to-br from-muted/50 to-background">
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-primary" />
+              Información del Partido
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Deporte</p>
-              <p className="font-semibold">{desafio.deporte?.nombre || 'Sin deporte'}</p>
-            </div>
-
-            <div className="flex items-start gap-2">
-              <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div>
-                <p className="text-sm text-muted-foreground">Ubicación</p>
-                <p className="font-semibold">{desafio.reserva?.disponibilidad?.cancha?.club?.nombre || 'Club'}</p>
-                <p className="text-sm">{desafio.reserva?.disponibilidad?.cancha?.nombre || 'Cancha'}</p>
+          <CardContent className="pt-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Ubicación */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase">
+                  <MapPin className="h-4 w-4" />
+                  Ubicación
+                </div>
+                <div className="pl-6">
+                  <p className="font-bold text-lg">{desafio.reserva?.disponibilidad?.cancha?.club?.nombre || 'Club'}</p>
+                  <p className="text-muted-foreground">{desafio.reserva?.disponibilidad?.cancha?.nombre || 'Cancha'}</p>
+                </div>
               </div>
-            </div>
 
-            <div className="flex items-start gap-2">
-              <Calendar className="h-5 w-5 text-muted-foreground mt-0.5" />
-              <div>
-                <p className="text-sm text-muted-foreground">Fecha y Hora</p>
-                <p className="font-semibold">
-                  {desafio.reserva?.fechaHora ? new Date(desafio.reserva.fechaHora).toLocaleDateString('es-AR', {
-                    weekday: 'long',
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
-                  }) : 'Fecha no disponible'}
-                </p>
-                <p className="text-sm">
-                  {desafio.reserva?.disponibilidad?.horario?.horaInicio || '--:--'} -{' '}
-                  {desafio.reserva?.disponibilidad?.horario?.horaFin || '--:--'}
-                </p>
-              </div>
-            </div>
-
-            {desafio.estado === 'finalizado' && (
-              <div className="pt-4 border-t">
-                <p className="text-sm text-muted-foreground">Resultado Final</p>
-                <p className="font-bold text-lg">
-                  Ganador: {desafio.ganador === 'creador' ? 'Equipo Creador' : 'Equipo Desafiado'}
-                </p>
-                {desafio.golesCreador !== null && desafio.golesDesafiado !== null && (
-                  <p className="text-xl font-semibold">
-                    {desafio.golesCreador} - {desafio.golesDesafiado}
+              {/* Fecha y Hora */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase">
+                  <Calendar className="h-4 w-4" />
+                  Fecha y Hora
+                </div>
+                <div className="pl-6">
+                  <p className="font-bold text-lg">
+                    {desafio.reserva?.fechaHora ? new Date(desafio.reserva.fechaHora).toLocaleDateString('es-AR', {
+                      weekday: 'long',
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric'
+                    }) : 'Fecha no disponible'}
                   </p>
-                )}
+                  <p className="text-muted-foreground">
+                    {desafio.reserva?.disponibilidad?.horario?.horaInicio || '--:--'} - {desafio.reserva?.disponibilidad?.horario?.horaFin || '--:--'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Resultado Final */}
+            {desafio.estado === 'finalizado' && desafio.ganador && (
+              <div className="mt-6 pt-6 border-t">
+                <div className="bg-gradient-to-br from-yellow-500/10 to-transparent rounded-xl p-6 border border-yellow-500/20">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Trophy className="h-8 w-8 text-yellow-500" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Ganador</p>
+                        <p className="text-2xl font-bold">
+                          {desafio.ganador === 'creador' ? 'Equipo Creador' : 'Equipo Desafiado'}
+                        </p>
+                      </div>
+                    </div>
+                    {desafio.golesCreador !== null && desafio.golesDesafiado !== null && (
+                      <div className="text-right">
+                        <p className="text-sm text-muted-foreground">Resultado</p>
+                        <p className="text-4xl font-bold">
+                          {desafio.golesCreador} - {desafio.golesDesafiado}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Acciones</CardTitle>
+        {/* Acciones - 1 columna */}
+        <Card className="border-2">
+          <CardHeader className="bg-gradient-to-br from-muted/50 to-background">
+            <CardTitle className="flex items-center gap-2">
+              <Flame className="h-5 w-5 text-primary" />
+              Acciones
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="pt-6 space-y-3">
             {isInvited() && desafio.estado === 'pendiente' && (
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">Has sido invitado a este desafío</p>
+              <div className="space-y-3 p-4 bg-primary/5 rounded-lg border border-primary/20">
+                <p className="text-sm font-semibold">Has sido invitado a este desafío</p>
                 <div className="flex gap-2">
-                  <Button onClick={handleAccept} className="flex-1">
+                  <Button onClick={handleAccept} className="flex-1 bg-green-600 hover:bg-green-700">
                     <CheckCircle className="h-4 w-4 mr-2" />
                     Aceptar
                   </Button>
-                  <Button onClick={handleReject} variant="outline" className="flex-1">
+                  <Button onClick={handleReject} variant="outline" className="flex-1 border-red-200 text-red-600 hover:bg-red-50">
                     <XCircle className="h-4 w-4 mr-2" />
                     Rechazar
                   </Button>
@@ -322,30 +407,26 @@ export default function DesafioDetailPage() {
               </div>
             )}
 
-            {canCancel() && desafio.estado !== 'finalizado' && desafio.estado !== 'cancelado' && (
-              <Button onClick={handleCancelar} variant="destructive" className="w-full">
-                <XCircle className="h-4 w-4 mr-2" />
-                Cancelar Desafío
-              </Button>
-            )}
-
             {canFinalize() && (
               <Dialog open={showFinalizarModal} onOpenChange={setShowFinalizarModal}>
                 <DialogTrigger asChild>
-                  <Button className="w-full">
-                    <Trophy className="h-4 w-4 mr-2" />
+                  <Button className="w-full" size="lg">
+                    <Trophy className="h-5 w-5 mr-2" />
                     Cargar Resultado
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="sm:max-w-md">
                   <DialogHeader>
-                    <DialogTitle>Finalizar Desafío</DialogTitle>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Trophy className="h-5 w-5 text-primary" />
+                      Finalizar Desafío
+                    </DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
                     <div>
                       <Label>¿Quién ganó?</Label>
                       <Select value={ganadorLado} onValueChange={(v: any) => setGanadorLado(v)}>
-                        <SelectTrigger>
+                        <SelectTrigger className="mt-2">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -358,6 +439,7 @@ export default function DesafioDetailPage() {
                     <div>
                       <Label>Resultado (opcional)</Label>
                       <Input
+                        className="mt-2"
                         placeholder="7-5"
                         value={resultado}
                         onChange={(e) => setResultado(e.target.value)}
@@ -375,10 +457,10 @@ export default function DesafioDetailPage() {
                             key={star}
                             type="button"
                             onClick={() => setValoracion(star)}
-                            className="focus:outline-none"
+                            className="focus:outline-none transition-transform hover:scale-110"
                           >
                             <Star
-                              className={`h-6 w-6 ${
+                              className={`h-7 w-7 ${
                                 star <= valoracion ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
                               }`}
                             />
@@ -387,22 +469,44 @@ export default function DesafioDetailPage() {
                       </div>
                     </div>
 
-                    <Button onClick={handleFinalizar} className="w-full">
+                    <Button onClick={handleFinalizar} className="w-full" size="lg">
                       Finalizar Desafío
                     </Button>
                   </div>
                 </DialogContent>
               </Dialog>
             )}
+
+            {canCancel() && desafio.estado !== 'finalizado' && desafio.estado !== 'cancelado' && (
+              <Button onClick={handleCancelar} variant="destructive" className="w-full">
+                <XCircle className="h-4 w-4 mr-2" />
+                Cancelar Desafío
+              </Button>
+            )}
+
+            {!isInvited() && !canFinalize() && !canCancel() && (
+              <div className="text-center py-8 text-muted-foreground">
+                <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">No hay acciones disponibles</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
 
+      {/* Equipos */}
       <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
+        {/* Equipo Creador */}
+        <Card className="border-2 hover:shadow-lg transition-shadow">
+          <CardHeader className="bg-gradient-to-br from-blue-500/10 to-background border-b">
             <div className="flex justify-between items-center">
-              <CardTitle>Equipo Creador</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-blue-500" />
+                Equipo Creador
+                <Badge variant="secondary" className="ml-2">
+                  {(desafio.jugadoresCreador?.length || 0) + 1}
+                </Badge>
+              </CardTitle>
               {canInvite('creador') && desafio.estado !== 'finalizado' && desafio.estado !== 'cancelado' && (
                 <Dialog open={showInviteModal && inviteSide === 'creador'} onOpenChange={(open) => {
                   if (open) setInviteSide('creador')
@@ -422,6 +526,7 @@ export default function DesafioDetailPage() {
                       <div>
                         <Label>Buscar jugadores</Label>
                         <Input
+                          className="mt-2"
                           placeholder="Nombre, apellido o email..."
                           value={searchQuery}
                           onChange={(e) => handleSearch(e.target.value)}
@@ -433,9 +538,9 @@ export default function DesafioDetailPage() {
                           {searchResults.map((persona) => (
                             <div
                               key={persona.id}
-                              className="flex items-center justify-between p-2 border rounded hover:bg-accent"
+                              className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent transition-colors"
                             >
-                              <span>{persona.nombre} {persona.apellido}</span>
+                              <span className="font-medium">{persona.nombre} {persona.apellido}</span>
                               <input
                                 type="checkbox"
                                 checked={selectedPersonas.includes(persona.id)}
@@ -446,6 +551,7 @@ export default function DesafioDetailPage() {
                                     setSelectedPersonas(selectedPersonas.filter(id => id !== persona.id))
                                   }
                                 }}
+                                className="h-4 w-4"
                               />
                             </div>
                           ))}
@@ -461,53 +567,70 @@ export default function DesafioDetailPage() {
               )}
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="font-semibold">Capitán:</div>
-              <div className="flex items-center justify-between p-2 bg-accent rounded">
-                <span>{desafio.creador?.nombre || 'Sin nombre'} {desafio.creador?.apellido || ''}</span>
-                <Badge>Creador</Badge>
+          <CardContent className="pt-6">
+            <div className="space-y-3">
+              {/* Capitán */}
+              <div className="p-3 bg-gradient-to-r from-blue-500/10 to-transparent rounded-lg border border-blue-500/20">
+                <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Capitán</p>
+                {renderPlayerAvatar(desafio.creador, 'md')}
               </div>
 
+              {/* Jugadores confirmados */}
               {desafio.jugadoresCreador && desafio.jugadoresCreador.length > 0 && (
-                <>
-                  <div className="font-semibold mt-4">Jugadores confirmados:</div>
-                  {desafio.jugadoresCreador.map((jugador) => (
-                    <div key={jugador.id} className="flex items-center justify-between p-2 border rounded">
-                      <span>{jugador.nombre} {jugador.apellido}</span>
-                      {isAdmin && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleRemovePlayer(jugador.id, 'creador')}
-                        >
-                          <XCircle className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                </>
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Jugadores confirmados</p>
+                  <div className="space-y-2">
+                    {desafio.jugadoresCreador.map((jugador) => (
+                      <div key={jugador.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors">
+                        {renderPlayerAvatar(jugador, 'sm')}
+                        {isAdmin && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleRemovePlayer(jugador.id, 'creador')}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <XCircle className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
 
+              {/* Invitados pendientes */}
               {desafio.invitadosCreador && desafio.invitadosCreador.length > 0 && (
-                <>
-                  <div className="font-semibold mt-4">Invitados pendientes:</div>
-                  {desafio.invitadosCreador.map((invitado) => (
-                    <div key={invitado.id} className="flex items-center justify-between p-2 border rounded opacity-60">
-                      <span>{invitado.nombre} {invitado.apellido}</span>
-                      <Badge variant="secondary">Pendiente</Badge>
-                    </div>
-                  ))}
-                </>
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Invitados pendientes</p>
+                  <div className="space-y-2">
+                    {desafio.invitadosCreador.map((invitado) => (
+                      <div key={invitado.id} className="flex items-center justify-between p-3 border rounded-lg opacity-60 bg-muted/30">
+                        {renderPlayerAvatar(invitado, 'sm')}
+                        <Badge variant="secondary" className="text-xs">
+                          <Clock className="h-3 w-3 mr-1" />
+                          Pendiente
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
+        {/* Equipo Desafiado */}
+        <Card className="border-2 hover:shadow-lg transition-shadow">
+          <CardHeader className="bg-gradient-to-br from-red-500/10 to-background border-b">
             <div className="flex justify-between items-center">
-              <CardTitle>Equipo Desafiado</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-red-500" />
+                Equipo Desafiado
+                <Badge variant="secondary" className="ml-2">
+                  {desafio.jugadoresDesafiados?.length || 0}
+                </Badge>
+              </CardTitle>
               {canInvite('desafiado') && desafio.estado !== 'finalizado' && desafio.estado !== 'cancelado' && (
                 <Dialog open={showInviteModal && inviteSide === 'desafiado'} onOpenChange={(open) => {
                   if (open) setInviteSide('desafiado')
@@ -527,6 +650,7 @@ export default function DesafioDetailPage() {
                       <div>
                         <Label>Buscar jugadores</Label>
                         <Input
+                          className="mt-2"
                           placeholder="Nombre, apellido o email..."
                           value={searchQuery}
                           onChange={(e) => handleSearch(e.target.value)}
@@ -538,9 +662,9 @@ export default function DesafioDetailPage() {
                           {searchResults.map((persona) => (
                             <div
                               key={persona.id}
-                              className="flex items-center justify-between p-2 border rounded hover:bg-accent"
+                              className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent transition-colors"
                             >
-                              <span>{persona.nombre} {persona.apellido}</span>
+                              <span className="font-medium">{persona.nombre} {persona.apellido}</span>
                               <input
                                 type="checkbox"
                                 checked={selectedPersonas.includes(persona.id)}
@@ -551,6 +675,7 @@ export default function DesafioDetailPage() {
                                     setSelectedPersonas(selectedPersonas.filter(id => id !== persona.id))
                                   }
                                 }}
+                                className="h-4 w-4"
                               />
                             </div>
                           ))}
@@ -566,42 +691,53 @@ export default function DesafioDetailPage() {
               )}
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
+          <CardContent className="pt-6">
+            <div className="space-y-3">
               {desafio.jugadoresDesafiados && desafio.jugadoresDesafiados.length > 0 ? (
                 <>
-                  <div className="font-semibold">Jugadores confirmados:</div>
-                  {desafio.jugadoresDesafiados.map((jugador) => (
-                    <div key={jugador.id} className="flex items-center justify-between p-2 border rounded">
-                      <span>{jugador.nombre} {jugador.apellido}</span>
-                      {isAdmin && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleRemovePlayer(jugador.id, 'desafiado')}
-                        >
-                          <XCircle className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
+                  <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Jugadores confirmados</p>
+                  <div className="space-y-2">
+                    {desafio.jugadoresDesafiados.map((jugador) => (
+                      <div key={jugador.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors">
+                        {renderPlayerAvatar(jugador, 'sm')}
+                        {isAdmin && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleRemovePlayer(jugador.id, 'desafiado')}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <XCircle className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </>
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  No hay jugadores confirmados aún
-                </p>
+                <div className="text-center py-12">
+                  <Users className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
+                  <p className="text-sm text-muted-foreground font-medium">No hay jugadores confirmados aún</p>
+                  <p className="text-xs text-muted-foreground mt-1">Invita jugadores para formar el equipo</p>
+                </div>
               )}
 
+              {/* Invitados pendientes */}
               {desafio.invitadosDesafiados && desafio.invitadosDesafiados.length > 0 && (
-                <>
-                  <div className="font-semibold mt-4">Invitados pendientes:</div>
-                  {desafio.invitadosDesafiados.map((invitado) => (
-                    <div key={invitado.id} className="flex items-center justify-between p-2 border rounded opacity-60">
-                      <span>{invitado.nombre} {invitado.apellido}</span>
-                      <Badge variant="secondary">Pendiente</Badge>
-                    </div>
-                  ))}
-                </>
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase mb-2 mt-4">Invitados pendientes</p>
+                  <div className="space-y-2">
+                    {desafio.invitadosDesafiados.map((invitado) => (
+                      <div key={invitado.id} className="flex items-center justify-between p-3 border rounded-lg opacity-60 bg-muted/30">
+                        {renderPlayerAvatar(invitado, 'sm')}
+                        <Badge variant="secondary" className="text-xs">
+                          <Clock className="h-3 w-3 mr-1" />
+                          Pendiente
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
           </CardContent>
