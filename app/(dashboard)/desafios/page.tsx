@@ -446,30 +446,42 @@ export default function DesafiosPage() {
                     <div className="space-y-3 pt-3 border-t">
                       {/* Equipo Creador */}
                       <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-semibold text-muted-foreground uppercase">Equipo Creador</span>
-                          <Badge variant="secondary" className="text-xs">
-                            {(desafio.jugadoresCreador?.length || 0) + 1}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center gap-1 flex-wrap">
-                          {desafio.creador && renderPlayerAvatar(desafio.creador, true)}
-                          {desafio.jugadoresCreador?.slice(0, 4).map((jugador) => (
-                            <div key={jugador.id}>
-                              {renderPlayerAvatar(jugador, true)}
-                            </div>
-                          ))}
-                          {desafio.jugadoresCreador && desafio.jugadoresCreador.length > 4 && (
-                            <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-xs font-semibold">
-                              +{desafio.jugadoresCreador.length - 4}
-                            </div>
-                          )}
-                          {desafio.invitadosCreador && desafio.invitadosCreador.length > 0 && (
-                            <Badge variant="outline" className="text-xs ml-2">
-                              +{desafio.invitadosCreador.length} invitado{desafio.invitadosCreador.length > 1 ? 's' : ''}
-                            </Badge>
-                          )}
-                        </div>
+                        {(() => {
+                          // Filtrar jugadores que no sean el creador para evitar duplicados
+                          const jugadoresSinCreador = desafio.jugadoresCreador?.filter(
+                            j => j.id !== desafio.creador?.id
+                          ) || []
+                          const totalJugadores = jugadoresSinCreador.length + 1 // +1 por el capitán
+                          
+                          return (
+                            <>
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs font-semibold text-muted-foreground uppercase">Equipo Creador</span>
+                                <Badge variant="secondary" className="text-xs">
+                                  {totalJugadores}
+                                </Badge>
+                              </div>
+                              <div className="flex items-center gap-1 flex-wrap">
+                                {desafio.creador && renderPlayerAvatar(desafio.creador, true)}
+                                {jugadoresSinCreador.slice(0, 4).map((jugador) => (
+                                  <div key={jugador.id}>
+                                    {renderPlayerAvatar(jugador, true)}
+                                  </div>
+                                ))}
+                                {jugadoresSinCreador.length > 4 && (
+                                  <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-xs font-semibold">
+                                    +{jugadoresSinCreador.length - 4}
+                                  </div>
+                                )}
+                                {desafio.invitadosCreador && desafio.invitadosCreador.length > 0 && (
+                                  <Badge variant="outline" className="text-xs ml-2">
+                                    +{desafio.invitadosCreador.length} invitado{desafio.invitadosCreador.length > 1 ? 's' : ''}
+                                  </Badge>
+                                )}
+                              </div>
+                            </>
+                          )
+                        })()}
                       </div>
 
                       {/* VS */}

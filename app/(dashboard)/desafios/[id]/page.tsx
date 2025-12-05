@@ -618,7 +618,13 @@ export default function DesafioDetailPage() {
                 <Users className="h-5 w-5 text-blue-500" />
                 Equipo Creador
                 <Badge variant="secondary" className="ml-2">
-                  {(desafio.jugadoresCreador?.length || 0) + 1}
+                  {(() => {
+                    // Filtrar jugadores que no sean el creador para evitar duplicados
+                    const jugadoresSinCreador = desafio.jugadoresCreador?.filter(
+                      j => j.id !== desafio.creador?.id
+                    ) || []
+                    return jugadoresSinCreador.length + 1 // +1 por el capitán
+                  })()}
                 </Badge>
               </CardTitle>
               {canInvite('creador') && desafio.estado !== 'finalizado' && desafio.estado !== 'cancelado' && (
@@ -690,28 +696,35 @@ export default function DesafioDetailPage() {
               </div>
 
               {/* Jugadores confirmados */}
-              {desafio.jugadoresCreador && desafio.jugadoresCreador.length > 0 && (
-                <div>
-                  <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Jugadores confirmados</p>
-                  <div className="space-y-2">
-                    {desafio.jugadoresCreador.map((jugador) => (
-                      <div key={jugador.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors">
-                        {renderPlayerAvatar(jugador, 'sm')}
-                        {isAdmin && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleRemovePlayer(jugador.id, 'creador')}
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                          >
-                            <XCircle className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    ))}
+              {(() => {
+                // Filtrar jugadores que no sean el creador para evitar duplicados
+                const jugadoresSinCreador = desafio.jugadoresCreador?.filter(
+                  j => j.id !== desafio.creador?.id
+                ) || []
+                
+                return jugadoresSinCreador.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Jugadores confirmados</p>
+                    <div className="space-y-2">
+                      {jugadoresSinCreador.map((jugador) => (
+                        <div key={jugador.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/50 transition-colors">
+                          {renderPlayerAvatar(jugador, 'sm')}
+                          {isAdmin && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleRemovePlayer(jugador.id, 'creador')}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <XCircle className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )
+              })()}
 
               {/* Invitados pendientes */}
               {desafio.invitadosCreador && desafio.invitadosCreador.length > 0 && (
