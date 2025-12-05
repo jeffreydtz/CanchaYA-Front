@@ -164,30 +164,31 @@ export default function DesafioDetailPage() {
 
     if (lado === 'creador') {
       return (
-        desafio.creador.id === personaId ||
-        desafio.jugadoresCreador.some(j => j.id === personaId)
+        desafio.creador?.id === personaId ||
+        desafio.jugadoresCreador?.some(j => j.id === personaId) || false
       )
     } else {
-      return desafio.jugadoresDesafiados.some(j => j.id === personaId)
+      return desafio.jugadoresDesafiados?.some(j => j.id === personaId) || false
     }
   }
 
   const canCancel = (): boolean => {
     if (!desafio || !personaId) return false
     if (isAdmin) return true
-    return desafio.creador.id === personaId
+    return desafio.creador?.id === personaId
   }
 
   const canFinalize = (): boolean => {
     if (!desafio || !personaId) return false
     if (desafio.estado !== 'aceptado') return false
 
-    const isPast = new Date(desafio.reserva.fechaHora) < new Date()
+    const isPast = desafio.reserva?.fechaHora ? new Date(desafio.reserva.fechaHora) < new Date() : false
     if (!isPast) return false
 
     const isParticipant =
-      desafio.jugadoresCreador.some(j => j.id === personaId) ||
-      desafio.jugadoresDesafiados.some(j => j.id === personaId)
+      desafio.jugadoresCreador?.some(j => j.id === personaId) ||
+      desafio.jugadoresDesafiados?.some(j => j.id === personaId) ||
+      false
 
     return isParticipant
   }
@@ -195,8 +196,9 @@ export default function DesafioDetailPage() {
   const isInvited = (): boolean => {
     if (!desafio || !personaId) return false
     return (
-      desafio.invitadosCreador.some(i => i.id === personaId) ||
-      desafio.invitadosDesafiados.some(i => i.id === personaId)
+      desafio.invitadosCreador?.some(i => i.id === personaId) ||
+      desafio.invitadosDesafiados?.some(i => i.id === personaId) ||
+      false
     )
   }
 
@@ -252,15 +254,15 @@ export default function DesafioDetailPage() {
           <CardContent className="space-y-4">
             <div>
               <p className="text-sm text-muted-foreground">Deporte</p>
-              <p className="font-semibold">{desafio.deporte.nombre}</p>
+              <p className="font-semibold">{desafio.deporte?.nombre || 'Sin deporte'}</p>
             </div>
 
             <div className="flex items-start gap-2">
               <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
               <div>
                 <p className="text-sm text-muted-foreground">Ubicación</p>
-                <p className="font-semibold">{desafio.reserva.disponibilidad.cancha.club.nombre}</p>
-                <p className="text-sm">{desafio.reserva.disponibilidad.cancha.nombre}</p>
+                <p className="font-semibold">{desafio.reserva?.disponibilidad?.cancha?.club?.nombre || 'Club'}</p>
+                <p className="text-sm">{desafio.reserva?.disponibilidad?.cancha?.nombre || 'Cancha'}</p>
               </div>
             </div>
 
@@ -269,16 +271,16 @@ export default function DesafioDetailPage() {
               <div>
                 <p className="text-sm text-muted-foreground">Fecha y Hora</p>
                 <p className="font-semibold">
-                  {new Date(desafio.reserva.fechaHora).toLocaleDateString('es-AR', {
+                  {desafio.reserva?.fechaHora ? new Date(desafio.reserva.fechaHora).toLocaleDateString('es-AR', {
                     weekday: 'long',
                     day: 'numeric',
                     month: 'long',
                     year: 'numeric'
-                  })}
+                  }) : 'Fecha no disponible'}
                 </p>
                 <p className="text-sm">
-                  {desafio.reserva.disponibilidad.horario.horaInicio} -{' '}
-                  {desafio.reserva.disponibilidad.horario.horaFin}
+                  {desafio.reserva?.disponibilidad?.horario?.horaInicio || '--:--'} -{' '}
+                  {desafio.reserva?.disponibilidad?.horario?.horaFin || '--:--'}
                 </p>
               </div>
             </div>
@@ -463,11 +465,11 @@ export default function DesafioDetailPage() {
             <div className="space-y-2">
               <div className="font-semibold">Capitán:</div>
               <div className="flex items-center justify-between p-2 bg-accent rounded">
-                <span>{desafio.creador.nombre} {desafio.creador.apellido}</span>
+                <span>{desafio.creador?.nombre || 'Sin nombre'} {desafio.creador?.apellido || ''}</span>
                 <Badge>Creador</Badge>
               </div>
 
-              {desafio.jugadoresCreador.length > 0 && (
+              {desafio.jugadoresCreador && desafio.jugadoresCreador.length > 0 && (
                 <>
                   <div className="font-semibold mt-4">Jugadores confirmados:</div>
                   {desafio.jugadoresCreador.map((jugador) => (
@@ -487,7 +489,7 @@ export default function DesafioDetailPage() {
                 </>
               )}
 
-              {desafio.invitadosCreador.length > 0 && (
+              {desafio.invitadosCreador && desafio.invitadosCreador.length > 0 && (
                 <>
                   <div className="font-semibold mt-4">Invitados pendientes:</div>
                   {desafio.invitadosCreador.map((invitado) => (
@@ -566,7 +568,7 @@ export default function DesafioDetailPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {desafio.jugadoresDesafiados.length > 0 ? (
+              {desafio.jugadoresDesafiados && desafio.jugadoresDesafiados.length > 0 ? (
                 <>
                   <div className="font-semibold">Jugadores confirmados:</div>
                   {desafio.jugadoresDesafiados.map((jugador) => (
@@ -590,7 +592,7 @@ export default function DesafioDetailPage() {
                 </p>
               )}
 
-              {desafio.invitadosDesafiados.length > 0 && (
+              {desafio.invitadosDesafiados && desafio.invitadosDesafiados.length > 0 && (
                 <>
                   <div className="font-semibold mt-4">Invitados pendientes:</div>
                   {desafio.invitadosDesafiados.map((invitado) => (
