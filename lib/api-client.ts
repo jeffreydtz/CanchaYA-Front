@@ -1110,9 +1110,37 @@ const apiClient = {
   },
 
   /**
-   * Obtener un desafío por ID - GET /desafios/{id}
+   * Obtener un desafío por ID
+   * Nota: El backend no tiene endpoint GET /desafios/:id
+   * Por lo tanto, obtenemos todos los desafíos y filtramos por ID
    */
-  getDesafio: (id: string) => apiRequest<Desafio>(`/desafios/${id}`),
+  getDesafio: async (id: string): Promise<ApiResponse<Desafio>> => {
+    const response = await apiRequest<Desafio[]>('/desafios')
+    
+    if (response.error || !response.data) {
+      return { 
+        error: response.error || 'Error al obtener desafíos', 
+        data: undefined,
+        status: response.status || 500
+      }
+    }
+    
+    const desafio = response.data.find(d => d.id === id)
+    
+    if (!desafio) {
+      return { 
+        error: 'Desafío no encontrado', 
+        data: undefined,
+        status: 404
+      }
+    }
+    
+    return { 
+      data: desafio, 
+      error: undefined,
+      status: 200
+    }
+  },
 
   /**
    * Crear desafío - POST /desafios

@@ -8,7 +8,6 @@ import Link from 'next/link'
 import HeroSection from '@/components/dashboard/hero-section'
 import CourtFilters from '@/components/dashboard/court-filters'
 import FeaturedCourts from '@/components/dashboard/featured-courts'
-import Navbar from '@/components/navbar/navbar'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { LanguageToggle } from '@/components/ui/language-toggle'
 import { FooterEasterEgg } from '@/components/easter-egg/footer-easter-egg'
@@ -49,8 +48,6 @@ export default function DashboardPage() {
         {/* Luxury background effects */}
         <div className="fixed inset-0 bg-grid opacity-20 pointer-events-none" />
         <div className="fixed inset-0 bg-gradient-to-br from-gold/5 via-transparent to-secondary/5 pointer-events-none" />
-
-        <Navbar />
 
         {/* Theme Toggle - Fixed Position with glamorous styling */}
         <div className="fixed bottom-6 right-6 z-50 group">
