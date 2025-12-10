@@ -78,7 +78,7 @@ export interface AuthMeResponse {
  */
 export interface JWTPayload {
   sub: string // User ID (UUID) - subject claim (JWT standard)
-  rol: string // User role: 'admin' | 'admin-club' | 'usuario' | custom business roles (e.g., 'recepcionista', 'cajero')
+  rol: string // User role: can be any system role or custom business role
   personaId: string // Person ID associated with user
   email: string // User email
   clubIds?: string[] // Array of club IDs if user is admin-club (optional)
@@ -109,7 +109,7 @@ export interface UserLegacy {
   nombre: string
   email: string
   telefono?: string
-  rol: string // Updated to accept any role: 'admin' | 'admin-club' | 'usuario' | custom business roles
+  rol: string // User role: can be any system role or custom business role
   activo: boolean
   deudaPendiente?: number
   estadoCuenta?: 'activo' | 'bloqueado'
@@ -622,11 +622,11 @@ export interface ReservasHeatmap {
 
 /**
  * Rol entity from backend
- * tipo: "sistema" (admin, admin-club, usuario) | "negocio" (custom roles created by admin)
+ * tipo: "sistema" (system roles - can include admin, admin-club, usuario, and other system roles) | "negocio" (custom business roles created by admin)
  */
 export interface Rol {
   id: string // UUID
-  nombre: string // e.g., "admin", "admin-club", "usuario", "recepcionista", "cajero", etc.
+  nombre: string // Role name (e.g., "admin", "admin-club", "usuario", "recepcionista", "cajero", or any other system/business role)
   tipo: 'sistema' | 'negocio'
 }
 
@@ -635,7 +635,7 @@ export interface Rol {
  * POST /api/roles
  */
 export interface CrearRolDto {
-  nombre: string // Must not be a reserved name (admin, admin-club, usuario)
+  nombre: string // Role name (must not conflict with existing system roles)
 }
 
 /**
@@ -663,7 +663,7 @@ export interface UsuarioAdmin {
     apellido: string
     email: string
   }
-  rol: string // Role name (e.g., "admin", "admin-club", "usuario", "recepcionista")
+  rol: string // Role name (can be any system or business role)
   createdAt: string // ISO date
   updatedAt: string // ISO date
 }
@@ -2013,22 +2013,18 @@ const apiClient = {
 
   /**
    * Listar todos los roles - GET /api/roles (admin only)
-   * Returns both sistema (admin, admin-club, usuario) and negocio (custom) roles
-   * NOTE: Backend endpoint not implemented - returns mock data
+   * Returns both sistema (system roles) and negocio (custom business) roles
+   * NOTE: If backend endpoint fails, returns empty array to allow dynamic role management
    */
   getRoles: () => apiRequest<Rol[]>('/roles').catch(() => Promise.resolve({ 
-    data: [
-      { id: '1', nombre: 'admin', tipo: 'sistema' },
-      { id: '2', nombre: 'admin-club', tipo: 'sistema' },
-      { id: '3', nombre: 'usuario', tipo: 'sistema' }
-    ] as Rol[], 
+    data: [] as Rol[], 
     error: null 
   })),
 
   /**
    * Crear nuevo rol de negocio - POST /api/roles (admin only)
    * Creates a new business role for segmentation/UX purposes
-   * Cannot create reserved names (admin, admin-club, usuario)
+   * Cannot create roles with names that conflict with existing system roles
    * NOTE: Backend endpoint not implemented - returns mock success
    */
   crearRol: (data: CrearRolDto) =>

@@ -14,14 +14,16 @@ export default function LoginPage() {
     if (!loading && isAuthenticated) {
       let redirectPath = '/'
 
+      // Redirect based on role - admin and admin-club go to admin panel, others to home
+      // Note: System supports additional roles beyond these, but only admin/admin-club have admin panel access
       if (userRole === 'admin') {
         // Global admin redirects to admin dashboard with full access
         redirectPath = '/admin/dashboard'
       } else if (userRole === 'admin-club') {
         // Club-specific admin redirects to admin dashboard with club filter
         redirectPath = '/admin/dashboard'
-      } else if (userRole === 'usuario') {
-        // Regular users redirect to home/dashboard
+      } else {
+        // All other roles (usuario, and any other system/business roles) redirect to home
         redirectPath = '/'
       }
 

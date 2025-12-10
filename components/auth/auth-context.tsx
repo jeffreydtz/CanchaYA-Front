@@ -313,9 +313,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const isAuthenticated = !!user
+  // Note: These flags check for specific roles needed for authorization logic
+  // The system supports additional system roles beyond these, but these are used for admin panel access
   const isAdmin = user?.rol === 'admin'
   const isAdminClub = user?.rol === 'admin-club'
-  const isSuperAdmin = user?.rol === 'admin' // True for global admin
+  const isSuperAdmin = user?.rol === 'admin' // True for global admin (distinct from admin-club)
 
   const value: AuthContextType = {
     user,

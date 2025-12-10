@@ -70,12 +70,15 @@ export function LoginForm() {
             // Decode the cookie value since it's URL-encoded
             const token = decodeURIComponent(rawTokenCookie)
             const decoded = jwtDecode<JWTPayload>(token)
+            // Redirect based on role - admin and admin-club go to admin panel, all others to home
+            // Note: System supports additional roles beyond these, but only admin/admin-club have admin panel access
             if (decoded.rol === 'admin') {
               redirectPath = '/admin/dashboard' // Global admin - full access
             } else if (decoded.rol === 'admin-club') {
               redirectPath = '/admin/dashboard' // Club-specific admin - filtered access
-            } else if (decoded.rol === 'usuario') {
-              redirectPath = '/' // Regular user
+            } else {
+              // All other roles (usuario, and any other system/business roles) redirect to home
+              redirectPath = '/'
             }
           } catch (decodeError) {
             console.error('Error decoding token for redirect:', decodeError)

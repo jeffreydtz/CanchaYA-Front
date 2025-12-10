@@ -127,7 +127,7 @@ export default function RolesPage() {
                   }}
                 />
                 <p className="text-xs text-muted-foreground">
-                  No puede usar nombres reservados: admin, admin-club, usuario
+                  No puede usar nombres que ya existen en el sistema
                 </p>
               </div>
             </div>
