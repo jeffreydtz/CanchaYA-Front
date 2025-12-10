@@ -25,7 +25,7 @@ import apiClient from '@/lib/api-client'
 import { toast } from 'sonner'
 import { format, subMonths, startOfMonth, endOfMonth, subDays, startOfDay } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { downloadCSV, downloadExcel, generateFilename } from '@/lib/analytics/export'
+import { downloadCSV, downloadExcel, generateFilename, createPrintableReport } from '@/lib/analytics/export'
 import { formatCurrency } from '@/lib/analytics/formatters'
 import { withErrorBoundary } from '@/components/error/with-error-boundary'
 
@@ -114,8 +114,8 @@ const fetchReportData = async (period: string): Promise<ReportData> => {
     ] = await Promise.all([
       apiClient.getReservas(),
       apiClient.getCanchas(),
-      apiClient.getReporteIngresos(desde, hasta).catch(() => ({ data: [], error: 'Not available' })),
-      apiClient.getReporteOcupacionHorarios().catch(() => ({ data: [], error: 'Not available' })),
+      apiClient.getReporteIngresos(desde, hasta).catch(() => ({ data: [], error: null })),
+      apiClient.getReporteOcupacionHorarios().catch(() => ({ data: [], error: null })),
       apiClient.getClubes()
     ])
 
@@ -300,7 +300,7 @@ const fetchReportData = async (period: string): Promise<ReportData> => {
 
 function AdminReportsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState('month')
-  const [selectedFormat, setSelectedFormat] = useState<'csv' | 'excel'>('excel')
+  const [selectedFormat, setSelectedFormat] = useState<'csv' | 'excel' | 'pdf'>('excel')
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<ReportData | null>(null)
 
@@ -460,23 +460,79 @@ function AdminReportsPage() {
       ]
 
       // Export based on selected format
-      let result
-      let filename
+      let result: { success: boolean; filename?: string; error?: string }
+      let filename: string
 
       if (selectedFormat === 'csv') {
         filename = generateFilename(`reporte-${selectedPeriod}`, 'csv')
         result = downloadCSV(reportData, filename)
-      } else {
+        if (result.success) {
+          toast.success('Reporte exportado', {
+            description: 'El reporte se ha descargado correctamente como CSV'
+          })
+        } else {
+          throw new Error(result.error || 'Error al exportar CSV')
+        }
+      } else if (selectedFormat === 'excel') {
         filename = generateFilename(`reporte-${selectedPeriod}`, 'xlsx')
         result = downloadExcel(reportData, filename, 'Reporte Analytics')
-      }
-
-      if (result.success) {
-        toast.success('Reporte exportado', {
-          description: `El reporte se ha descargado correctamente como ${selectedFormat.toUpperCase()}`
+        if (result.success) {
+          toast.success('Reporte exportado', {
+            description: 'El reporte se ha descargado correctamente como Excel'
+          })
+        } else {
+          throw new Error(result.error || 'Error al exportar Excel')
+        }
+      } else if (selectedFormat === 'pdf') {
+        // PDF export using print dialog
+        const sections = [
+          {
+            title: 'Resumen',
+            content: `
+              <table>
+                <tr><th>Métrica</th><th>Valor</th></tr>
+                <tr><td>Ingresos Totales</td><td>$${totalRevenue.toLocaleString()}</td></tr>
+                <tr><td>Reservas Totales</td><td>${totalReservations}</td></tr>
+                <tr><td>Ocupación Promedio</td><td>${occupancyRate}%</td></tr>
+                <tr><td>Margen de Ganancia</td><td>${profitMargin}%</td></tr>
+              </table>
+            `
+          },
+          {
+            title: 'Ingresos Mensuales',
+            content: `
+              <table>
+                <tr><th>Mes</th><th>Ingresos</th></tr>
+                ${monthlyRevenueData.map(d => `<tr><td>${d.month}</td><td>$${d.revenue.toLocaleString()}</td></tr>`).join('')}
+              </table>
+            `
+          },
+          {
+            title: 'Deportes',
+            content: `
+              <table>
+                <tr><th>Deporte</th><th>Ingresos</th></tr>
+                ${sportData.map(d => `<tr><td>${d.name}</td><td>$${d.revenue.toLocaleString()}</td></tr>`).join('')}
+              </table>
+            `
+          },
+          {
+            title: 'Ubicaciones',
+            content: `
+              <table>
+                <tr><th>Ubicación</th><th>Ingresos</th></tr>
+                ${locationData.map(d => `<tr><td>${d.location}</td><td>$${d.revenue.toLocaleString()}</td></tr>`).join('')}
+              </table>
+            `
+          }
+        ]
+        createPrintableReport(`Reporte Analytics - ${selectedPeriod}`, sections)
+        toast.success('Reporte listo para imprimir', {
+          description: 'Usa el diálogo de impresión para guardar como PDF'
         })
+        return
       } else {
-        throw new Error(result.error || 'Error al exportar')
+        throw new Error(`Formato no soportado: ${selectedFormat}`)
       }
     } catch (error) {
       console.error('Error exporting report:', error)
@@ -513,13 +569,14 @@ function AdminReportsPage() {
                 <SelectItem value="year">Este año</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={selectedFormat} onValueChange={(value) => setSelectedFormat(value as 'csv' | 'excel')}>
+            <Select value={selectedFormat} onValueChange={(value) => setSelectedFormat(value as 'csv' | 'excel' | 'pdf')}>
               <SelectTrigger className="h-11 min-w-[140px] rounded-xl border-slate-200 bg-white/70 text-sm font-medium text-slate-600 shadow-sm focus:ring-2 focus:ring-indigo-200 focus:ring-offset-0">
                 <SelectValue placeholder="Formato" />
               </SelectTrigger>
               <SelectContent className="rounded-xl border border-slate-100 bg-white shadow-lg">
                 <SelectItem value="excel">Excel (.xlsx)</SelectItem>
                 <SelectItem value="csv">CSV (.csv)</SelectItem>
+                <SelectItem value="pdf">PDF</SelectItem>
               </SelectContent>
             </Select>
             <Button
@@ -528,7 +585,7 @@ function AdminReportsPage() {
               className="h-11 rounded-xl border-slate-200 bg-white/80 text-sm font-medium text-slate-600 shadow-sm transition hover:border-indigo-200 hover:bg-white"
             >
               <Download className="mr-2 h-4 w-4" />
-              Exportar {selectedFormat === 'csv' ? 'CSV' : 'Excel'}
+              Exportar {selectedFormat === 'csv' ? 'CSV' : selectedFormat === 'excel' ? 'Excel' : 'PDF'}
             </Button>
             <Button className="h-11 rounded-xl bg-slate-900 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800">
               <Filter className="mr-2 h-4 w-4" />

@@ -3,6 +3,7 @@
  * Functions for exporting data to various formats (CSV, JSON, Excel)
  */
 
+import * as XLSX from 'xlsx';
 import type { ExportOptions, ExportResult } from './types';
 import { formatMetricValue, formatDate, formatDateTime } from './formatters';
 import { REPORT_CONFIG } from './config';
@@ -178,9 +179,8 @@ function triggerDownload(blob: Blob, filename: string): void {
 // ============================================================================
 
 /**
- * Export data as Excel file (using HTML table)
- * Note: This is a simple implementation. For complex Excel features,
- * consider using a library like exceljs or xlsx
+ * Export data as Excel file (using xlsx library)
+ * Creates a proper .xlsx file with the data in a worksheet
  */
 export function downloadExcel(
   data: Record<string, any>[],
@@ -188,35 +188,21 @@ export function downloadExcel(
   sheetName: string = 'Datos'
 ): ExportResult {
   try {
-    const html = arrayToHTMLTable(data);
-    const excelContent = `
-      <html xmlns:o="urn:schemas-microsoft-com:office:office"
-            xmlns:x="urn:schemas-microsoft-com:office:excel"
-            xmlns="http://www.w3.org/TR/REC-html40">
-      <head>
-        <meta charset="utf-8">
-        <!--[if gte mso 9]>
-        <xml>
-          <x:ExcelWorkbook>
-            <x:ExcelWorksheets>
-              <x:ExcelWorksheet>
-                <x:Name>${sheetName}</x:Name>
-                <x:WorksheetOptions>
-                  <x:DisplayGridlines/>
-                </x:WorksheetOptions>
-              </x:ExcelWorksheet>
-            </x:ExcelWorksheets>
-          </x:ExcelWorkbook>
-        </xml>
-        <![endif]-->
-      </head>
-      <body>${html}</body>
-      </html>
-    `;
+    // Create worksheet from JSON data
+    const worksheet = XLSX.utils.json_to_sheet(data);
 
-    const blob = new Blob([excelContent], {
-      type: 'application/vnd.ms-excel;charset=utf-8;'
+    // Create workbook
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+
+    // Generate Excel file buffer
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+
+    // Create blob with proper MIME type for XLSX
+    const blob = new Blob([excelBuffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     });
+
     triggerDownload(blob, filename);
 
     return {

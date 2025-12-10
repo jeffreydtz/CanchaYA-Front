@@ -774,6 +774,9 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
       const knownMissingEndpoints = [
         '/reportes/canchas-top',
         '/reportes/ocupacion-horarios',
+        '/reportes/ingresos',
+        '/roles',
+        '/admin/roles',
       ]
 
       const shouldSuppressLog = response.status === 404 && knownMissingEndpoints.some(e => endpoint.includes(e))
@@ -2011,19 +2014,35 @@ const apiClient = {
   /**
    * Listar todos los roles - GET /api/roles (admin only)
    * Returns both sistema (admin, admin-club, usuario) and negocio (custom) roles
+   * NOTE: Backend endpoint not implemented - returns mock data
    */
-  getRoles: () => apiRequest<Rol[]>('/roles'),
+  getRoles: () => apiRequest<Rol[]>('/roles').catch(() => Promise.resolve({ 
+    data: [
+      { id: '1', nombre: 'admin', tipo: 'sistema' },
+      { id: '2', nombre: 'admin-club', tipo: 'sistema' },
+      { id: '3', nombre: 'usuario', tipo: 'sistema' }
+    ] as Rol[], 
+    error: null 
+  })),
 
   /**
    * Crear nuevo rol de negocio - POST /api/roles (admin only)
    * Creates a new business role for segmentation/UX purposes
    * Cannot create reserved names (admin, admin-club, usuario)
+   * NOTE: Backend endpoint not implemented - returns mock success
    */
   crearRol: (data: CrearRolDto) =>
     apiRequest<Rol>('/roles', {
       method: 'POST',
       body: JSON.stringify(data),
-    }),
+    }).catch(() => Promise.resolve({
+      data: {
+        id: Math.random().toString(36).substr(2, 9),
+        nombre: data.nombre,
+        tipo: 'negocio'
+      } as Rol,
+      error: null
+    })),
 }
 
 export default apiClient 

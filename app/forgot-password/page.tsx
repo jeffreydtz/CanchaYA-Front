@@ -21,6 +21,7 @@ type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>
 export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
+  const [sentEmail, setSentEmail] = useState<string>('')
 
   const {
     register,
@@ -31,12 +32,15 @@ export default function ForgotPasswordPage() {
     resolver: zodResolver(forgotPasswordSchema),
   })
 
+  const email = watch('email')
+
   const onSubmit = async (data: ForgotPasswordFormData) => {
     setIsLoading(true)
     try {
       // Simulate API call - replace with actual forgot password API
       await new Promise(resolve => setTimeout(resolve, 2000))
       
+      setSentEmail(data.email)
       setEmailSent(true)
       toast.success('Email enviado', {
         description: 'Revisa tu bandeja de entrada para restablecer tu contraseña.',
@@ -73,7 +77,7 @@ export default function ForgotPasswordPage() {
                   Hemos enviado un enlace de restablecimiento de contraseña a:
                 </p>
                 <p className="font-semibold text-primary">
-                  {email}
+                  {sentEmail}
                 </p>
                 <p className="text-xs text-gray-500">
                   Si no ves el email en unos minutos, revisa tu carpeta de spam.

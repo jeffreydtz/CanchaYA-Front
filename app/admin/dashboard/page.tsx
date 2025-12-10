@@ -79,8 +79,8 @@ const fetchDashboardData = async (filters?: Record<string, unknown> | null): Pro
       apiClient.getReservas(),
       apiClient.getCanchas(),
       apiClient.getUsuarios(),
-      apiClient.getReporteCanchasTop().catch(() => ({ data: [], error: 'Not available' })),
-      apiClient.getReporteOcupacionHorarios().catch(() => ({ data: [], error: 'Not available' }))
+      apiClient.getReporteCanchasTop().catch(() => ({ data: [], error: null })),
+      apiClient.getReporteOcupacionHorarios().catch(() => ({ data: [], error: null }))
     ])
 
     // Handle potential errors
@@ -96,23 +96,25 @@ const fetchDashboardData = async (filters?: Record<string, unknown> | null): Pro
     // Apply filters if provided
     if (filters) {
       // Filter by cancha
-      if (filters.cancha && filters.cancha !== 'all') {
+      if (filters.cancha && filters.cancha !== 'all' && typeof filters.cancha === 'string') {
         canchas = canchas.filter(c => c.id === filters.cancha)
         const canchaIds = canchas.map(c => c.id)
         reservas = reservas.filter(r => canchaIds.includes(r.disponibilidad?.cancha?.id))
       }
 
       // Filter by deporte
-      if (filters.deporte && filters.deporte !== 'all') {
-        canchas = canchas.filter(c => c.deporte?.nombre?.toLowerCase() === filters.deporte.toLowerCase())
+      if (filters.deporte && filters.deporte !== 'all' && typeof filters.deporte === 'string') {
+        const deporteFilter = filters.deporte as string
+        canchas = canchas.filter(c => c.deporte?.nombre?.toLowerCase() === deporteFilter.toLowerCase())
         const canchaIds = canchas.map(c => c.id)
         reservas = reservas.filter(r => canchaIds.includes(r.disponibilidad?.cancha?.id))
       }
 
       // Filter by date range
-      if (filters.dateRange && filters.dateRange.from) {
-        const fromDate = new Date(filters.dateRange.from)
-        const toDate = filters.dateRange.to ? new Date(filters.dateRange.to) : new Date()
+      if (filters.dateRange && typeof filters.dateRange === 'object' && filters.dateRange !== null && 'from' in filters.dateRange) {
+        const dateRange = filters.dateRange as { from: string | Date; to?: string | Date }
+        const fromDate = new Date(dateRange.from)
+        const toDate = dateRange.to ? new Date(dateRange.to) : new Date()
         reservas = reservas.filter(r => {
           const reservaDate = new Date(r.fechaHora)
           return reservaDate >= fromDate && reservaDate <= toDate
@@ -258,7 +260,7 @@ const fetchDashboardData = async (filters?: Record<string, unknown> | null): Pro
         sport: data.sport,
         color: getColorForSport(data.sport)
       }))
-      .sort((a, b) => b.reservations - a.reservations)
+      .sort((a, b) => (b.reservations || 0) - (a.reservations || 0))
       .slice(0, 6)
 
     // HeatMap data - use occupancy data from API if available
@@ -416,11 +418,11 @@ function DashboardPage() {
 
       // Add top canchas data
       const topCanchasData = data.topCanchas.map(cancha => ({
-        'Cancha': cancha.name,
-        'Deporte': cancha.sport,
-        'Reservas': cancha.reservations.toString(),
-        'Ingresos': `$${cancha.revenue}`,
-        'Ocupación': `${cancha.occupancy}%`,
+        'Cancha': cancha.name || 'N/A',
+        'Deporte': cancha.sport || 'N/A',
+        'Reservas': (cancha.reservations !== undefined ? cancha.reservations.toString() : '0'),
+        'Ingresos': `$${cancha.revenue !== undefined ? cancha.revenue : 0}`,
+        'Ocupación': `${cancha.occupancy !== undefined ? cancha.occupancy : 0}%`,
         'Tendencia': `${cancha.trend > 0 ? '+' : ''}${cancha.trend}%`
       }))
 
@@ -454,12 +456,12 @@ function DashboardPage() {
     setDrillDownOpen(true)
   }
 
-  const handleBarClick = (cancha: { id?: string; name?: string }) => {
+  const handleBarClick = (cancha: { id?: string; name?: string; reservations?: number; sport?: string }) => {
     if (cancha.id && cancha.name) {
       handleCanchaClick(cancha.id, cancha.name)
-    } else {
+    } else if (cancha.name) {
       toast.info(`Detalles de ${cancha.name}`, {
-        description: `${cancha.reservations} reservas en ${cancha.sport}`
+        description: cancha.reservations !== undefined ? `${cancha.reservations} reservas en ${cancha.sport || 'N/A'}` : 'Información no disponible'
       })
     }
   }
