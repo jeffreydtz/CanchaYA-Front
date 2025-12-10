@@ -78,7 +78,7 @@ export interface AuthMeResponse {
  */
 export interface JWTPayload {
   sub: string // User ID (UUID) - subject claim (JWT standard)
-  rol: 'admin' | 'admin-club' | 'usuario' // User role
+  rol: string // User role: 'admin' | 'admin-club' | 'usuario' | custom business roles (e.g., 'recepcionista', 'cajero')
   personaId: string // Person ID associated with user
   email: string // User email
   clubIds?: string[] // Array of club IDs if user is admin-club (optional)
@@ -774,8 +774,6 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
       const knownMissingEndpoints = [
         '/reportes/canchas-top',
         '/reportes/ocupacion-horarios',
-        '/roles',
-        '/admin/roles'
       ]
 
       const shouldSuppressLog = response.status === 404 && knownMissingEndpoints.some(e => endpoint.includes(e))
@@ -2007,22 +2005,22 @@ const apiClient = {
 
   // ===== ROLES =====
   // Module for managing system and business roles
-  // Base URL: /api/admin/roles (changed from /api/roles based on backend pattern)
+  // Base URL: /api/roles
   // Permissions: admin only
 
   /**
-   * Listar todos los roles - GET /api/admin/roles (admin only)
+   * Listar todos los roles - GET /api/roles (admin only)
    * Returns both sistema (admin, admin-club, usuario) and negocio (custom) roles
    */
-  getRoles: () => apiRequest<Rol[]>('/admin/roles'),
+  getRoles: () => apiRequest<Rol[]>('/roles'),
 
   /**
-   * Crear nuevo rol de negocio - POST /api/admin/roles (admin only)
+   * Crear nuevo rol de negocio - POST /api/roles (admin only)
    * Creates a new business role for segmentation/UX purposes
    * Cannot create reserved names (admin, admin-club, usuario)
    */
   crearRol: (data: CrearRolDto) =>
-    apiRequest<Rol>('/admin/roles', {
+    apiRequest<Rol>('/roles', {
       method: 'POST',
       body: JSON.stringify(data),
     }),

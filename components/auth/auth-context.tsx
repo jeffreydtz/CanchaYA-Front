@@ -31,7 +31,7 @@ interface AuthContextType {
   personaId: string | null // Added for backend API compatibility
   userId: string | null     // User ID from JWT
   clubIds: string[] // Array of club IDs for scoped access (admin-club users)
-  userRole: 'admin' | 'admin-club' | 'usuario' | null // Complete role information
+  userRole: string | null // Complete role information (admin, admin-club, usuario, or custom business roles)
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [personaId, setPersonaId] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
   const [clubIds, setClubIds] = useState<string[]>([])
-  const [userRole, setUserRole] = useState<'admin' | 'admin-club' | 'usuario' | null>(null)
+  const [userRole, setUserRole] = useState<string | null>(null)
 
   // Enable automatic token refresh
   useTokenRefresh()

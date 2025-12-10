@@ -3,7 +3,7 @@
  * Provides selected club state and filtering utilities for admin users
  */
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useAuth } from '@/components/auth/auth-context'
 
 export function useAdminClubFilter() {
@@ -11,9 +11,11 @@ export function useAdminClubFilter() {
   const [selectedClubId, setSelectedClubId] = useState<string | null>(null)
 
   // For admin-club users, automatically set to their first (or only) club
-  if (isAdminClub && clubIds && clubIds.length > 0 && !selectedClubId) {
-    setSelectedClubId(clubIds[0])
-  }
+  useEffect(() => {
+    if (isAdminClub && clubIds && clubIds.length > 0 && !selectedClubId) {
+      setSelectedClubId(clubIds[0])
+    }
+  }, [isAdminClub, clubIds, selectedClubId])
 
   const handleClubSelect = useCallback((clubId: string | null) => {
     setSelectedClubId(clubId)
