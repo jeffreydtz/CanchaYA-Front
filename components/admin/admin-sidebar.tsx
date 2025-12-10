@@ -26,7 +26,8 @@ import {
   Download,
   UserCog,
   ChevronDown,
-  Clock
+  Clock,
+  Shield
 } from "lucide-react"
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
@@ -95,16 +96,29 @@ const menuItems = [
     description: "Administrar reservas"
   },
   {
-    title: "Usuarios",
-    url: "/admin/usuarios",
-    icon: Users,
-    description: "Gestión de usuarios"
-  },
-  {
-    title: "Personas",
-    url: "/admin/personas",
-    icon: UserCog,
-    description: "Gestión de perfiles de personas"
+    title: "Administración",
+    icon: Shield,
+    description: "Gestión de usuarios y roles",
+    submenu: [
+      {
+        title: "Usuarios",
+        url: "/admin/usuarios",
+        icon: Users,
+        description: "Gestión de usuarios y asignación de roles"
+      },
+      {
+        title: "Roles",
+        url: "/admin/roles",
+        icon: Shield,
+        description: "Gestión de roles del sistema"
+      },
+      {
+        title: "Personas",
+        url: "/admin/personas",
+        icon: UserCog,
+        description: "Gestión de perfiles de personas"
+      }
+    ]
   },
   {
     title: "Reportes",
@@ -123,7 +137,7 @@ function clientLogout(router: ReturnType<typeof useRouter>) {
 export default function AdminSidebar() {
   const router = useRouter()
   const pathname = usePathname()
-  const [expandedItems, setExpandedItems] = useState<string[]>(['Analytics'])
+  const [expandedItems, setExpandedItems] = useState<string[]>(['Analytics', 'Administración'])
 
   const toggleExpand = (title: string) => {
     setExpandedItems(prev =>

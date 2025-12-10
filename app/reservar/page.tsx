@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Calendar } from '@/components/ui/calendar'
 import { toast } from 'sonner'
-import apiClient, { Club, Cancha, AvailabilitySlot, CanchaFoto } from '@/lib/api-client'
+import apiClient, { Club, Cancha, AvailabilitySlotRealTime, CanchaFoto } from '@/lib/api-client'
 import { Loader2, MapPin, Trophy, Calendar as CalendarIcon, Clock, CheckCircle2 } from 'lucide-react'
 import { CourtPhotosCarousel } from '@/components/court/court-photos-carousel'
 import {
@@ -25,7 +25,7 @@ import { jwtDecode } from 'jwt-decode'
 export default function ReservarPage() {
   const [clubs, setClubs] = useState<Club[]>([])
   const [canchas, setCanchas] = useState<Cancha[]>([])
-  const [availableSlots, setAvailableSlots] = useState<AvailabilitySlot[]>([])
+  const [availableSlots, setAvailableSlots] = useState<AvailabilitySlotRealTime[]>([])
   const [selectedClub, setSelectedClub] = useState<string>('')
   const [selectedCancha, setSelectedCancha] = useState<string>('')
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
@@ -102,15 +102,16 @@ export default function ReservarPage() {
       setSlotsLoading(true)
       try {
         const dateStr = format(selectedDate, 'yyyy-MM-dd')
-        const response = await apiClient.getDisponibilidadDinamica({
+        const response = await apiClient.getDisponibilidadRealTime({
           from: dateStr,
           to: dateStr,
           canchaId: selectedCancha
         })
 
         if (response.data) {
+          // Filter to only show free slots
           const slots = response.data
-            .filter(slot => slot.fecha === dateStr)
+            .filter(slot => slot.estado === 'libre' && slot.fecha === dateStr)
             .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio))
           setAvailableSlots(slots)
         } else {
@@ -147,7 +148,7 @@ export default function ReservarPage() {
     loadCanchaFotos()
   }, [selectedCancha])
 
-  const handleReserve = async (slot: AvailabilitySlot) => {
+  const handleReserve = async (slot: AvailabilitySlotRealTime) => {
     if (!personaId) {
       toast.error('Debes iniciar sesión para hacer una reserva')
       return
@@ -190,12 +191,12 @@ export default function ReservarPage() {
       }
 
       toast.success('¡Reserva creada exitosamente!', {
-        description: `${slot.canchaNombre} - ${format(selectedDate, "dd 'de' MMMM", { locale: es })} a las ${slot.horaInicio}`
+        description: `${slot.canchaNombre} - ${format(selectedDate, "dd 'de' MMMM", { locale: es })} a las ${slot.horaInicio.substring(0, 5)}`
       })
 
       // Recargar disponibilidad
       const dateStr2 = format(selectedDate, 'yyyy-MM-dd')
-      const availResponse = await apiClient.getDisponibilidadDinamica({
+      const availResponse = await apiClient.getDisponibilidadRealTime({
         from: dateStr2,
         to: dateStr2,
         canchaId: selectedCancha
@@ -203,7 +204,7 @@ export default function ReservarPage() {
 
       if (availResponse.data) {
         const slots = availResponse.data
-          .filter(s => s.fecha === dateStr2)
+          .filter(s => s.estado === 'libre' && s.fecha === dateStr2)
           .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio))
         setAvailableSlots(slots)
       }
@@ -374,19 +375,22 @@ export default function ReservarPage() {
                         onClick={() => handleReserve(slot)}
                         disabled={reserving !== null}
                         variant="outline"
-                        className="h-auto py-4 flex flex-col items-center gap-2 border-2 border-gray-200 dark:border-gray-700 hover:border-primary hover:bg-primary/5 dark:hover:bg-primary/10 transition-all"
+                        className="h-auto py-4 flex flex-col items-center gap-2 border-2 border-green-200 dark:border-green-700 hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950/20 transition-all"
                       >
                         {reserving === slot.disponibilidadId ? (
                           <Loader2 className="h-6 w-6 animate-spin text-primary" />
                         ) : (
                           <>
-                            <Clock className="h-5 w-5 text-primary" />
+                            <Clock className="h-5 w-5 text-green-600 dark:text-green-400" />
                             <span className="text-lg font-bold text-gray-900 dark:text-white">
-                              {slot.horaInicio}
+                              {slot.horaInicio.substring(0, 5)}
                             </span>
                             <span className="text-xs text-gray-500 dark:text-gray-400">
-                              {slot.horaFin}
+                              {slot.horaFin.substring(0, 5)}
                             </span>
+                            <Badge variant="outline" className="bg-green-100 text-green-700 text-xs mt-1 dark:bg-green-900 dark:text-green-300">
+                              Disponible
+                            </Badge>
                           </>
                         )}
                       </Button>

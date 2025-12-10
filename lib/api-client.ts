@@ -161,18 +161,20 @@ export interface Cancha {
 
 export interface DisponibilidadHorario {
   id: string
-  diaSemana: number // 0-6 (Sunday-Saturday)
+  diaSemana: number // 0-6 (0=domingo, 1=lunes, ..., 6=sábado)
+  disponible: boolean // Si este slot está habilitado
   horario: {
-    id?: string
-    horaInicio: string // HH:MM
-    horaFin: string // HH:MM
+    id: string
+    horaInicio: string // HH:MM:SS
+    horaFin: string // HH:MM:SS
   }
-  cancha: {
+  cancha?: {
     id: string
     nombre: string
-    deporte: { nombre: string }
+    deporte?: { nombre: string }
   }
-  disponible?: boolean
+  canchaId?: string
+  horarioId?: string
 }
 
 export interface CanchaFoto {
@@ -196,8 +198,8 @@ export interface AvailabilitySlot {
 export interface CrearDisponibilidadLoteDto {
   canchaIds: string[]
   horarioIds: string[]
-  diasSemana: number[] // 0-6 (0=domingo, 1=lunes, etc.)
-  disponible: boolean
+  diasSemana: number[] // 1-7 (1=lunes, 7=domingo - se convierte a 0 internamente)
+  disponible?: boolean // Default: true
 }
 
 export interface CrearDisponibilidadLoteResponse {
@@ -206,6 +208,33 @@ export interface CrearDisponibilidadLoteResponse {
   totalPost: number
   created: DisponibilidadHorario[]
   message?: string
+}
+
+/**
+ * Query params for real-time availability by date range
+ * GET /disponibilidad-cancha/availability
+ */
+export interface AvailabilityQueryDto {
+  from: string // YYYY-MM-DD (required)
+  to: string // YYYY-MM-DD (required)
+  clubId?: string // UUID (optional) - filter by club
+  canchaId?: string // UUID (optional) - filter by cancha
+}
+
+/**
+ * Real-time availability slot for a specific date
+ * Shows if a slot is free or occupied based on reservations
+ */
+export interface AvailabilitySlotRealTime {
+  fecha: string // YYYY-MM-DD
+  canchaId: string
+  canchaNombre: string
+  horarioId: string
+  horaInicio: string // HH:MM:SS
+  horaFin: string // HH:MM:SS
+  disponibilidadId: string // UUID of DisponibilidadHorario
+  ocupado: boolean // true if there's a pending/confirmed reservation
+  estado: 'libre' | 'ocupado'
 }
 
 export interface Reserva {
@@ -589,6 +618,116 @@ export interface ReservasHeatmap {
   reservas: number
 }
 
+// ===== ROLES INTERFACES =====
+
+/**
+ * Rol entity from backend
+ * tipo: "sistema" (admin, admin-club, usuario) | "negocio" (custom roles created by admin)
+ */
+export interface Rol {
+  id: string // UUID
+  nombre: string // e.g., "admin", "admin-club", "usuario", "recepcionista", "cajero", etc.
+  tipo: 'sistema' | 'negocio'
+}
+
+/**
+ * DTO for creating a new business role
+ * POST /api/roles
+ */
+export interface CrearRolDto {
+  nombre: string // Must not be a reserved name (admin, admin-club, usuario)
+}
+
+/**
+ * DTO for changing a user's role
+ * PATCH /api/usuarios/:id/rol
+ */
+export interface CambiarRolDto {
+  rol: string // Role name (must exist in Rol table)
+}
+
+// ===== USUARIOS EXTENDED INTERFACES =====
+
+/**
+ * Extended User interface for admin panel
+ * This aligns with the new backend user structure
+ */
+export interface UsuarioAdmin {
+  id: string // UUID
+  activo: boolean
+  failedLoginAttempts: number
+  lastLoginAt?: string // ISO date
+  persona: {
+    id: string
+    nombre: string
+    apellido: string
+    email: string
+  }
+  rol: string // Role name (e.g., "admin", "admin-club", "usuario", "recepcionista")
+  createdAt: string // ISO date
+  updatedAt: string // ISO date
+}
+
+/**
+ * DTO for creating a user from admin panel
+ * POST /api/usuarios/registro (admin only)
+ */
+export interface CrearUsuarioAdminDto {
+  nombre: string
+  apellido: string
+  email: string
+  password: string
+  rol?: string // Optional, defaults to "usuario"
+}
+
+/**
+ * DTO for updating user data
+ * PATCH /api/usuarios/:id
+ */
+export interface ActualizarUsuarioDto {
+  nombre?: string
+  apellido?: string
+  email?: string
+}
+
+// ===== ADMIN REPORTS EXTENDED =====
+
+/**
+ * Tendencia de ocupación a lo largo del tiempo
+ * GET /api/admin/reportes/ocupacion-trend
+ */
+export interface OcupacionTrend {
+  fecha: string // YYYY-MM-DD
+  ocupacion: number // 0.0 - 1.0
+}
+
+/**
+ * Tendencia de ingresos a lo largo del tiempo
+ * GET /api/admin/reportes/revenue-trend
+ */
+export interface RevenueTrend {
+  fecha: string // YYYY-MM-DD
+  ingresos: number
+}
+
+/**
+ * Tendencia de usuarios nuevos a lo largo del tiempo
+ * GET /api/admin/reportes/usuarios-trend
+ */
+export interface UsuariosTrend {
+  fecha: string // YYYY-MM-DD
+  nuevosUsuarios: number
+}
+
+/**
+ * Segmentación de usuarios por tipo de rol
+ * GET /api/admin/usuarios/segmentacion
+ */
+export interface UsuariosSegmentacion {
+  rol: string
+  cantidad: number
+}
+
 // --- Utilidad centralizada para requests ---
 
 async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
@@ -711,11 +850,42 @@ const apiClient = {
 
   /**
    * Listar usuarios - GET /usuarios (admin only)
+   * Returns full user list with extended info for admin panel
    */
-  getUsuarios: () => apiRequest<User[]>('/usuarios'),
+  getUsuarios: () => apiRequest<UsuarioAdmin[]>('/usuarios'),
 
   /**
-   * Actualizar usuario - PATCH /usuarios/{id}
+   * Crear usuario desde panel admin - POST /usuarios/registro (admin only)
+   * Creates a new user with optional role assignment
+   */
+  crearUsuarioAdmin: (data: CrearUsuarioAdminDto) =>
+    apiRequest<UsuarioAdmin>('/usuarios/registro', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  /**
+   * Actualizar datos de usuario - PATCH /usuarios/{id}
+   * Admin can edit any user, regular users can only edit themselves
+   */
+  actualizarUsuario: (id: string, data: ActualizarUsuarioDto) =>
+    apiRequest<UsuarioAdmin>(`/usuarios/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  /**
+   * Cambiar rol de usuario - PATCH /usuarios/{id}/rol (admin only)
+   * Changes the user's role to a valid existing role
+   */
+  cambiarRolUsuario: (id: string, data: CambiarRolDto) =>
+    apiRequest<UsuarioAdmin>(`/usuarios/${id}/rol`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  /**
+   * Actualizar usuario (legacy) - PATCH /usuarios/{id}
    */
   updateUsuario: (id: string, data: Partial<User>) =>
     apiRequest<User>(`/usuarios/${id}`, {
@@ -1422,6 +1592,23 @@ const apiClient = {
     return apiRequest<AvailabilitySlot[]>(`/disponibilidad-cancha/availability?${queryParams.toString()}`)
   },
 
+  /**
+   * Disponibilidad real por rango de fechas - GET /disponibilidad-cancha/availability
+   * Returns real-time availability showing free/occupied slots based on weekly patterns and existing reservations
+   * @param params Query parameters with date range and optional filters
+   * @returns Array of slots with occupation status (libre/ocupado)
+   */
+  getDisponibilidadRealTime: (params: AvailabilityQueryDto) => {
+    const queryParams = new URLSearchParams()
+    queryParams.append('from', params.from)
+    queryParams.append('to', params.to)
+    if (params.clubId) queryParams.append('clubId', params.clubId)
+    if (params.canchaId) queryParams.append('canchaId', params.canchaId)
+    return apiRequest<AvailabilitySlotRealTime[]>(
+      `/disponibilidad-cancha/availability?${queryParams.toString()}`
+    )
+  },
+
   // ===== VALORACIONES =====
   // NOTE: Valoraciones are documented in API docs under "Entidades relacionadas"
   
@@ -1730,6 +1917,102 @@ const apiClient = {
     const query = params.toString() ? `?${params.toString()}` : ''
     return apiRequest<ReservasHeatmap[]>(`/admin/reservas/heatmap${query}`)
   },
+
+  /**
+   * Tendencia de ocupación - GET /admin/reportes/ocupacion-trend
+   * @param granularity Granularidad: 'day' | 'week' | 'month'
+   * @param from Fecha desde (YYYY-MM-DD)
+   * @param to Fecha hasta (YYYY-MM-DD)
+   * @param clubIds IDs de clubes (opcional, para admin-club)
+   * @returns Evolución del % de ocupación a lo largo del tiempo
+   */
+  getAdminOcupacionTrend: (
+    granularity: 'day' | 'week' | 'month',
+    from: string,
+    to: string,
+    clubIds?: string[]
+  ) => {
+    const params = new URLSearchParams()
+    params.append('granularity', granularity)
+    params.append('from', from)
+    params.append('to', to)
+    if (clubIds && clubIds.length > 0) {
+      params.append('clubIds', clubIds.join(','))
+    }
+    return apiRequest<OcupacionTrend[]>(`/admin/reportes/ocupacion-trend?${params.toString()}`)
+  },
+
+  /**
+   * Tendencia de ingresos - GET /admin/reportes/revenue-trend
+   * @param granularity Granularidad: 'day' | 'week' | 'month'
+   * @param from Fecha desde (YYYY-MM-DD)
+   * @param to Fecha hasta (YYYY-MM-DD)
+   * @param clubIds IDs de clubes (opcional, para admin-club)
+   * @returns Evolución de ingresos a lo largo del tiempo
+   */
+  getAdminRevenueTrend: (
+    granularity: 'day' | 'week' | 'month',
+    from: string,
+    to: string,
+    clubIds?: string[]
+  ) => {
+    const params = new URLSearchParams()
+    params.append('granularity', granularity)
+    params.append('from', from)
+    params.append('to', to)
+    if (clubIds && clubIds.length > 0) {
+      params.append('clubIds', clubIds.join(','))
+    }
+    return apiRequest<RevenueTrend[]>(`/admin/reportes/revenue-trend?${params.toString()}`)
+  },
+
+  /**
+   * Tendencia de usuarios nuevos - GET /admin/reportes/usuarios-trend
+   * @param granularity Granularidad: 'day' | 'week' | 'month'
+   * @param from Fecha desde (YYYY-MM-DD)
+   * @param to Fecha hasta (YYYY-MM-DD)
+   * @returns Evolución de usuarios nuevos (global por ahora)
+   */
+  getAdminUsuariosTrend: (
+    granularity: 'day' | 'week' | 'month',
+    from: string,
+    to: string
+  ) => {
+    const params = new URLSearchParams()
+    params.append('granularity', granularity)
+    params.append('from', from)
+    params.append('to', to)
+    return apiRequest<UsuariosTrend[]>(`/admin/reportes/usuarios-trend?${params.toString()}`)
+  },
+
+  /**
+   * Segmentación de usuarios por rol - GET /admin/usuarios/segmentacion
+   * @returns Cantidad de usuarios por tipo de rol
+   */
+  getAdminUsuariosSegmentacion: () =>
+    apiRequest<UsuariosSegmentacion[]>('/admin/usuarios/segmentacion'),
+
+  // ===== ROLES =====
+  // Module for managing system and business roles
+  // Base URL: /api/roles
+  // Permissions: admin only
+
+  /**
+   * Listar todos los roles - GET /api/roles (admin only)
+   * Returns both sistema (admin, admin-club, usuario) and negocio (custom) roles
+   */
+  getRoles: () => apiRequest<Rol[]>('/roles'),
+
+  /**
+   * Crear nuevo rol de negocio - POST /api/roles (admin only)
+   * Creates a new business role for segmentation/UX purposes
+   * Cannot create reserved names (admin, admin-club, usuario)
+   */
+  crearRol: (data: CrearRolDto) =>
+    apiRequest<Rol>('/roles', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 }
 
 export default apiClient 

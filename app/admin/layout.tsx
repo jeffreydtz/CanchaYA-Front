@@ -14,18 +14,21 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { isAuthenticated, isAdmin } = useAuth()
+  const { isAuthenticated, isAdmin, isAdminClub } = useAuth()
   const router = useRouter()
+
+  // Allow access to both admin and admin-club users
+  const hasAdminAccess = isAdmin || isAdminClub
 
   useEffect(() => {
     if (!isAuthenticated) {
       router.replace('/login')
-    } else if (!isAdmin) {
+    } else if (!hasAdminAccess) {
       router.replace('/')
     }
-  }, [isAuthenticated, isAdmin, router])
+  }, [isAuthenticated, hasAdminAccess, router])
 
-  if (!isAuthenticated || !isAdmin) {
+  if (!isAuthenticated || !hasAdminAccess) {
     return null // O un loader/spinner
   }
 
