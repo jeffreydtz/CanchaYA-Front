@@ -114,32 +114,78 @@ function AdminDisponibilidadPage() {
 
       setViewLoading(true)
       try {
+        console.log('Cargando disponibilidades para cancha:', selectedCancha)
         const response = await apiClient.getDisponibilidadPorCancha(selectedCancha)
         
+        console.log('Respuesta completa del servidor:', {
+          hasData: !!response.data,
+          dataLength: response.data?.length,
+          hasError: !!response.error,
+          error: response.error,
+          status: response.status,
+          rawResponse: response
+        })
+        
         if (response.error) {
-          console.error('API Error:', response.error)
-          toast.error('Error al cargar disponibilidades', {
-            description: response.error
-          })
-          setDisponibilidades([])
+          console.error('API Error al cargar disponibilidades:', response.error)
+          // Si es un 404, puede que simplemente no haya disponibilidades aún
+          if (response.status === 404) {
+            console.log('No se encontraron disponibilidades (404) - esto es normal si no se han creado aún')
+            setDisponibilidades([])
+            // No mostrar error si es 404, solo loguear
+          } else {
+            toast.error('Error al cargar disponibilidades', {
+              description: response.error
+            })
+            setDisponibilidades([])
+          }
           return
         }
 
         if (response.data) {
+          console.log('Datos recibidos del backend:', response.data)
+          
+          // Verificar que sea un array
+          if (!Array.isArray(response.data)) {
+            console.error('La respuesta no es un array:', typeof response.data, response.data)
+            toast.error('Error en el formato de datos', {
+              description: 'El servidor devolvió un formato inesperado'
+            })
+            setDisponibilidades([])
+            return
+          }
+
           // Convertir días del formato backend al formato frontend
           // Backend puede devolver 0-6 (0=domingo) o 1-7 (7=domingo), normalizamos a 0-6
-          const disponibilidadesConvertidas = response.data.map(disp => ({
-            ...disp,
-            diaSemana: convertDiaFromBackendFormat(disp.diaSemana)
-          }))
-          console.log('Disponibilidades cargadas:', disponibilidadesConvertidas.length)
+          const disponibilidadesConvertidas = response.data.map((disp, index) => {
+            console.log(`Disponibilidad ${index}:`, {
+              id: disp.id,
+              diaSemanaOriginal: disp.diaSemana,
+              horario: disp.horario,
+              disponible: disp.disponible
+            })
+            
+            const diaConvertido = convertDiaFromBackendFormat(disp.diaSemana)
+            console.log(`  -> diaSemana convertido: ${disp.diaSemana} -> ${diaConvertido}`)
+            
+            return {
+              ...disp,
+              diaSemana: diaConvertido
+            }
+          })
+          
+          console.log('Disponibilidades convertidas:', disponibilidadesConvertidas.length, disponibilidadesConvertidas)
           setDisponibilidades(disponibilidadesConvertidas)
+          
+          if (disponibilidadesConvertidas.length === 0) {
+            console.log('No hay disponibilidades configuradas para esta cancha')
+          }
         } else {
-          console.log('No hay disponibilidades para esta cancha')
+          console.log('No hay data en la respuesta - array vacío')
           setDisponibilidades([])
         }
       } catch (error) {
-        console.error('Error loading disponibilidades:', error)
+        console.error('Error loading disponibilidades (catch):', error)
         toast.error('Error al cargar disponibilidades', {
           description: error instanceof Error ? error.message : 'Error desconocido'
         })
@@ -170,24 +216,40 @@ function AdminDisponibilidadPage() {
       // Convertir días del formato frontend (0-6) al formato backend (1-7)
       const diasBackend = convertDiasToBackendFormat(selectedDias)
       
-      const response = await apiClient.crearDisponibilidadLote({
+      // Log para debugging
+      console.log('Creando disponibilidad con:', {
+        canchaIds: selectedCanchas,
+        horarioIds: selectedHorarios,
+        diasSemana: diasBackend,
+        diasOriginales: selectedDias,
+        disponible: true
+      })
+      
+      const requestData = {
         canchaIds: selectedCanchas,
         horarioIds: selectedHorarios,
         diasSemana: diasBackend,
         disponible: true
-      })
+      }
+      
+      const response = await apiClient.crearDisponibilidadLote(requestData)
+
+      console.log('Respuesta del servidor:', response)
 
       if (response.error) {
+        console.error('Error en la respuesta:', response.error)
         toast.error('Error al crear disponibilidad', {
-          description: response.error
+          description: response.error || 'Error desconocido del servidor'
         })
+        setSubmitting(false)
         return
       }
 
       const result = response.data
       if (result) {
+        console.log('Resultado exitoso:', result)
         toast.success('Patrón de disponibilidad creado', {
-          description: `${result.inserted} slot(s) creado(s), ${result.skipped} duplicado(s)`
+          description: `${result.inserted} slot(s) creado(s), ${result.skipped || 0} duplicado(s)`
         })
 
         // Limpiar selección
@@ -200,28 +262,39 @@ function AdminDisponibilidadPage() {
           // Pequeño delay para asegurar que el backend haya procesado la creación
           setTimeout(async () => {
             try {
+              console.log('Recargando disponibilidades para cancha:', selectedCancha)
               const reloadResponse = await apiClient.getDisponibilidadPorCancha(selectedCancha)
+              console.log('Respuesta de recarga:', reloadResponse)
               if (reloadResponse.data) {
                 // Convertir días del formato backend al formato frontend
                 const disponibilidadesConvertidas = reloadResponse.data.map(disp => ({
                   ...disp,
                   diaSemana: convertDiaFromBackendFormat(disp.diaSemana)
                 }))
+                console.log('Disponibilidades convertidas:', disponibilidadesConvertidas.length)
                 setDisponibilidades(disponibilidadesConvertidas)
               } else if (reloadResponse.error) {
                 console.error('Error al recargar disponibilidades:', reloadResponse.error)
+                toast.error('Error al recargar disponibilidades', {
+                  description: reloadResponse.error
+                })
               }
             } catch (error) {
               console.error('Error al recargar disponibilidades:', error)
+              toast.error('Error al recargar disponibilidades', {
+                description: error instanceof Error ? error.message : 'Error desconocido'
+              })
             }
-          }, 500)
+          }, 1000) // Aumentado a 1 segundo para dar más tiempo al backend
         }
       } else {
+        console.error('No se recibió data en la respuesta:', response)
         toast.error('Error al crear disponibilidad', {
-          description: 'No se recibió respuesta del servidor'
+          description: 'No se recibió respuesta del servidor. Revisa la consola para más detalles.'
         })
       }
     } catch (error) {
+      console.error('Error al crear disponibilidad (catch):', error)
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
       toast.error('Error al crear disponibilidad', {
         description: errorMessage
@@ -458,64 +531,73 @@ function AdminDisponibilidadPage() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    disponibilidades.map((disp) => {
-                      const dia = DIAS_SEMANA.find(d => d.value === disp.diaSemana)
-                      return (
-                        <TableRow key={disp.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/50">
-                          <TableCell className="font-semibold text-gray-900 dark:text-white">
-                            {dia?.label || `Día ${disp.diaSemana}`}
-                          </TableCell>
-                          <TableCell className="text-gray-600 dark:text-gray-400">
-                            <div className="flex items-center gap-2">
-                              <Clock className="h-4 w-4 text-gray-400" />
-                              {disp.horario.horaInicio} - {disp.horario.horaFin}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              className={
-                                disp.disponible !== false
-                                  ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-400'
-                                  : 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-400'
-                              }
-                            >
-                              {disp.disponible !== false ? 'Disponible' : 'No disponible'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>¿Eliminar este horario?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Se eliminará el slot de {dia?.label} de {disp.horario.horaInicio} a {disp.horario.horaFin}.
-                                    Esta acción no se puede deshacer.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleDeleteSlot(disp.id)}
-                                    className="bg-red-600 hover:bg-red-700 text-white"
+                    disponibilidades
+                      .filter(disp => disp.horario) // Filtrar disponibilidades sin horario
+                      .map((disp) => {
+                        const dia = DIAS_SEMANA.find(d => d.value === disp.diaSemana)
+                        
+                        if (!disp.horario) {
+                          console.warn('Disponibilidad sin horario (filtrada):', disp)
+                          return null
+                        }
+                        
+                        return (
+                          <TableRow key={disp.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/50">
+                            <TableCell className="font-semibold text-gray-900 dark:text-white">
+                              {dia?.label || `Día ${disp.diaSemana}`}
+                            </TableCell>
+                            <TableCell className="text-gray-600 dark:text-gray-400">
+                              <div className="flex items-center gap-2">
+                                <Clock className="h-4 w-4 text-gray-400" />
+                                {disp.horario.horaInicio} - {disp.horario.horaFin}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                className={
+                                  disp.disponible !== false
+                                    ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-400'
+                                    : 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-400'
+                                }
+                              >
+                                {disp.disponible !== false ? 'Disponible' : 'No disponible'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20"
                                   >
-                                    Eliminar
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>¿Eliminar este horario?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Se eliminará el slot de {dia?.label} de {disp.horario.horaInicio} a {disp.horario.horaFin}.
+                                      Esta acción no se puede deshacer.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDeleteSlot(disp.id)}
+                                      className="bg-red-600 hover:bg-red-700 text-white"
+                                    >
+                                      Eliminar
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })
+                      .filter(Boolean) // Remover nulls
                   )}
                 </TableBody>
               </Table>
