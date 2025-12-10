@@ -300,6 +300,7 @@ const fetchReportData = async (period: string): Promise<ReportData> => {
 
 function AdminReportsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState('month')
+  const [selectedFormat, setSelectedFormat] = useState<'csv' | 'excel'>('excel')
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<ReportData | null>(null)
 
@@ -458,13 +459,21 @@ function AdminReportsPage() {
         }))
       ]
 
-      // Export as Excel
-      const filename = generateFilename(`reporte-${selectedPeriod}`, 'xlsx')
-      const result = downloadExcel(reportData, filename, 'Reporte Analytics')
+      // Export based on selected format
+      let result
+      let filename
+
+      if (selectedFormat === 'csv') {
+        filename = generateFilename(`reporte-${selectedPeriod}`, 'csv')
+        result = downloadCSV(reportData, filename)
+      } else {
+        filename = generateFilename(`reporte-${selectedPeriod}`, 'xlsx')
+        result = downloadExcel(reportData, filename, 'Reporte Analytics')
+      }
 
       if (result.success) {
         toast.success('Reporte exportado', {
-          description: 'El reporte se ha descargado correctamente'
+          description: `El reporte se ha descargado correctamente como ${selectedFormat.toUpperCase()}`
         })
       } else {
         throw new Error(result.error || 'Error al exportar')
@@ -504,13 +513,22 @@ function AdminReportsPage() {
                 <SelectItem value="year">Este año</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={selectedFormat} onValueChange={(value) => setSelectedFormat(value as 'csv' | 'excel')}>
+              <SelectTrigger className="h-11 min-w-[140px] rounded-xl border-slate-200 bg-white/70 text-sm font-medium text-slate-600 shadow-sm focus:ring-2 focus:ring-indigo-200 focus:ring-offset-0">
+                <SelectValue placeholder="Formato" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border border-slate-100 bg-white shadow-lg">
+                <SelectItem value="excel">Excel (.xlsx)</SelectItem>
+                <SelectItem value="csv">CSV (.csv)</SelectItem>
+              </SelectContent>
+            </Select>
             <Button
               variant="outline"
               onClick={exportReport}
               className="h-11 rounded-xl border-slate-200 bg-white/80 text-sm font-medium text-slate-600 shadow-sm transition hover:border-indigo-200 hover:bg-white"
             >
               <Download className="mr-2 h-4 w-4" />
-              Exportar
+              Exportar {selectedFormat === 'csv' ? 'CSV' : 'Excel'}
             </Button>
             <Button className="h-11 rounded-xl bg-slate-900 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800">
               <Filter className="mr-2 h-4 w-4" />
