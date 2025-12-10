@@ -48,7 +48,7 @@ function AdminClubesPage() {
       } else {
         setClubs([])
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al cargar clubes')
     } finally {
       setLoading(false)
@@ -86,7 +86,7 @@ function AdminClubesPage() {
       toast.success('Club eliminado', {
         description: `El club "${clubName}" ha sido eliminado exitosamente.`
       })
-    } catch (error) {
+    } catch {
       toast.error('Error', {
         description: 'No se pudo eliminar el club. Inténtalo de nuevo.'
       })

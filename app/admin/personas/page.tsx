@@ -69,7 +69,7 @@ function AdminPersonasPage() {
       } else {
         setPersonas(response.data || [])
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al cargar personas')
       setPersonas([])
     } finally {
@@ -124,7 +124,7 @@ function AdminPersonasPage() {
         setDeleteDialogOpen(false)
         setSelectedPersona(null)
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al eliminar persona')
     } finally {
       setDeletingId(null)

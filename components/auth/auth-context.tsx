@@ -199,13 +199,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   prevUser ? { ...prevUser, avatarUrl } : null
                 )
               }
-            } catch (error) {
+            } catch {
               // Continue even if persona fetch fails
             }
           }
 
           return true
-        } catch (e) {
+        } catch {
           setUser(null)
           deleteCookie('token')
           deleteCookie('refreshToken')
@@ -216,7 +216,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       toast.error('Error en la autenticación')
       return false
-    } catch (error) {
+    } catch {
       toast.error('Error del servidor. Intenta nuevamente.')
       return false
     } finally {

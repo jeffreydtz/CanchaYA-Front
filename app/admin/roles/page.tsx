@@ -51,9 +51,9 @@ export default function RolesPage() {
       } else if (response.data) {
         setRoles(response.data)
       }
-    } catch (error) {
-      toast.error('Error al cargar roles')
-    } finally {
+      } catch {
+        toast.error('Error al cargar roles')
+      } finally {
       setLoading(false)
     }
   }
@@ -78,7 +78,7 @@ export default function RolesPage() {
         setDialogOpen(false)
         fetchRoles()
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al crear rol')
     } finally {
       setCreating(false)

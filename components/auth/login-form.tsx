@@ -94,7 +94,7 @@ export function LoginForm() {
         })
         setIsLoading(false)
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al iniciar sesión', {
         description: 'Verifica tus credenciales e intenta nuevamente.',
       })

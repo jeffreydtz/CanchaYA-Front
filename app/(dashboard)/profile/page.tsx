@@ -18,7 +18,6 @@ import {
   Mail, 
   Phone, 
   Calendar, 
-  MapPin, 
   Shield, 
   Edit,
   Save,
@@ -35,7 +34,7 @@ import {
   BarChart3
 } from 'lucide-react'
 import { useAuth } from '@/components/auth/auth-context'
-import apiClient, { User as UserType, Reserva, DisponibilidadPersona, PerfilCompetitivo } from '@/lib/api-client'
+import apiClient, { Reserva, PerfilCompetitivo } from '@/lib/api-client'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useForm } from 'react-hook-form'
@@ -65,8 +64,7 @@ function ProfileForm() {
     register,
     handleSubmit,
     formState: { errors },
-    reset,
-    watch
+    reset
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -106,7 +104,7 @@ function ProfileForm() {
         await refreshUser()
         setIsEditing(false)
       }
-    } catch (error: any) {
+    } catch {
       toast.error('Error al actualizar el perfil')
     } finally {
       setLoading(false)
@@ -635,7 +633,6 @@ function ProfileStats() {
     reservasConfirmadas: 0,
     reservasPendientes: 0,
   })
-  const { user } = useAuth()
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {

@@ -76,7 +76,7 @@ function AdminDisponibilidadPage() {
 
         if (canchasRes.data) setCanchas(canchasRes.data)
         if (horariosRes.data) setHorarios(horariosRes.data)
-      } catch (error) {
+      } catch {
         toast.error('Error al cargar datos iniciales')
       } finally {
         setLoading(false)
@@ -101,7 +101,7 @@ function AdminDisponibilidadPage() {
         } else {
           setDisponibilidades([])
         }
-      } catch (error) {
+      } catch {
         toast.error('Error al cargar disponibilidades')
       } finally {
         setViewLoading(false)
@@ -160,9 +160,10 @@ function AdminDisponibilidadPage() {
           if (response.data) setDisponibilidades(response.data)
         }
       }
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
       toast.error('Error al crear disponibilidad', {
-        description: error.message
+        description: errorMessage
       })
     } finally {
       setSubmitting(false)
@@ -182,7 +183,7 @@ function AdminDisponibilidadPage() {
 
       toast.success('Slot eliminado exitosamente')
       setDisponibilidades(prev => prev.filter(d => d.id !== id))
-    } catch (error) {
+    } catch {
       toast.error('Error al eliminar slot')
     }
   }

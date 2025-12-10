@@ -52,7 +52,7 @@ function AdminAnalyticsPage() {
         }
         setOcupacion(filtered)
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al cargar datos de analytics')
     } finally {
       setLoading(false)

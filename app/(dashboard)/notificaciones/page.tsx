@@ -13,20 +13,15 @@ import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { 
   Bell, 
-  BellOff, 
   Calendar, 
   Trophy, 
-  MessageCircle,
-  AlertTriangle,
   Info,
   Check,
-  X,
   Clock,
   Mail,
   Smartphone,
   Settings
 } from 'lucide-react'
-import apiClient, { NotificationLog, NotificationSubscription } from '@/lib/api-client'
 import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
@@ -87,7 +82,7 @@ function NotificationList() {
         )
       )
       toast.success('Marcada como leída')
-    } catch (error) {
+    } catch {
       toast.error('Error al marcar como leída')
     }
   }
@@ -284,7 +279,7 @@ function NotificationSettingsComponent() {
       
       setSubscription(updatedSubscription)
       toast.success('Configuración actualizada')
-    } catch (error) {
+    } catch {
       toast.error('Error al actualizar configuración')
     } finally {
       setUpdating(false)

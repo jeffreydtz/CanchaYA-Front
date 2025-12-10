@@ -66,7 +66,7 @@ const getColorForSport = (sport: string): string => {
   return SPORTS_COLORS[sport] || '#6b7280'
 }
 
-const fetchDashboardData = async (filters?: Record<string, any> | null): Promise<DashboardData> => {
+const fetchDashboardData = async (filters?: Record<string, unknown> | null): Promise<DashboardData> => {
   try {
     // Fetch all required data in parallel
     const [
@@ -353,9 +353,8 @@ function DashboardPage() {
       const dashboardData = await fetchDashboardData(activeFilters)
       setData(dashboardData)
       setLastUpdate(new Date())
-    } catch (error) {
+    } catch {
       toast.error('Error al cargar datos del dashboard')
-      console.error(error)
     } finally {
       setLoading(false)
     }
@@ -455,8 +454,8 @@ function DashboardPage() {
     setDrillDownOpen(true)
   }
 
-  const handleBarClick = (cancha: any) => {
-    if (cancha.id) {
+  const handleBarClick = (cancha: { id?: string; name?: string }) => {
+    if (cancha.id && cancha.name) {
       handleCanchaClick(cancha.id, cancha.name)
     } else {
       toast.info(`Detalles de ${cancha.name}`, {
@@ -494,7 +493,7 @@ function DashboardPage() {
     setDrillDownOpen(true)
   }
 
-  const handleTopCanchaClick = (cancha: any) => {
+  const handleTopCanchaClick = (cancha: { id: string; name: string }) => {
     handleCanchaClick(cancha.id, cancha.name)
   }
 

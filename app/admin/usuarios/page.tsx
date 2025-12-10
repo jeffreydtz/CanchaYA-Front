@@ -31,7 +31,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
-import { Edit, UserPlus, Loader2, Shield } from 'lucide-react'
+import { Edit, UserPlus, Loader2 } from 'lucide-react'
 import apiClient, { UsuarioAdmin, Rol, CrearUsuarioAdminDto, ActualizarUsuarioDto, CambiarRolDto } from '@/lib/api-client'
 import { withErrorBoundary } from '@/components/error/with-error-boundary'
 import { toast } from 'sonner'
@@ -80,7 +80,7 @@ function AdminUsersPage() {
       } else if (response.data) {
         setUsers(response.data)
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al cargar usuarios')
     } finally {
       setLoading(false)
@@ -93,8 +93,8 @@ function AdminUsersPage() {
       if (response.data) {
         setRoles(response.data)
       }
-    } catch (error) {
-      console.error('Error al cargar roles:', error)
+    } catch {
+      // Silently fail - roles are optional
     }
   }
 
@@ -121,7 +121,7 @@ function AdminUsersPage() {
         })
         loadUsers()
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al crear usuario')
     } finally {
       setCreating(false)
@@ -142,7 +142,7 @@ function AdminUsersPage() {
         setSelectedUser(null)
         loadUsers()
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al actualizar usuario')
     } finally {
       setEditing(false)
@@ -165,7 +165,7 @@ function AdminUsersPage() {
         toast.success(`Rol actualizado a "${nuevoRol}"`)
         loadUsers()
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al cambiar rol')
     }
   }

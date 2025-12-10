@@ -7,7 +7,7 @@ import { useAuth } from '@/components/auth/auth-context'
 
 export default function LoginPage() {
   const router = useRouter()
-  const { isAuthenticated, loading, user, userRole } = useAuth()
+  const { isAuthenticated, loading, userRole } = useAuth()
 
   useEffect(() => {
     // If already authenticated, redirect based on role

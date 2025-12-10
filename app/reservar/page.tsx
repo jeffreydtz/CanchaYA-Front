@@ -2,13 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
 import { Calendar } from '@/components/ui/calendar'
 import { toast } from 'sonner'
 import apiClient, { Club, Cancha, AvailabilitySlotRealTime, CanchaFoto } from '@/lib/api-client'
-import { Loader2, MapPin, Trophy, Calendar as CalendarIcon, Clock, CheckCircle2 } from 'lucide-react'
+import { Loader2, MapPin, Trophy, Calendar as CalendarIcon, Clock } from 'lucide-react'
 import { CourtPhotosCarousel } from '@/components/court/court-photos-carousel'
 import { RealtimeAvailability } from '@/components/disponibilidad/realtime-availability'
 import {
@@ -20,8 +17,6 @@ import {
 } from '@/components/ui/select'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { getCookie } from '@/lib/auth'
-import { jwtDecode } from 'jwt-decode'
 
 export default function ReservarPage() {
   const [clubs, setClubs] = useState<Club[]>([])
@@ -58,7 +53,7 @@ export default function ReservarPage() {
         if (response.data) {
           setClubs(response.data)
         }
-      } catch (error) {
+      } catch {
         toast.error('Error al cargar clubes')
       } finally {
         setLoading(false)
@@ -84,7 +79,7 @@ export default function ReservarPage() {
         } else {
           setCanchas([])
         }
-      } catch (error) {
+      } catch {
         toast.error('Error al cargar canchas')
       } finally {
         setCanchasLoading(false)
@@ -118,7 +113,7 @@ export default function ReservarPage() {
         } else {
           setAvailableSlots([])
         }
-      } catch (error) {
+      } catch {
         toast.error('Error al cargar horarios disponibles')
         setAvailableSlots([])
       } finally {
@@ -142,7 +137,7 @@ export default function ReservarPage() {
         } else {
           setCanchaFotos([])
         }
-      } catch (error) {
+      } catch {
         setCanchaFotos([])
       }
     }
@@ -216,9 +211,10 @@ export default function ReservarPage() {
           .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio))
         setAvailableSlots(slots)
       }
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Ocurrió un error inesperado'
       toast.error('Error al crear reserva', {
-        description: error.message || 'Ocurrió un error inesperado'
+        description: errorMessage
       })
     } finally {
       setReserving(null)

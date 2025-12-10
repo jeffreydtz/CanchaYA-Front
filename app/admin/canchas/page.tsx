@@ -52,7 +52,7 @@ function AdminCourtsPage() {
       } else {
         setCourts([])
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al cargar canchas')
     } finally {
       setLoading(false)
@@ -95,7 +95,7 @@ function AdminCourtsPage() {
       toast.success('Cancha eliminada', {
         description: `La cancha "${courtName}" ha sido eliminada exitosamente.`
       })
-    } catch (error) {
+    } catch {
       toast.error('Error', {
         description: 'No se pudo eliminar la cancha. Inténtalo de nuevo.'
       })
@@ -126,7 +126,7 @@ function AdminCourtsPage() {
       toast.success('Estado actualizado', {
         description: `La cancha "${court.nombre}" ha sido ${court.activa ? 'desactivada' : 'activada'}.`
       })
-    } catch (error) {
+    } catch {
       toast.error('Error', {
         description: 'No se pudo actualizar el estado de la cancha.'
       })

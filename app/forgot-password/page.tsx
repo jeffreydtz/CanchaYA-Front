@@ -31,8 +31,6 @@ export default function ForgotPasswordPage() {
     resolver: zodResolver(forgotPasswordSchema),
   })
 
-  const email = watch('email')
-
   const onSubmit = async (data: ForgotPasswordFormData) => {
     setIsLoading(true)
     try {
@@ -43,7 +41,7 @@ export default function ForgotPasswordPage() {
       toast.success('Email enviado', {
         description: 'Revisa tu bandeja de entrada para restablecer tu contraseña.',
       })
-    } catch (error) {
+    } catch {
       toast.error('Error al enviar el email', {
         description: 'Intenta nuevamente en unos momentos.',
       })

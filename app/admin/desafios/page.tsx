@@ -23,9 +23,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog'
-import { Trophy, Shield, Search, Eye, XCircle, Filter, RefreshCw } from 'lucide-react'
+import { Shield, Search, Eye, XCircle, Filter, RefreshCw } from 'lucide-react'
 
 export default function AdminDesafiosPage() {
   const router = useRouter()
@@ -86,7 +85,7 @@ export default function AdminDesafiosPage() {
     const filtro: FiltroDesafioDto = {}
 
     if (filtroEstado !== 'todos') {
-      filtro.estado = filtroEstado as any
+      filtro.estado = filtroEstado as 'pendiente' | 'aceptado' | 'cancelado' | 'finalizado'
     }
 
     if (filtroDeporte !== 'todos') {

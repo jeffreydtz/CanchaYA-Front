@@ -44,7 +44,6 @@ interface ClubSelectorProps {
 export function ClubSelector({
   selectedClubId,
   onClubSelect,
-  allowMultiple = false,
   showLabel = true,
 }: ClubSelectorProps) {
   const { userRole, clubIds, isSuperAdmin, isAdminClub } = useAuth()

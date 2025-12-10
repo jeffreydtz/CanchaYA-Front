@@ -15,7 +15,6 @@ import { withErrorBoundary } from '@/components/error/with-error-boundary';
 function ReportesAnalyticsPage() {
   const [reports, setReports] = useState<Report[]>([]);
   const [isCreating, setIsCreating] = useState(false);
-  const [generating, setGenerating] = useState(false);
 
   // Load reports from localStorage
   useEffect(() => {
@@ -23,19 +22,22 @@ function ReportesAnalyticsPage() {
     if (savedReports) {
       try {
         const parsed = JSON.parse(savedReports);
-        setReports(parsed.map((r: any) => ({
-          ...r,
-          generatedAt: new Date(r.generatedAt),
-          config: {
-            ...r.config,
-            period: {
-              start: new Date(r.config.period.start),
-              end: new Date(r.config.period.end)
-            }
-          }
-        })));
-      } catch (error) {
-        console.error('Error loading reports:', error);
+        setReports(parsed.map((r: unknown) => {
+          const report = r as Partial<Report> & { generatedAt?: string; config?: { period?: { start?: string; end?: string } } };
+          return {
+            ...report,
+            generatedAt: report.generatedAt ? new Date(report.generatedAt) : new Date(),
+            config: report.config ? {
+              ...report.config,
+              period: report.config.period ? {
+                start: report.config.period.start ? new Date(report.config.period.start) : new Date(),
+                end: report.config.period.end ? new Date(report.config.period.end) : new Date()
+              } : undefined
+            } : undefined
+          } as Report;
+        }));
+      } catch {
+        console.error('Error loading reports');
       }
     }
   }, []);
@@ -47,7 +49,7 @@ function ReportesAnalyticsPage() {
   };
 
   const handleGenerateReport = async (config: ReportConfig) => {
-    setGenerating(true);
+    setIsCreating(true);
 
     try {
       // Fetch dashboard data for the report period
@@ -150,12 +152,13 @@ function ReportesAnalyticsPage() {
         throw new Error(result.error || 'Error al generar reporte');
       }
     } catch (error) {
-      console.error('Error generating report:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      console.error('Error generating report:', errorMessage);
       toast.error('Error al generar reporte', {
-        description: error instanceof Error ? error.message : 'Error desconocido'
+        description: errorMessage
       });
     } finally {
-      setGenerating(false);
+      setIsCreating(false);
     }
   };
 

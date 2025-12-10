@@ -19,11 +19,9 @@ import {
   AlertCircle,
   CheckCircle,
   XCircle,
-  Filter,
   Plus,
   MoreVertical,
-  Trophy,
-  Swords
+  Trophy
 } from 'lucide-react'
 import { useAuth } from '@/components/auth/auth-context'
 import apiClient, { Reserva } from '@/lib/api-client'
@@ -99,7 +97,7 @@ function ReservationCard({ reserva, onCancel, onConfirm, onUpdate }: {
         toast.success('Reserva cancelada exitosamente')
         onCancel(reserva.id)
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al cancelar la reserva')
     } finally {
       setCancelling(false)
@@ -117,7 +115,7 @@ function ReservationCard({ reserva, onCancel, onConfirm, onUpdate }: {
         toast.success('Reserva confirmada exitosamente')
         onConfirm(reserva.id)
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al confirmar la reserva')
     } finally {
       setConfirming(false)
@@ -345,7 +343,7 @@ function LoadingSkeleton() {
 }
 
 export default function MisReservasPage() {
-  const { user, isAuthenticated, personaId } = useAuth()
+  const { isAuthenticated, personaId } = useAuth()
   const [reservas, setReservas] = useState<Reserva[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -377,7 +375,7 @@ export default function MisReservasPage() {
         } else {
           setError(response.error || 'Error al cargar las reservas')
         }
-      } catch (error) {
+      } catch {
         if (!isMounted) return
         setError('Error de conexión al servidor')
       } finally {

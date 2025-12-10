@@ -69,7 +69,7 @@ export function ClubFilter({
       } else if (response.data) {
         setClubs(response.data)
       }
-    } catch (error) {
+    } catch {
       toast.error('Error al cargar clubes')
     } finally {
       setLoading(false)
