@@ -109,7 +109,7 @@ export interface UserLegacy {
   nombre: string
   email: string
   telefono?: string
-  rol: 'usuario' | 'admin' | 'admin-club' // Updated to include admin-club role
+  rol: string // Updated to accept any role: 'admin' | 'admin-club' | 'usuario' | custom business roles
   activo: boolean
   deudaPendiente?: number
   estadoCuenta?: 'activo' | 'bloqueado'
