@@ -52,6 +52,25 @@ function convertDiasToBackendFormat(dias: number[]): number[] {
   })
 }
 
+/**
+ * Convierte días de la semana del formato backend al formato frontend (0-6)
+ * Backend GET puede devolver:
+ *   - Formato 0-6: 0=domingo, 1=lunes, ..., 6=sábado (formato interno)
+ *   - Formato 1-7: 1=lunes, ..., 6=sábado, 7=domingo (formato de respuesta)
+ * Frontend siempre usa: 0=domingo, 1=lunes, ..., 6=sábado
+ */
+function convertDiaFromBackendFormat(backendDia: number): number {
+  // Si el backend devuelve 0 para domingo, mantenerlo (ya está en formato frontend)
+  if (backendDia === 0) return 0
+  // Si el backend devuelve 7 para domingo, convertir a 0
+  if (backendDia === 7) return 0
+  // Para lunes-sábado (1-6), mantener igual (compatible en ambos formatos)
+  if (backendDia >= 1 && backendDia <= 6) return backendDia
+  // Si recibimos un valor inesperado, loguear y devolver tal cual
+  console.warn(`Valor inesperado de diaSemana del backend: ${backendDia}`)
+  return backendDia
+}
+
 function AdminDisponibilidadPage() {
   const [canchas, setCanchas] = useState<Cancha[]>([])
   const [horarios, setHorarios] = useState<Horario[]>([])
@@ -96,13 +115,35 @@ function AdminDisponibilidadPage() {
       setViewLoading(true)
       try {
         const response = await apiClient.getDisponibilidadPorCancha(selectedCancha)
+        
+        if (response.error) {
+          console.error('API Error:', response.error)
+          toast.error('Error al cargar disponibilidades', {
+            description: response.error
+          })
+          setDisponibilidades([])
+          return
+        }
+
         if (response.data) {
-          setDisponibilidades(response.data)
+          // Convertir días del formato backend al formato frontend
+          // Backend puede devolver 0-6 (0=domingo) o 1-7 (7=domingo), normalizamos a 0-6
+          const disponibilidadesConvertidas = response.data.map(disp => ({
+            ...disp,
+            diaSemana: convertDiaFromBackendFormat(disp.diaSemana)
+          }))
+          console.log('Disponibilidades cargadas:', disponibilidadesConvertidas.length)
+          setDisponibilidades(disponibilidadesConvertidas)
         } else {
+          console.log('No hay disponibilidades para esta cancha')
           setDisponibilidades([])
         }
-      } catch {
-        toast.error('Error al cargar disponibilidades')
+      } catch (error) {
+        console.error('Error loading disponibilidades:', error)
+        toast.error('Error al cargar disponibilidades', {
+          description: error instanceof Error ? error.message : 'Error desconocido'
+        })
+        setDisponibilidades([])
       } finally {
         setViewLoading(false)
       }
@@ -156,9 +197,29 @@ function AdminDisponibilidadPage() {
 
         // Recargar si estamos viendo una cancha
         if (selectedCancha) {
-          const response = await apiClient.getDisponibilidadPorCancha(selectedCancha)
-          if (response.data) setDisponibilidades(response.data)
+          // Pequeño delay para asegurar que el backend haya procesado la creación
+          setTimeout(async () => {
+            try {
+              const reloadResponse = await apiClient.getDisponibilidadPorCancha(selectedCancha)
+              if (reloadResponse.data) {
+                // Convertir días del formato backend al formato frontend
+                const disponibilidadesConvertidas = reloadResponse.data.map(disp => ({
+                  ...disp,
+                  diaSemana: convertDiaFromBackendFormat(disp.diaSemana)
+                }))
+                setDisponibilidades(disponibilidadesConvertidas)
+              } else if (reloadResponse.error) {
+                console.error('Error al recargar disponibilidades:', reloadResponse.error)
+              }
+            } catch (error) {
+              console.error('Error al recargar disponibilidades:', error)
+            }
+          }, 500)
         }
+      } else {
+        toast.error('Error al crear disponibilidad', {
+          description: 'No se recibió respuesta del servidor'
+        })
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
