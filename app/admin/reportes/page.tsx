@@ -485,51 +485,125 @@ function AdminReportsPage() {
         }
       } else if (selectedFormat === 'pdf') {
         // PDF export using print dialog
+        // Helper function to escape HTML
+        const escapeHTML = (str: string | number): string => {
+          const s = String(str);
+          return s
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+        };
+
         const sections = [
           {
             title: 'Resumen',
             content: `
-              <table>
-                <tr><th>Métrica</th><th>Valor</th></tr>
-                <tr><td>Ingresos Totales</td><td>$${totalRevenue.toLocaleString()}</td></tr>
-                <tr><td>Reservas Totales</td><td>${totalReservations}</td></tr>
-                <tr><td>Ocupación Promedio</td><td>${occupancyRate}%</td></tr>
-                <tr><td>Margen de Ganancia</td><td>${profitMargin}%</td></tr>
+              <table border="1" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                  <tr style="background-color: #f5f5f5;">
+                    <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Métrica</th>
+                    <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Valor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;">Ingresos Totales</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">$${totalRevenue.toLocaleString()}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;">Reservas Totales</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${totalReservations}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;">Ocupación Promedio</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${occupancyRate.toFixed(2)}%</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;">Margen de Ganancia</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${profitMargin.toFixed(2)}%</td>
+                  </tr>
+                </tbody>
               </table>
             `
           },
           {
             title: 'Ingresos Mensuales',
             content: `
-              <table>
-                <tr><th>Mes</th><th>Ingresos</th></tr>
-                ${monthlyRevenueData.map(d => `<tr><td>${d.month}</td><td>$${d.revenue.toLocaleString()}</td></tr>`).join('')}
+              <table border="1" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                  <tr style="background-color: #f5f5f5;">
+                    <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Mes</th>
+                    <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Ingresos</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${monthlyRevenueData.map(d => `
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${escapeHTML(d.month)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">$${d.revenue.toLocaleString()}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
               </table>
             `
           },
           {
             title: 'Deportes',
             content: `
-              <table>
-                <tr><th>Deporte</th><th>Ingresos</th></tr>
-                ${sportData.map(d => `<tr><td>${d.name}</td><td>$${d.revenue.toLocaleString()}</td></tr>`).join('')}
+              <table border="1" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                  <tr style="background-color: #f5f5f5;">
+                    <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Deporte</th>
+                    <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Ingresos</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${sportData.map(d => `
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${escapeHTML(d.name)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">$${d.revenue.toLocaleString()}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
               </table>
             `
           },
           {
             title: 'Ubicaciones',
             content: `
-              <table>
-                <tr><th>Ubicación</th><th>Ingresos</th></tr>
-                ${locationData.map(d => `<tr><td>${d.location}</td><td>$${d.revenue.toLocaleString()}</td></tr>`).join('')}
+              <table border="1" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                  <tr style="background-color: #f5f5f5;">
+                    <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Ubicación</th>
+                    <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Ingresos</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${locationData.map(d => `
+                    <tr>
+                      <td style="padding: 8px; border: 1px solid #ddd;">${escapeHTML(d.location)}</td>
+                      <td style="padding: 8px; border: 1px solid #ddd;">$${d.revenue.toLocaleString()}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
               </table>
             `
           }
         ]
-        createPrintableReport(`Reporte Analytics - ${selectedPeriod}`, sections)
-        toast.success('Reporte listo para imprimir', {
-          description: 'Usa el diálogo de impresión para guardar como PDF'
-        })
+        
+        try {
+          createPrintableReport(`Reporte Analytics - ${selectedPeriod}`, sections)
+          toast.success('Reporte listo para imprimir', {
+            description: 'Usa el diálogo de impresión para guardar como PDF'
+          })
+        } catch (error) {
+          console.error('Error creating PDF report:', error)
+          toast.error('Error al generar reporte PDF', {
+            description: error instanceof Error ? error.message : 'Error desconocido'
+          })
+        }
         return
       } else {
         throw new Error(`Formato no soportado: ${selectedFormat}`)
