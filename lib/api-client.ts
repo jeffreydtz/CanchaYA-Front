@@ -769,11 +769,23 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
         errorMessage = data.error
       }
 
-      console.error(`API Error [${response.status}] at ${endpoint}:`, {
-        status: response.status,
-        data,
-        errorMessage
-      })
+      // List of known endpoints that are not yet implemented in backend
+      // Suppress 404 errors for these to avoid console spam
+      const knownMissingEndpoints = [
+        '/reportes/canchas-top',
+        '/reportes/ocupacion-horarios',
+        '/roles'
+      ]
+
+      const shouldSuppressLog = response.status === 404 && knownMissingEndpoints.some(e => endpoint.includes(e))
+
+      if (!shouldSuppressLog) {
+        console.error(`API Error [${response.status}] at ${endpoint}:`, {
+          status: response.status,
+          data,
+          errorMessage
+        })
+      }
 
       return {
         error: errorMessage,
