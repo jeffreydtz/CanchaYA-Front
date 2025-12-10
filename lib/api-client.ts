@@ -774,7 +774,8 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
       const knownMissingEndpoints = [
         '/reportes/canchas-top',
         '/reportes/ocupacion-horarios',
-        '/roles'
+        '/roles',
+        '/admin/roles'
       ]
 
       const shouldSuppressLog = response.status === 404 && knownMissingEndpoints.some(e => endpoint.includes(e))
@@ -2006,22 +2007,22 @@ const apiClient = {
 
   // ===== ROLES =====
   // Module for managing system and business roles
-  // Base URL: /api/roles
+  // Base URL: /api/admin/roles (changed from /api/roles based on backend pattern)
   // Permissions: admin only
 
   /**
-   * Listar todos los roles - GET /api/roles (admin only)
+   * Listar todos los roles - GET /api/admin/roles (admin only)
    * Returns both sistema (admin, admin-club, usuario) and negocio (custom) roles
    */
-  getRoles: () => apiRequest<Rol[]>('/roles'),
+  getRoles: () => apiRequest<Rol[]>('/admin/roles'),
 
   /**
-   * Crear nuevo rol de negocio - POST /api/roles (admin only)
+   * Crear nuevo rol de negocio - POST /api/admin/roles (admin only)
    * Creates a new business role for segmentation/UX purposes
    * Cannot create reserved names (admin, admin-club, usuario)
    */
   crearRol: (data: CrearRolDto) =>
-    apiRequest<Rol>('/roles', {
+    apiRequest<Rol>('/admin/roles', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
