@@ -40,6 +40,18 @@ const DIAS_SEMANA = [
   { value: 6, label: 'Sábado', short: 'Sáb' },
 ]
 
+/**
+ * Convierte días de la semana del formato frontend (0-6) al formato backend (1-7)
+ * Frontend: 0=domingo, 1=lunes, ..., 6=sábado
+ * Backend POST: 1=lunes, ..., 6=sábado, 7=domingo
+ */
+function convertDiasToBackendFormat(dias: number[]): number[] {
+  return dias.map(dia => {
+    if (dia === 0) return 7 // Domingo: 0 -> 7
+    return dia // Lunes-Sábado: 1-6 -> 1-6
+  })
+}
+
 function AdminDisponibilidadPage() {
   const [canchas, setCanchas] = useState<Cancha[]>([])
   const [horarios, setHorarios] = useState<Horario[]>([])
@@ -114,10 +126,13 @@ function AdminDisponibilidadPage() {
 
     setSubmitting(true)
     try {
+      // Convertir días del formato frontend (0-6) al formato backend (1-7)
+      const diasBackend = convertDiasToBackendFormat(selectedDias)
+      
       const response = await apiClient.crearDisponibilidadLote({
         canchaIds: selectedCanchas,
         horarioIds: selectedHorarios,
-        diasSemana: selectedDias,
+        diasSemana: diasBackend,
         disponible: true
       })
 

@@ -10,6 +10,7 @@ import { toast } from 'sonner'
 import apiClient, { Club, Cancha, AvailabilitySlotRealTime, CanchaFoto } from '@/lib/api-client'
 import { Loader2, MapPin, Trophy, Calendar as CalendarIcon, Clock, CheckCircle2 } from 'lucide-react'
 import { CourtPhotosCarousel } from '@/components/court/court-photos-carousel'
+import { RealtimeAvailability } from '@/components/disponibilidad/realtime-availability'
 import {
   Select,
   SelectContent,
@@ -109,9 +110,9 @@ export default function ReservarPage() {
         })
 
         if (response.data) {
-          // Filter to only show free slots
+          // Show all slots (libre and ocupado) - ocupado will be disabled in UI
           const slots = response.data
-            .filter(slot => slot.estado === 'libre' && slot.fecha === dateStr)
+            .filter(slot => slot.fecha === dateStr)
             .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio))
           setAvailableSlots(slots)
         } else {
@@ -149,6 +150,12 @@ export default function ReservarPage() {
   }, [selectedCancha])
 
   const handleReserve = async (slot: AvailabilitySlotRealTime) => {
+    // Validate slot is free
+    if (slot.ocupado || slot.estado !== 'libre') {
+      toast.error('Este horario ya está ocupado')
+      return
+    }
+
     if (!personaId) {
       toast.error('Debes iniciar sesión para hacer una reserva')
       return
@@ -203,8 +210,9 @@ export default function ReservarPage() {
       })
 
       if (availResponse.data) {
+        // Show all slots (libre and ocupado) - ocupado will be disabled in UI
         const slots = availResponse.data
-          .filter(s => s.estado === 'libre' && s.fecha === dateStr2)
+          .filter(s => s.fecha === dateStr2)
           .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio))
         setAvailableSlots(slots)
       }
@@ -361,41 +369,19 @@ export default function ReservarPage() {
                     <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
                     <p className="text-gray-600 dark:text-gray-400">Cargando horarios...</p>
                   </div>
-                ) : availableSlots.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-20 text-gray-500 dark:text-gray-400">
-                    <CalendarIcon className="h-16 w-16 mb-4 text-gray-300 dark:text-gray-700" />
-                    <p className="text-lg font-medium">No hay horarios disponibles</p>
-                    <p className="text-sm">para esta fecha y cancha</p>
-                  </div>
                 ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                    {availableSlots.map((slot) => (
-                      <Button
-                        key={`${slot.disponibilidadId}-${slot.fecha}`}
-                        onClick={() => handleReserve(slot)}
-                        disabled={reserving !== null}
-                        variant="outline"
-                        className="h-auto py-4 flex flex-col items-center gap-2 border-2 border-green-200 dark:border-green-700 hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-950/20 transition-all"
-                      >
-                        {reserving === slot.disponibilidadId ? (
-                          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                        ) : (
-                          <>
-                            <Clock className="h-5 w-5 text-green-600 dark:text-green-400" />
-                            <span className="text-lg font-bold text-gray-900 dark:text-white">
-                              {slot.horaInicio.substring(0, 5)}
-                            </span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                              {slot.horaFin.substring(0, 5)}
-                            </span>
-                            <Badge variant="outline" className="bg-green-100 text-green-700 text-xs mt-1 dark:bg-green-900 dark:text-green-300">
-                              Disponible
-                            </Badge>
-                          </>
-                        )}
-                      </Button>
-                    ))}
-                  </div>
+                  <RealtimeAvailability
+                    slots={availableSlots}
+                    selectedDate={selectedDate ? format(selectedDate, 'yyyy-MM-dd') : ''}
+                    onSlotSelect={(slot) => {
+                      // Only allow selection of free slots
+                      if (slot.estado === 'libre' && !slot.ocupado) {
+                        handleReserve(slot)
+                      }
+                    }}
+                    selectedSlotId={reserving || undefined}
+                    title="Horarios Disponibles"
+                  />
                 )}
               </CardContent>
             </Card>
