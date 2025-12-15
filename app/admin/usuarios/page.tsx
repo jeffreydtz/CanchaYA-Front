@@ -272,6 +272,14 @@ function AdminUsersPage() {
     setEditDialogOpen(true)
   }
 
+  const openAccessDialog = (user: UsuarioAdmin) => {
+    setSelectedUser(user)
+    const accessLevel = getUserAccessLevel(user)
+    setSelectedAccessLevel(accessLevel)
+    setSelectedClubIds(user.clubIds || [])
+    setAccessDialogOpen(true)
+  }
+
   const getUserAccessLevel = (user: UsuarioAdmin): 'usuario' | 'admin-club' | 'admin' => {
     const rolInfo = roles.find((rol) => rol.nombre === user.rol)
     // Si el backend aún no devuelve nivelAcceso en UsuarioAdmin,
