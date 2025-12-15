@@ -12,7 +12,7 @@ import { useLanguage } from '@/lib/language-context'
 import { Badge } from '@/components/ui/badge'
 
 export default function Navbar() {
-  const { user, isAuthenticated, isAdmin, isAdminClub, logout } = useAuth()
+  const { user, isAuthenticated, isAdmin, isAdminClub, clubIds, nivelAcceso, logout } = useAuth()
   const { pendingChallengesCount } = useChallengesNotifications()
   const { t } = useLanguage()
   const [isScrolled, setIsScrolled] = useState(false)
@@ -216,7 +216,13 @@ export default function Navbar() {
                             {hasAdminAccess && (
                               <div className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gradient-to-r from-secondary to-accent text-white mt-2">
                                 <Shield className="h-3 w-3 mr-1" />
-                                {isAdmin ? 'Admin' : 'Admin Club'}
+                                {isAdmin
+                                  ? 'Administrador (Global)'
+                                  : `Administrador (Club)${
+                                      clubIds && clubIds.length > 0
+                                        ? ` · Clubs: ${clubIds.length}`
+                                        : ''
+                                    }`}
                               </div>
                             )}
                           </div>

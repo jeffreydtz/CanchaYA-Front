@@ -1,23 +1,28 @@
 'use client'
 
-import { Suspense } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import AdminSidebar from '@/components/admin/admin-sidebar'
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import Navbar from '@/components/navbar/navbar'
 import { useAuth } from '@/components/auth/auth-context'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
 import { ErrorBoundary } from '@/components/error/error-boundary'
 import { AlertCircle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import apiClient, { Club } from '@/lib/api-client'
+import { useAdminClubFilter } from '@/hooks/use-admin-club-filter'
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const { isAuthenticated, isAdmin, isAdminClub, clubIds } = useAuth()
+  const { isAuthenticated, isAdmin, isAdminClub, clubIds, nivelAcceso } = useAuth()
   const router = useRouter()
+  const { selectedClubId, onClubSelect } = useAdminClubFilter()
+  const [clubs, setClubs] = useState<Club[]>([])
 
   // Allow access to both admin and admin-club users
   const hasAdminAccess = isAdmin || isAdminClub
@@ -30,6 +35,28 @@ export default function AdminLayout({
       router.replace('/')
     }
   }, [isAuthenticated, hasAdminAccess, router])
+
+  // Load clubs for selector in admin panel header
+  useEffect(() => {
+    const loadClubs = async () => {
+      try {
+        const response = await apiClient.getClubes()
+        if (response.error) return
+        let data = response.data || []
+        // For admin-club, only show their scoped clubs
+        if (isAdminClub && clubIds && clubIds.length > 0) {
+          data = data.filter((club) => clubIds.includes(club.id))
+        }
+        setClubs(data)
+      } catch {
+        // Silenciar errores en header de admin
+      }
+    }
+
+    if (hasAdminAccess) {
+      void loadClubs()
+    }
+  }, [hasAdminAccess, isAdminClub, clubIds])
 
   if (!isAuthenticated || !hasAdminAccess) {
     return null // O un loader/spinner
@@ -51,6 +78,52 @@ export default function AdminLayout({
                 </div>
               </header>
               <main className="p-4 md:p-6 lg:p-8">
+                {/* Header role badge + scope selector */}
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">
+                      {nivelAcceso === 'admin'
+                        ? 'Admin Global'
+                        : nivelAcceso === 'admin-club'
+                        ? `Admin Club${clubIds && clubIds.length ? ` · Clubs: ${clubIds.length}` : ''}`
+                        : 'Usuario'}
+                    </Badge>
+                  </div>
+                  {hasAdminAccess && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs md:text-sm text-gray-600 dark:text-gray-300">
+                        {isAdminClub ? 'Club actual:' : 'Alcance de datos:'}
+                      </span>
+                      <Select
+                        value={selectedClubId ?? (isAdmin ? 'all' : '')}
+                        onValueChange={(value) => {
+                          if (isAdmin && value === 'all') {
+                            onClubSelect(null)
+                          } else {
+                            onClubSelect(value)
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="h-8 w-[200px]">
+                          <SelectValue placeholder={isAdminClub ? 'Seleccioná un club' : 'Todos los clubes'} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {isAdmin && (
+                            <SelectItem value="all">
+                              Todos los clubes
+                            </SelectItem>
+                          )}
+                          {clubs.map((club) => (
+                            <SelectItem key={club.id} value={club.id}>
+                              {club.nombre}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </div>
+
                 {/* Warning banner for admin-club users without assigned clubs */}
                 {hasNoClubScope && (
                   <div className="mb-4">
