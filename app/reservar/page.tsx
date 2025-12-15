@@ -105,9 +105,9 @@ export default function ReservarPage() {
         })
 
         if (response.data) {
-          // Show all slots (libre and ocupado) - ocupado will be disabled in UI
+          // Show all slots returned by backend for that rango.
+          // No filtramos por fecha aquí para evitar perder horarios que cruzan medianoche.
           const slots = response.data
-            .filter(slot => slot.fecha === dateStr)
             .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio))
           setAvailableSlots(slots)
         } else {
@@ -205,9 +205,8 @@ export default function ReservarPage() {
       })
 
       if (availResponse.data) {
-        // Show all slots (libre and ocupado) - ocupado will be disabled in UI
+        // Show all slots (libre y ocupado); el backend ya respeta el rango de fechas.
         const slots = availResponse.data
-          .filter(s => s.fecha === dateStr2)
           .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio))
         setAvailableSlots(slots)
       }
