@@ -112,13 +112,33 @@ export default function ReservarPage() {
         })
 
         if (response.data && response.data.length > 0) {
+          // mostramos slots del día seleccionado, y slots que COMIENZAN en el día seleccionado
+          // aunque terminen después de medianoche (ej: 23:00-00:00)
           const slots = response.data
-            // mostramos slots del día seleccionado, y los que cayeron en la madrugada del día siguiente
-            .filter(slot =>
-              slot.fecha === dateStr ||
-              (slot.fecha === nextDayStr && slot.horaInicio < '06:00') // rango tolerante para slots 23:00-00:00, 00-02, etc.
-            )
+            .filter(slot => {
+              // Caso 1: Slot que pertenece exactamente al día seleccionado
+              if (slot.fecha === dateStr) {
+                return true
+              }
+
+              // Caso 2: Slot del día siguiente PERO que comenzó antes de medianoche
+              // Ejemplo: slot 23:00-00:00 del día X aparece con fecha X+1 pero horaInicio 23:00
+              if (slot.fecha === nextDayStr) {
+                // Si el horario de inicio es >= 23:00, significa que comenzó el día anterior
+                // (algunos backends guardan el slot con la fecha de fin, no de inicio)
+                if (slot.horaInicio >= '23:00:00' || slot.horaInicio >= '23:00') {
+                  return true
+                }
+                // También incluir slots que realmente son de madrugada (00:00-06:00)
+                if (slot.horaInicio < '06:00:00' || slot.horaInicio < '06:00') {
+                  return true
+                }
+              }
+
+              return false
+            })
             .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio))
+
           setAvailableSlots(slots)
         } else {
           // Fallback: construir slots a partir del patrón semanal si la API de realtime no devuelve nada
@@ -222,7 +242,17 @@ export default function ReservarPage() {
       const fechaHora = `${year}-${month}-${day}T${hours}:${minutes}:00-03:00`
 
       const dateStr = format(selectedDate, 'yyyy-MM-dd')
-      if (slot.fecha !== dateStr) {
+      const nextDay = new Date(selectedDate)
+      nextDay.setDate(nextDay.getDate() + 1)
+      const nextDayStr = format(nextDay, 'yyyy-MM-dd')
+
+      // Validación flexible para slots que cruzan medianoche
+      // Un slot de 23:00-00:00 puede tener fecha del día siguiente pero comenzar en el día seleccionado
+      const isValidSlot =
+        slot.fecha === dateStr ||
+        (slot.fecha === nextDayStr && (slot.horaInicio >= '23:00' || slot.horaInicio >= '23:00:00'))
+
+      if (!isValidSlot) {
         toast.error('Error de validación', {
           description: 'La fecha del slot no coincide con la fecha seleccionada'
         })
@@ -263,10 +293,21 @@ export default function ReservarPage() {
 
         if (availResponse.data && availResponse.data.length > 0) {
           const slots = availResponse.data
-            .filter(slot =>
-              slot.fecha === dateStr2 ||
-              (slot.fecha === nextDayStr2 && slot.horaInicio < '06:00')
-            )
+            .filter(slot => {
+              // Mismo filtro que en la carga inicial
+              if (slot.fecha === dateStr2) {
+                return true
+              }
+              if (slot.fecha === nextDayStr2) {
+                if (slot.horaInicio >= '23:00:00' || slot.horaInicio >= '23:00') {
+                  return true
+                }
+                if (slot.horaInicio < '06:00:00' || slot.horaInicio < '06:00') {
+                  return true
+                }
+              }
+              return false
+            })
             .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio))
           setAvailableSlots(slots)
         } else {
@@ -296,8 +337,7 @@ export default function ReservarPage() {
           }
         }
       } catch (reloadError: any) {
-        // Error al recargar disponibilidad - no crítico, solo loguear
-        console.warn('Error al recargar disponibilidad después de reservar:', reloadError)
+        // Error al recargar disponibilidad - no crítico
         // No mostrar error al usuario ya que la reserva se creó exitosamente
       }
     } catch (error: any) {
