@@ -7,29 +7,29 @@ import { useAuth } from '@/components/auth/auth-context'
 
 export default function LoginPage() {
   const router = useRouter()
-  const { isAuthenticated, loading, userRole } = useAuth()
+  const { isAuthenticated, loading, nivelAcceso } = useAuth()
 
   useEffect(() => {
-    // If already authenticated, redirect based on role
+    // If already authenticated, redirect based on nivelAcceso (permission level)
     if (!loading && isAuthenticated) {
       let redirectPath = '/'
 
-      // Redirect based on role - admin and admin-club go to admin panel, others to home
-      // Note: System supports additional roles beyond these, but only admin/admin-club have admin panel access
-      if (userRole === 'admin') {
+      // Redirect based on nivelAcceso - admin and admin-club go to admin panel, others to home
+      // CRITICAL: Use nivelAcceso for routing decisions, NOT rol
+      if (nivelAcceso === 'admin') {
         // Global admin redirects to admin dashboard with full access
         redirectPath = '/admin/dashboard'
-      } else if (userRole === 'admin-club') {
+      } else if (nivelAcceso === 'admin-club') {
         // Club-specific admin redirects to admin dashboard with club filter
         redirectPath = '/admin/dashboard'
       } else {
-        // All other roles (usuario, and any other system/business roles) redirect to home
+        // All other permission levels (usuario) redirect to home
         redirectPath = '/'
       }
 
       router.push(redirectPath)
     }
-  }, [isAuthenticated, loading, userRole, router])
+  }, [isAuthenticated, loading, nivelAcceso, router])
 
   // Show nothing while checking auth or redirecting
   if (loading || isAuthenticated) {
