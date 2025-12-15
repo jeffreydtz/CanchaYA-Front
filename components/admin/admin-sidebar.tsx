@@ -32,6 +32,7 @@ import {
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/components/auth/auth-context"
 
 const menuItems = [
   {
@@ -137,6 +138,10 @@ function clientLogout(router: ReturnType<typeof useRouter>) {
 export default function AdminSidebar() {
   const router = useRouter()
   const pathname = usePathname()
+  const { nivelAcceso, clubIds } = useAuth()
+  const isSuperAdmin = nivelAcceso === 'admin'
+  const isAdminClub = nivelAcceso === 'admin-club'
+  const hasNoClubs = isAdminClub && (!clubIds || clubIds.length === 0)
   const [expandedItems, setExpandedItems] = useState<string[]>(['Analytics', 'Administración'])
 
   const toggleExpand = (title: string) => {
@@ -144,6 +149,20 @@ export default function AdminSidebar() {
       prev.includes(title) ? prev.filter(t => t !== title) : [...prev, title]
     )
   }
+
+  // Filter menu items based on access level
+  const visibleMenuItems = menuItems.filter((item) => {
+    // Only super admins can see the Administración section (Usuarios, Roles, Personas)
+    if (item.title === "Administración" && !isSuperAdmin) {
+      return false
+    }
+    // If an admin-club has no clubs assigned, still allow access to Dashboard/Analytics
+    // but hide explicit Clubes/Canchas/Disponibilidad/Reservas menus that would always be vacíos
+    if (hasNoClubs && ["Clubes", "Canchas", "Disponibilidad", "Reservas"].includes(item.title)) {
+      return false
+    }
+    return true
+  })
 
   return (
     <Sidebar className="border-r-2 border-gold/20 glass-luxury shadow-luxury-lg">
@@ -164,7 +183,7 @@ export default function AdminSidebar() {
 
       <SidebarContent className="p-4">
         <SidebarMenu className="space-y-3">
-          {menuItems.map((item) => {
+          {visibleMenuItems.map((item) => {
             const hasSubmenu = 'submenu' in item && item.submenu
             const isExpanded = expandedItems.includes(item.title)
             const isActive = pathname === item.url || (hasSubmenu && item.submenu?.some(sub => pathname === sub.url))

@@ -11,13 +11,23 @@ import apiClient, { Reserva } from '@/lib/api-client'
 import { withErrorBoundary } from '@/components/error/with-error-boundary'
 
 function AdminReservationsPage() {
-  const { isAuthenticated, loading: authLoading } = useAuth()
+  const { isAuthenticated, loading: authLoading, nivelAcceso, clubIds } = useAuth()
   const [reservations, setReservations] = useState<Reserva[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
 
+  const isAdminClub = nivelAcceso === 'admin-club'
+  const hasNoClubScope = isAdminClub && (!clubIds || clubIds.length === 0)
+
   useEffect(() => {
     if (!isAuthenticated || authLoading) {
+      setLoading(false)
+      return
+    }
+
+    // If admin-club user has no assigned clubs, don't request reservations (backend devolvería vacío igualmente)
+    if (hasNoClubScope) {
+      setReservations([])
       setLoading(false)
       return
     }
@@ -50,7 +60,7 @@ function AdminReservationsPage() {
     return () => {
       isMounted = false
     }
-  }, [isAuthenticated, authLoading])
+  }, [isAuthenticated, authLoading, hasNoClubScope])
 
   const filteredReservations = reservations.filter(reservation =>
     (reservation.disponibilidad?.cancha?.nombre?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
@@ -88,12 +98,21 @@ function AdminReservationsPage() {
     return <div className="text-center py-8">Cargando reservas...</div>
   }
 
+  const emptyStateContent = hasNoClubScope ? (
+    <div className="text-center py-8 space-y-2">
+      <p className="font-semibold">No tenés reservas para mostrar todavía.</p>
+      <p className="text-sm text-muted-foreground">
+        Sos <strong>Admin Club</strong> pero no tenés clubes asignados. Un admin global debe asignarte clubes para que puedas ver y gestionar reservas.
+      </p>
+    </div>
+  ) : (
+    <div className="text-center py-8">
+      <p>No hay reservas registradas en el sistema.</p>
+    </div>
+  )
+
   if (reservations.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <p>No hay reservas registradas en el sistema.</p>
-      </div>
-    )
+    return emptyStateContent
   }
 
   return (

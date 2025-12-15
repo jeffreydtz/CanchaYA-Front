@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import { formatCurrency, formatNumber } from '@/lib/analytics/formatters'
 import apiClient, { AdminResumen, TopJugador, CanchaMasUsada, PersonaConDeuda, ReservasAggregate } from '@/lib/api-client'
+import { useAuth } from '@/components/auth/auth-context'
 
 // Helper function to format currency with proper abbreviations
 const formatCurrencyCompact = (value: number): string => {
@@ -82,6 +83,10 @@ export function AdminDashboard() {
   const [reservasData, setReservasData] = useState<ReservasAggregate[]>([])
   const [error, setError] = useState<string | null>(null)
 
+  const { nivelAcceso, clubIds } = useAuth()
+  const isAdminClub = nivelAcceso === 'admin-club'
+  const hasNoClubScope = isAdminClub && (!clubIds || clubIds.length === 0)
+
   useEffect(() => {
     fetchDashboardData()
   }, [period])
@@ -89,6 +94,17 @@ export function AdminDashboard() {
   const fetchDashboardData = async () => {
     setLoading(true)
     setError(null)
+
+    // If admin-club user has no clubs assigned, avoid hitting analytics endpoints
+    if (hasNoClubScope) {
+      setResumen(null)
+      setTopJugadores([])
+      setCanchasMasUsadas([])
+      setPersonasConDeuda([])
+      setReservasData([])
+      setLoading(false)
+      return
+    }
 
     try {
       // Calculate date range based on period
@@ -210,7 +226,7 @@ export function AdminDashboard() {
       </div>
 
       {/* Error Alert */}
-      {error && (
+      {error && !hasNoClubScope && (
         <Card className="border-red-200 bg-red-50">
           <CardContent className="flex items-center gap-2 p-4">
             <AlertCircle className="h-5 w-5 text-red-600" />
@@ -219,8 +235,25 @@ export function AdminDashboard() {
         </Card>
       )}
 
-      {/* Key Metrics */}
-      {loading ? (
+      {/* Special case: admin-club without clubs */}
+      {hasNoClubScope ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-amber-500" />
+              Sin datos para mostrar todavía
+            </CardTitle>
+            <CardDescription>
+              Tu usuario es <strong>Admin Club</strong>, pero no tiene clubes asignados. Un admin global debe asignarte al menos un club para habilitar métricas.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Una vez que tengas clubes asignados, este dashboard mostrará reservas, canchas más usadas y métricas financieras filtradas automáticamente por tus clubes.
+            </p>
+          </CardContent>
+        </Card>
+      ) : loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(4)].map((_, i) => (
             <Card key={i} className="animate-pulse">
