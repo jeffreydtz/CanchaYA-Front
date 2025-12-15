@@ -628,19 +628,25 @@ export interface ReservasHeatmap {
 /**
  * Rol entity from backend
  * tipo: "sistema" (system roles - can include admin, admin-club, usuario, and other system roles) | "negocio" (custom business roles created by admin)
+ * nivelAcceso: REAL permission level that this role maps to
  */
 export interface Rol {
   id: string // UUID
   nombre: string // Role name (e.g., "admin", "admin-club", "usuario", "recepcionista", "cajero", or any other system/business role)
   tipo: 'sistema' | 'negocio'
+  nivelAcceso: 'usuario' | 'admin-club' | 'admin'
 }
 
 /**
  * DTO for creating a new business role
  * POST /api/roles
+ *
+ * Backend spec:
+ * { "nombre": "recepcionista", "nivelAcceso": "admin-club" }
  */
 export interface CrearRolDto {
   nombre: string // Role name (must not conflict with existing system roles)
+  nivelAcceso: 'usuario' | 'admin-club' | 'admin'
 }
 
 /**

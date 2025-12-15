@@ -29,6 +29,7 @@ export default function RolesPage() {
   const [creating, setCreating] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [nuevoRolNombre, setNuevoRolNombre] = useState('')
+  const [nuevoRolNivelAcceso, setNuevoRolNivelAcceso] = useState<'usuario' | 'admin-club' | 'admin'>('usuario')
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -68,6 +69,7 @@ export default function RolesPage() {
       setCreating(true)
       const data: CrearRolDto = {
         nombre: nuevoRolNombre.trim().toLowerCase(),
+        nivelAcceso: nuevoRolNivelAcceso,
       }
       const response = await apiClient.crearRol(data)
       if (response.error) {
@@ -75,6 +77,7 @@ export default function RolesPage() {
       } else {
         toast.success(`Rol "${nuevoRolNombre}" creado correctamente`)
         setNuevoRolNombre('')
+        setNuevoRolNivelAcceso('usuario')
         setDialogOpen(false)
         fetchRoles()
       }
@@ -109,7 +112,7 @@ export default function RolesPage() {
             <DialogHeader>
               <DialogTitle>Crear Nuevo Rol de Negocio</DialogTitle>
               <DialogDescription>
-                Los roles de negocio se usan para segmentación y UX. No agregan permisos adicionales de seguridad.
+                Cada rol de negocio se mapea a un nivel de acceso real. El nivel de acceso define qué puede hacer el usuario en el sistema.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
@@ -129,6 +132,69 @@ export default function RolesPage() {
                 <p className="text-xs text-muted-foreground">
                   No puede usar nombres que ya existen en el sistema
                 </p>
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  Nivel de acceso
+                  <span className="text-xs font-normal text-muted-foreground">
+                    (define permisos reales)
+                  </span>
+                </Label>
+                <div className="grid gap-3 md:grid-cols-3">
+                  <button
+                    type="button"
+                    className={`text-left p-3 rounded-lg border text-sm transition-all ${
+                      nuevoRolNivelAcceso === 'usuario'
+                        ? 'border-primary bg-primary/5 shadow-sm'
+                        : 'border-muted hover:border-muted-foreground/40'
+                    }`}
+                    onClick={() => setNuevoRolNivelAcceso('usuario')}
+                  >
+                    <div className="font-medium flex items-center gap-2 mb-1">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      Usuario
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Puede reservar y ver sus propias reservas. Sin acceso a panel de administración.
+                    </p>
+                  </button>
+
+                  <button
+                    type="button"
+                    className={`text-left p-3 rounded-lg border text-sm transition-all ${
+                      nuevoRolNivelAcceso === 'admin-club'
+                        ? 'border-orange-500 bg-orange-500/5 shadow-sm'
+                        : 'border-muted hover:border-muted-foreground/40'
+                    }`}
+                    onClick={() => setNuevoRolNivelAcceso('admin-club')}
+                  >
+                    <div className="font-medium flex items-center gap-2 mb-1">
+                      <Building2 className="h-4 w-4 text-orange-500" />
+                      Admin Club
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Gestiona reservas, canchas y métricas solo de los clubes asignados.
+                    </p>
+                  </button>
+
+                  <button
+                    type="button"
+                    className={`text-left p-3 rounded-lg border text-sm transition-all ${
+                      nuevoRolNivelAcceso === 'admin'
+                        ? 'border-red-500 bg-red-500/5 shadow-sm'
+                        : 'border-muted hover:border-muted-foreground/40'
+                    }`}
+                    onClick={() => setNuevoRolNivelAcceso('admin')}
+                  >
+                    <div className="font-medium flex items-center gap-2 mb-1">
+                      <Shield className="h-4 w-4 text-red-500" />
+                      Admin Global
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Acceso total al sistema, todos los clubes y configuración global.
+                    </p>
+                  </button>
+                </div>
               </div>
             </div>
             <DialogFooter>
