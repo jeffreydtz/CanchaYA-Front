@@ -102,6 +102,9 @@ export default function ReservarPage() {
         nextDay.setDate(nextDay.getDate() + 1)
         const nextDayStr = format(nextDay, 'yyyy-MM-dd')
 
+        // Validación: verificar que from <= to (ya se cumple automáticamente aquí)
+        // Validación: rango máximo de 30 días (en este caso solo consultamos 1-2 días, OK)
+
         const response = await apiClient.getDisponibilidadRealTime({
           from: dateStr,
           to: nextDayStr, // incluir la madrugada siguiente para capturar slots cruzando medianoche
@@ -145,8 +148,25 @@ export default function ReservarPage() {
             setAvailableSlots([])
           }
         }
-      } catch {
-        toast.error('Error al cargar horarios disponibles')
+      } catch (error: any) {
+        // Manejo específico de errores según documentación backend
+        if (error?.response?.status === 400) {
+          // Error de validación - problema de input del usuario
+          const details = error?.response?.data?.details
+          const errorMessage = Array.isArray(details) ? details.join(', ') : 'Parámetros de búsqueda inválidos'
+          toast.error('Error de validación', {
+            description: errorMessage
+          })
+        } else if (error?.response?.status === 404) {
+          // No se encontraron disponibilidades - no es error, solo vacío
+          setAvailableSlots([])
+        } else {
+          // Otro tipo de error (red, servidor, etc.)
+          const errorMessage = error instanceof Error ? error.message : 'Error al cargar horarios disponibles'
+          toast.error('Error al cargar horarios', {
+            description: errorMessage
+          })
+        }
         setAvailableSlots([])
       } finally {
         setSlotsLoading(false)
@@ -228,57 +248,79 @@ export default function ReservarPage() {
         description: `${slot.canchaNombre} - ${format(selectedDate, "dd 'de' MMMM", { locale: es })} a las ${slot.horaInicio.substring(0, 5)}`
       })
 
-      // Recargar disponibilidad
+      // Recargar disponibilidad después de crear la reserva
       const dateStr2 = format(selectedDate, 'yyyy-MM-dd')
       const nextDay2 = new Date(selectedDate)
       nextDay2.setDate(nextDay2.getDate() + 1)
       const nextDayStr2 = format(nextDay2, 'yyyy-MM-dd')
 
-      const availResponse = await apiClient.getDisponibilidadRealTime({
-        from: dateStr2,
-        to: nextDayStr2,
-        canchaId: selectedCancha
-      })
+      try {
+        const availResponse = await apiClient.getDisponibilidadRealTime({
+          from: dateStr2,
+          to: nextDayStr2,
+          canchaId: selectedCancha
+        })
 
-      if (availResponse.data && availResponse.data.length > 0) {
-        const slots = availResponse.data
-          .filter(slot =>
-            slot.fecha === dateStr2 ||
-            (slot.fecha === nextDayStr2 && slot.horaInicio < '06:00')
-          )
-          .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio))
-        setAvailableSlots(slots)
-      } else {
-        // mismo fallback que en la carga inicial
-        const patternResponse = await apiClient.getDisponibilidadPorCancha(selectedCancha)
-        if (patternResponse.data && patternResponse.data.length > 0) {
-          const allPattern: DisponibilidadHorario[] = patternResponse.data
-          const weekday = selectedDate.getDay()
-          const patternForDay = allPattern.filter(
-            (disp) => disp.diaSemana === weekday && disp.disponible !== false && disp.horario
-          )
+        if (availResponse.data && availResponse.data.length > 0) {
+          const slots = availResponse.data
+            .filter(slot =>
+              slot.fecha === dateStr2 ||
+              (slot.fecha === nextDayStr2 && slot.horaInicio < '06:00')
+            )
+            .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio))
+          setAvailableSlots(slots)
+        } else {
+          // mismo fallback que en la carga inicial
+          const patternResponse = await apiClient.getDisponibilidadPorCancha(selectedCancha)
+          if (patternResponse.data && patternResponse.data.length > 0) {
+            const allPattern: DisponibilidadHorario[] = patternResponse.data
+            const weekday = selectedDate.getDay()
+            const patternForDay = allPattern.filter(
+              (disp) => disp.diaSemana === weekday && disp.disponible !== false && disp.horario
+            )
 
-          const fallbackSlots: AvailabilitySlotRealTime[] = patternForDay.map((disp) => ({
-            fecha: dateStr2,
-            canchaId: selectedCancha,
-            canchaNombre: '',
-            horarioId: disp.horario.id,
-            horaInicio: disp.horario.horaInicio,
-            horaFin: disp.horario.horaFin,
-            disponibilidadId: disp.id,
-            ocupado: false,
-            estado: 'libre',
-          }))
+            const fallbackSlots: AvailabilitySlotRealTime[] = patternForDay.map((disp) => ({
+              fecha: dateStr2,
+              canchaId: selectedCancha,
+              canchaNombre: '',
+              horarioId: disp.horario.id,
+              horaInicio: disp.horario.horaInicio,
+              horaFin: disp.horario.horaFin,
+              disponibilidadId: disp.id,
+              ocupado: false,
+              estado: 'libre',
+            }))
 
-          fallbackSlots.sort((a, b) => a.horaInicio.localeCompare(b.horaInicio))
-          setAvailableSlots(fallbackSlots)
+            fallbackSlots.sort((a, b) => a.horaInicio.localeCompare(b.horaInicio))
+            setAvailableSlots(fallbackSlots)
+          }
         }
+      } catch (reloadError: any) {
+        // Error al recargar disponibilidad - no crítico, solo loguear
+        console.warn('Error al recargar disponibilidad después de reservar:', reloadError)
+        // No mostrar error al usuario ya que la reserva se creó exitosamente
       }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Ocurrió un error inesperado'
-      toast.error('Error al crear reserva', {
-        description: errorMessage
-      })
+    } catch (error: any) {
+      // Manejo específico de errores según documentación backend
+      if (error?.response?.status === 400) {
+        // Error de validación
+        const details = error?.response?.data?.details
+        const errorMessage = Array.isArray(details) ? details.join(', ') : error?.response?.data?.message || 'Datos de reserva inválidos'
+        toast.error('Error de validación', {
+          description: errorMessage
+        })
+      } else if (error?.response?.status === 409) {
+        // Conflicto - slot ya reservado
+        toast.error('Slot no disponible', {
+          description: 'Este horario ya fue reservado por otro usuario. Por favor selecciona otro horario.'
+        })
+      } else {
+        // Otro tipo de error
+        const errorMessage = error instanceof Error ? error.message : 'Ocurrió un error inesperado'
+        toast.error('Error al crear reserva', {
+          description: errorMessage
+        })
+      }
     } finally {
       setReserving(null)
     }

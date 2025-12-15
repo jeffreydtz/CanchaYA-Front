@@ -29,6 +29,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { withErrorBoundary } from '@/components/error/with-error-boundary'
+import { useAuth } from '@/components/auth/auth-context'
 
 const DIAS_SEMANA = [
   { value: 0, label: 'Domingo', short: 'Dom' },
@@ -72,6 +73,7 @@ function convertDiaFromBackendFormat(backendDia: number): number {
 }
 
 function AdminDisponibilidadPage() {
+  const { nivelAcceso, clubIds, isAdmin } = useAuth()
   const [canchas, setCanchas] = useState<Cancha[]>([])
   const [horarios, setHorarios] = useState<Horario[]>([])
   const [disponibilidades, setDisponibilidades] = useState<DisponibilidadHorario[]>([])
@@ -83,7 +85,7 @@ function AdminDisponibilidadPage() {
   const [submitting, setSubmitting] = useState(false)
   const [viewLoading, setViewLoading] = useState(false)
 
-  // Cargar canchas al inicio
+  // Cargar canchas al inicio - FILTRADAS POR ALCANCE DEL USUARIO
   useEffect(() => {
     const loadInitialData = async () => {
       setLoading(true)
@@ -93,7 +95,23 @@ function AdminDisponibilidadPage() {
           apiClient.getHorarios()
         ])
 
-        if (canchasRes.data) setCanchas(canchasRes.data)
+        if (canchasRes.data) {
+          let filteredCanchas = canchasRes.data
+
+          // CRITICAL: Filtrar canchas según nivel de acceso
+          // Admin global: ve todas las canchas
+          // Admin club: solo ve canchas de sus clubes asignados
+          if (nivelAcceso === 'admin-club' && clubIds && clubIds.length > 0) {
+            filteredCanchas = canchasRes.data.filter(cancha =>
+              clubIds.includes(cancha.club.id)
+            )
+            console.log(`Admin-club: Filtrando ${canchasRes.data.length} canchas a ${filteredCanchas.length} canchas de clubes: ${clubIds.join(', ')}`)
+          } else if (nivelAcceso === 'admin') {
+            console.log(`Admin global: Mostrando todas las ${canchasRes.data.length} canchas`)
+          }
+
+          setCanchas(filteredCanchas)
+        }
         if (horariosRes.data) setHorarios(horariosRes.data)
       } catch {
         toast.error('Error al cargar datos iniciales')
@@ -102,7 +120,7 @@ function AdminDisponibilidadPage() {
       }
     }
     loadInitialData()
-  }, [])
+  }, [nivelAcceso, clubIds])
 
   // Cargar disponibilidades cuando se selecciona una cancha para ver
   useEffect(() => {
