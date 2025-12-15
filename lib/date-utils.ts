@@ -21,13 +21,12 @@ export const formatDate = (date: Date | string, formatType: keyof typeof DATE_FO
     }
     return format(dateObj, DATE_FORMATS[formatType], { locale: es })
   } catch (error) {
-    console.error('Error formatting date:', error)
     return 'Fecha inválida'
   }
 }
 
 export const formatDateWithTimezone = (
-  date: Date | string, 
+  date: Date | string,
   formatType: keyof typeof DATE_FORMATS = 'DISPLAY',
   timezone: string = DEFAULT_TIMEZONE
 ): string => {
@@ -38,7 +37,6 @@ export const formatDateWithTimezone = (
     }
     return formatInTimeZone(dateObj, timezone, DATE_FORMATS[formatType], { locale: es })
   } catch (error) {
-    console.error('Error formatting date with timezone:', error)
     return 'Fecha inválida'
   }
 }
@@ -48,7 +46,6 @@ export const parseDate = (dateString: string): Date | null => {
     const date = parseISO(dateString)
     return isValid(date) ? date : null
   } catch (error) {
-    console.error('Error parsing date:', error)
     return null
   }
 }

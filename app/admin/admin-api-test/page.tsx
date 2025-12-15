@@ -165,7 +165,6 @@ export default function AdminApiTestPage() {
         })
       }
     } catch (error) {
-      console.error('Error running tests:', error)
       toast.error('Error al ejecutar pruebas')
     } finally {
       setLoading(false)

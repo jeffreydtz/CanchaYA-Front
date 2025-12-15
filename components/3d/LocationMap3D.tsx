@@ -304,7 +304,6 @@ export function LocationMap3D({ locations, onLocationClick, className = '' }: Lo
     // Handle WebGL context loss
     const handleContextLost = (event: Event) => {
       event.preventDefault()
-      console.warn('WebGL context lost. 3D map disabled.')
       setHasError(true)
     }
 

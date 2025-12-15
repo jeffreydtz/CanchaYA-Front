@@ -46,7 +46,6 @@ export default function MyReservations() {
           setReservations(response.data)
         }
       } catch (error) {
-        console.error('Error loading reservations:', error)
         toast.error('No se pudieron cargar las reservas')
       } finally {
         setIsLoading(false)
@@ -71,7 +70,6 @@ export default function MyReservations() {
         toast.success('Tu reserva ha sido confirmada exitosamente')
       }
     } catch (error) {
-      console.error('Error confirming reservation:', error)
       toast.error('No se pudo confirmar la reserva')
     }
   }
@@ -88,7 +86,6 @@ export default function MyReservations() {
       setReservations(prev => prev.filter(r => r.id !== reservationId))
       toast.success('Tu reserva ha sido cancelada')
     } catch (error) {
-      console.error('Error cancelling reservation:', error)
       toast.error('No se pudo cancelar la reserva')
     }
   }

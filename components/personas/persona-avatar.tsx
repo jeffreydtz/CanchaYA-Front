@@ -111,7 +111,6 @@ export default function PersonaAvatar({
         setAvatarPreview(null)
       }
     } catch (error) {
-      console.error('Error uploading avatar:', error)
       toast.error('Error al subir el avatar')
     } finally {
       setUploading(false)

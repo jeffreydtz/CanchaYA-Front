@@ -81,7 +81,6 @@ export function LoginForm() {
               redirectPath = '/'
             }
           } catch (decodeError) {
-            console.error('Error decoding token for redirect:', decodeError)
             // Fall back to home if we can't decode
             redirectPath = '/'
           }

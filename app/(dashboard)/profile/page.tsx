@@ -162,7 +162,6 @@ function ProfileForm() {
         setAvatarPreview(null)
       }
     } catch (error) {
-      console.error('Error uploading avatar:', error)
       toast.error('Error al subir el avatar')
     } finally {
       setUploadingAvatar(false)
@@ -390,7 +389,7 @@ function RecentActivity() {
           setReservas(recent)
         }
       } catch (error) {
-        console.error('Error fetching recent reservations:', error)
+        // Silently handle fetch error
       } finally {
         setLoading(false)
       }
@@ -490,7 +489,7 @@ function CompetitiveProfile() {
           setPerfil(response.data)
         }
       } catch (error) {
-        console.error('Error fetching competitive profile:', error)
+        // Silently handle fetch error
       } finally {
         setLoading(false)
       }
@@ -648,7 +647,7 @@ function ProfileStats() {
           })
         }
       } catch (error) {
-        console.error('Error fetching stats:', error)
+        // Silently handle fetch error
       } finally {
         setLoading(false)
       }

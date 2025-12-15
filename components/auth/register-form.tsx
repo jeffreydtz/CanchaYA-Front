@@ -112,8 +112,6 @@ export function RegisterForm() {
         toast.error('Error en el registro')
       }
     } catch (error: any) {
-      console.error('Registration error:', error)
-      
       // Intentar extraer errores del backend
       if (error.response?.data?.errors) {
         error.response.data.errors.forEach((err: string) => {

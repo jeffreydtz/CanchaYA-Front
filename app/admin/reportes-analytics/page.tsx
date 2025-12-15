@@ -37,7 +37,7 @@ function ReportesAnalyticsPage() {
           } as Report;
         }));
       } catch {
-        console.error('Error loading reports');
+        // Error loading reports from localStorage
       }
     }
   }, []);
@@ -206,7 +206,6 @@ function ReportesAnalyticsPage() {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-      console.error('Error generating report:', errorMessage);
       toast.error('Error al generar reporte', {
         description: errorMessage
       });

@@ -27,7 +27,7 @@ export function ChallengesProvider({ children }: { children: ReactNode }) {
         setPendingChallengesCount(pending)
       }
     } catch (error) {
-      console.error('Error fetching pending challenges:', error)
+      // Silently handle fetch error
     }
   }, [isAuthenticated])
 

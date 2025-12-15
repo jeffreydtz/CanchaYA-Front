@@ -53,7 +53,6 @@ export default function ChallengesList() {
         setChallenges(sorted)
       }
     } catch (error) {
-      console.error('Error loading challenges:', error)
       toast.error('No se pudieron cargar los desafíos')
     } finally {
       setIsLoading(false)
@@ -79,7 +78,6 @@ export default function ChallengesList() {
       notifyChallengePendingCountChanged()
       loadChallenges()
     } catch (error) {
-      console.error('Error accepting challenge:', error)
       toast.error('No se pudo aceptar el desafío')
     }
   }
@@ -96,7 +94,6 @@ export default function ChallengesList() {
       notifyChallengePendingCountChanged()
       loadChallenges()
     } catch (error) {
-      console.error('Error rejecting challenge:', error)
       toast.error('No se pudo rechazar el desafío')
     }
   }

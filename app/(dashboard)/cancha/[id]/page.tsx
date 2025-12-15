@@ -164,7 +164,6 @@ export default function CanchaDetailPage() {
           setDisponibilidades(disponibilidadesResponse.data)
         }
       } catch (error) {
-        console.error('Error fetching cancha:', error)
         notifyError('Error al cargar la cancha', 'Por favor, intenta nuevamente', {
           label: 'Reintentar',
           onClick: () => window.location.reload()
@@ -187,7 +186,7 @@ export default function CanchaDetailPage() {
           setCanchaFotos(response.data)
         }
       } catch (error) {
-        console.error('Error fetching cancha fotos:', error)
+        // Silently handle fetch error for fotos
       }
     }
     loadFotos()
@@ -277,7 +276,6 @@ export default function CanchaDetailPage() {
         notifyError('Error al crear la reserva', response.error || 'Intenta nuevamente')
       }
     } catch (error) {
-      console.error('Error creating reservation:', error)
       notifyError('Error al crear la reserva', 'Ocurrió un problema. Por favor, intenta nuevamente.')
     } finally {
       setReserving(false)

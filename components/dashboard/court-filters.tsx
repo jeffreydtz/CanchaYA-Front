@@ -44,7 +44,7 @@ export default function CourtFilters() {
           setDeportes(deportesResponse.data)
         }
       } catch (error) {
-        console.error('Error fetching filter data:', error)
+        // Silently handle filter data loading error
       } finally {
         setLoading(false)
       }
@@ -76,7 +76,6 @@ export default function CourtFilters() {
       }
     } catch (error) {
       toast.error('Error al aplicar filtros')
-      console.error('Error applying filters:', error)
     }
   }
 

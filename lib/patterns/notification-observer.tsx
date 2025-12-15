@@ -98,7 +98,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       try {
         observer.callback(notification)
       } catch (error) {
-        console.error(`[NotificationObserver] Error en observer ${observer.id}:`, error)
+        // Silently handle observer errors
       }
     })
   }, [observers])

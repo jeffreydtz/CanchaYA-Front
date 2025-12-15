@@ -169,7 +169,6 @@ export function ClubAnalyticsCard({
       setClubStats(stats)
       setClubCanchas(canchasByClub)
     } catch (error) {
-      console.error('Error loading club analytics:', error)
       toast.error('Error al cargar análisis de clubes')
     } finally {
       setLoading(false)

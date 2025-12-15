@@ -54,7 +54,6 @@ function decodeJWTToken(token: string): {
       clubIds: decoded.clubIds || [],
     }
   } catch (e) {
-    console.error('Error decoding JWT token:', e)
     return null
   }
 }
@@ -121,12 +120,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   )
                 }
               } catch (error) {
-                console.error('Error fetching persona data for avatar on init:', error)
                 // Continue even if persona fetch fails
               }
             }
           } catch (e) {
-            console.error('Error decoding token on init:', e)
             setUser(null)
             setPersonaId(null)
             setUserId(null)
@@ -246,7 +243,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         await apiClient.logoutAuth(refreshToken)
       } catch (error) {
-        console.error('Error revoking refresh token:', error)
+        // Silently handle token revocation error
       }
     }
 
@@ -269,12 +266,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshUser = async () => {
     if (typeof window === 'undefined') return
 
-    console.log('Refreshing user...')
     const token = getCookie('token')
-    console.log('Token from cookie:', token ? 'exists' : 'not found')
 
     if (!token) {
-      console.log('No token found, setting user to null')
       setUser(null)
       setNivelAcceso(null)
       setDisplayRole(null)
@@ -285,7 +279,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const decoded = jwtDecode<JWTPayload>(token)
       const tokenInfo = decodeJWTToken(token)
-      console.log('Token decoded successfully:', decoded)
 
       const userData: User = {
         id: decoded.id,
@@ -303,26 +296,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setNivelAcceso(decoded.nivelAcceso)
       setDisplayRole(decoded.rol)
       setClubIds(tokenInfo?.clubIds || [])
-      console.log('User refreshed:', userData)
 
       // Fetch persona data to get avatar URL
       if (decoded.personaId) {
         try {
           const personaResponse = await apiClient.getPersona(decoded.personaId)
           if (personaResponse.data?.avatarUrl) {
-            console.log('Avatar URL fetched:', personaResponse.data.avatarUrl)
             const avatarUrl = personaResponse.data.avatarUrl
             setUser((prevUser) =>
               prevUser ? { ...prevUser, avatarUrl } : null
             )
           }
         } catch (error) {
-          console.error('Error fetching persona data for avatar:', error)
           // Continue even if persona fetch fails
         }
       }
     } catch (e) {
-      console.error('Error decoding token on refresh:', e)
       setUser(null)
       setNivelAcceso(null)
       setDisplayRole(null)

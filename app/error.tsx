@@ -19,8 +19,7 @@ interface ErrorPageProps {
 
 export default function ErrorPage({ error, reset }: ErrorPageProps) {
   useEffect(() => {
-    // Log error to console and external service
-    console.error('Page Error:', error)
+    // Handle page error
     
     // In production, send to error tracking service
     if (process.env.NODE_ENV === 'production') {
@@ -124,7 +123,7 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
     // Copy error info to clipboard
     navigator.clipboard.writeText(JSON.stringify(errorReport, null, 2))
       .then(() => alert('Información del error copiada al portapapeles'))
-      .catch(() => console.error('Failed to copy error info'))
+      .catch(() => {/* Failed to copy error info */})
   }
 
   return (

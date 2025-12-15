@@ -84,7 +84,6 @@ export function RatingDisplay({
         }
       }
     } catch (error) {
-      console.error('Error loading ratings:', error)
       toast.error('Error al cargar valoraciones')
     } finally {
       setLoading(false)

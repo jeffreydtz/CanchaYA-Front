@@ -113,12 +113,11 @@ function DefaultErrorFallback({
     }
     
     // In a real app, this would send to error tracking service
-    console.error('Error Report:', errorReport)
-    
+
     // Copy error info to clipboard for user to send
     navigator.clipboard.writeText(JSON.stringify(errorReport, null, 2))
       .then(() => alert('Información del error copiada al portapapeles'))
-      .catch(() => console.error('Failed to copy error info'))
+      .catch(() => {/* Failed to copy error info */})
   }
 
   return (
@@ -269,9 +268,6 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     this.setState({ errorInfo })
 
-    // Log error to console (and external service in production)
-    console.error('ErrorBoundary caught an error:', error, errorInfo)
-
     // Call custom error handler if provided
     if (this.props.onError) {
       this.props.onError(error, errorInfo)
@@ -301,8 +297,6 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     //   headers: { 'Content-Type': 'application/json' },
     //   body: JSON.stringify(errorReport)
     // })
-    
-    console.log('Error report prepared for service:', errorReport)
   }
 
   resetError = () => {
@@ -344,8 +338,6 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 // Hook for error reporting in functional components
 export function useErrorHandler() {
   const reportError = React.useCallback((error: Error, context?: string) => {
-    console.error(`Error in ${context || 'component'}:`, error)
-    
     // In production, send to error tracking service
     if (process.env.NODE_ENV === 'production') {
       // reportErrorToService(error, context)

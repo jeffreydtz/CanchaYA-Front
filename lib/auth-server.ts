@@ -51,7 +51,6 @@ export async function getServerUser(): Promise<ServerUser | null> {
       fechaCreacion: decoded.iat ? new Date(decoded.iat * 1000).toISOString() : new Date().toISOString(),
     } as ServerUser
   } catch (error) {
-    console.error('Error decoding token:', error)
     cookieStore.delete('token')
     return null
   }

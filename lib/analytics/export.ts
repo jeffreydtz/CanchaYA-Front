@@ -120,7 +120,6 @@ export function downloadCSV(
       filename
     };
   } catch (error) {
-    console.error('Error exporting CSV:', error);
     return {
       success: false,
       filename,
@@ -147,7 +146,6 @@ export function downloadJSON(
       filename
     };
   } catch (error) {
-    console.error('Error exporting JSON:', error);
     return {
       success: false,
       filename,
@@ -210,7 +208,6 @@ export function downloadExcel(
       filename
     };
   } catch (error) {
-    console.error('Error exporting Excel:', error);
     return {
       success: false,
       filename,
@@ -239,7 +236,6 @@ export function downloadHTML(
       filename
     }
   } catch (error) {
-    console.error('Error exporting HTML:', error)
     return {
       success: false,
       filename,
@@ -476,7 +472,6 @@ export function createPrintableReport(
     };
 
   } catch (error) {
-    console.error('Error creating printable report:', error);
     alert('Error al generar el reporte PDF. Por favor, intenta nuevamente.');
   }
 }
@@ -558,7 +553,6 @@ export function exportChartAsPNG(
       error: 'Element is not a canvas or SVG'
     };
   } catch (error) {
-    console.error('Error exporting chart:', error);
     return {
       success: false,
       filename,
@@ -579,7 +573,6 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     await navigator.clipboard.writeText(text);
     return true;
   } catch (error) {
-    console.error('Error copying to clipboard:', error);
     return false;
   }
 }

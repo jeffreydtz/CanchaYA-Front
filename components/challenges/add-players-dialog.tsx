@@ -64,7 +64,6 @@ export function AddPlayersDialog({
           setSearchResults(filtered)
         }
       } catch (error) {
-        console.error('Error searching personas:', error)
         toast.error('Error al buscar jugadores')
       } finally {
         setIsSearching(false)
@@ -106,7 +105,6 @@ export function AddPlayersDialog({
       toast.success('Jugadores agregados exitosamente')
       onSuccess()
     } catch (error) {
-      console.error('Error adding players:', error)
       toast.error('No se pudieron agregar los jugadores')
     } finally {
       setIsSubmitting(false)

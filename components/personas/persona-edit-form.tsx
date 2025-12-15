@@ -76,7 +76,6 @@ export default function PersonaEditForm({
         }
       }
     } catch (error) {
-      console.error('Error updating persona:', error)
       toast.error('Error al actualizar el perfil')
     }
   }

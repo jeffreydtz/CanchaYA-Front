@@ -262,7 +262,6 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
         revenueByPeriod
       })
     } catch (error) {
-      console.error('Error loading detailed analytics:', error)
       toast.error('Error al cargar análisis detallado')
     } finally {
       setLoading(false)

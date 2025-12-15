@@ -70,7 +70,6 @@ function SegmentacionPage() {
 
       setSegmentData(mockData);
     } catch (error) {
-      console.error('Error loading segment data:', error);
       toast.error('Error al cargar datos de segmentación');
     } finally {
       setLoading(false);
@@ -97,7 +96,6 @@ function SegmentacionPage() {
         description: 'El archivo CSV se ha descargado correctamente'
       });
     } catch (error) {
-      console.error('Error exporting data:', error);
       toast.error('Error al exportar datos');
     }
   };

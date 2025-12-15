@@ -156,7 +156,6 @@ export function AdminDashboard() {
       }
 
     } catch (err) {
-      console.error('Error fetching dashboard data:', err)
       setError('Error al cargar los datos del dashboard')
       // Use mock data on error
       setResumen(defaultMockData.resumen)

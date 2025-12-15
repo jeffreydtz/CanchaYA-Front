@@ -252,7 +252,6 @@ const fetchDashboardData = async (filters?: Record<string, unknown> | null): Pro
       topCanchas
     }
   } catch (error) {
-    console.error('Error fetching dashboard data:', error)
     throw error
   }
 }
@@ -358,7 +357,6 @@ function DashboardPage() {
         throw new Error(result.error || 'Error al exportar')
       }
     } catch (error) {
-      console.error('Error exporting dashboard:', error)
       toast.error('Error al exportar', {
         description: error instanceof Error ? error.message : 'Error desconocido'
       })
@@ -444,7 +442,6 @@ function DashboardPage() {
         description: `Mostrando datos filtrados`
       })
     } catch (error) {
-      console.error('Error applying filters:', error)
       toast.error('Error al aplicar filtros')
     } finally {
       setLoading(false)

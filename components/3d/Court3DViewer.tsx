@@ -177,7 +177,6 @@ export function Court3DViewer({ sport, className = '' }: Court3DViewerProps) {
                 state.gl.domElement.addEventListener('webglcontextlost', (e: Event) => {
                   e.preventDefault()
                   setContextLost(true)
-                  console.warn('WebGL context lost in Court3DViewer')
                 })
               }}
             >

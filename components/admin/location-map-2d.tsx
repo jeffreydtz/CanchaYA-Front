@@ -100,7 +100,7 @@ export function LocationMap2D({ initialLat = -32.9442, initialLng = -60.6560, on
         mapInstanceRef.current = null
       }
     }).catch((err) => {
-      console.error('Error loading Leaflet:', err)
+      // Silently handle Leaflet loading error
     })
   }, [])
 

@@ -81,7 +81,6 @@ export async function fetchDashboardData(
       heatmap
     };
   } catch (error) {
-    console.error('Error fetching dashboard data:', error);
     throw error;
   }
 }
@@ -139,7 +138,6 @@ async function fetchTopCourts() {
     return response.data;
   } catch (error) {
     // Endpoint not available, return empty array to continue
-    console.warn('Top courts endpoint not available:', error);
     return [];
   }
 }
@@ -155,7 +153,6 @@ async function fetchOccupancyHourly() {
     return response.data;
   } catch (error) {
     // Endpoint not available, return empty array to continue
-    console.warn('Occupancy hourly endpoint not available:', error);
     return [];
   }
 }
@@ -450,7 +447,6 @@ async function calculateKPIs(
 
     return kpis;
   } catch (error) {
-    console.error('Error calculating KPIs:', error);
     // Return KPIs without comparison data
     return generateKPIsWithoutComparison(currentMetrics);
   }

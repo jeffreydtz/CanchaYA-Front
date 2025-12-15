@@ -63,7 +63,6 @@ export async function loginAction(
       success: false,
     }
   } catch (error) {
-    console.error('Login error:', error)
     return {
       error: 'Error del servidor. Intenta nuevamente.',
       success: false,
@@ -128,7 +127,6 @@ export async function registerAction(
       success: false,
     }
   } catch (error) {
-    console.error('Registration error:', error)
     return {
       error: 'Error del servidor. Intenta nuevamente.',
       success: false,
@@ -188,7 +186,6 @@ export async function createReservationAction(
       success: false,
     }
   } catch (error) {
-    console.error('Reservation creation error:', error)
     return {
       error: 'Error del servidor. Intenta nuevamente.',
       success: false,
@@ -215,7 +212,6 @@ export async function cancelReservationAction(
       message: 'Reserva cancelada exitosamente',
     }
   } catch (error) {
-    console.error('Reservation cancellation error:', error)
     return {
       error: 'Error del servidor. Intenta nuevamente.',
       success: false,

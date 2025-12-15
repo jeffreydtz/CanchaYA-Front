@@ -26,7 +26,7 @@ function AlertasPage() {
           lastTriggered: a.lastTriggered ? new Date(a.lastTriggered) : undefined
         })));
       } catch (error) {
-        console.error('Error loading alerts:', error);
+        // Error loading alerts from localStorage
       }
     }
   }, []);

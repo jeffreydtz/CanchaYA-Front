@@ -57,13 +57,8 @@ export class DataFactory {
    */
   static createValidatedCancha(data: any): Cancha {
     const validatedPrecio = this.validateNumeric(data.precioPorHora, 0)
-    
-    // Log de advertencia si el dato original era inválido
-    if (!validatedPrecio.isValid && data.precioPorHora !== undefined) {
-      console.warn(
-        `[DataFactory] precioPorHora inválido para cancha ${data.id}: "${data.precioPorHora}" → ${validatedPrecio.value}`
-      )
-    }
+
+    // Invalid precio data is silently normalized to 0
 
     return {
       id: data.id || '',
@@ -92,15 +87,9 @@ export class DataFactory {
    */
   static createValidatedRating(data: any): Valoracion {
     const validatedPuntaje = this.validateNumeric(data.puntaje, 0)
-    
+
     // Asegurar que el puntaje esté entre 1 y 5
     const clampedPuntaje = Math.max(1, Math.min(5, validatedPuntaje.value))
-    
-    if (!validatedPuntaje.isValid && data.puntaje !== undefined) {
-      console.warn(
-        `[DataFactory] puntaje inválido: "${data.puntaje}" → ${clampedPuntaje}`
-      )
-    }
 
     return {
       id: data.id || '',

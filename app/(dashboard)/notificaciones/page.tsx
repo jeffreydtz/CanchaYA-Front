@@ -63,7 +63,6 @@ function NotificationList() {
           setNotifications(response.data)
         }
       } catch (error) {
-        console.error('Error fetching notifications:', error)
         toast.error('Error al cargar notificaciones')
       } finally {
         setLoading(false)
@@ -256,7 +255,7 @@ function NotificationSettingsComponent() {
           setSubscription(response.data)
         }
       } catch (error) {
-        console.error('Error fetching subscription:', error)
+        // Silently handle fetch error
       } finally {
         setLoading(false)
       }

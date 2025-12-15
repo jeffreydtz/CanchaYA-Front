@@ -60,7 +60,6 @@ function AdminReservationsPage() {
         }
       } catch (error) {
         if (isMounted) {
-          console.error('Error loading reservations:', error)
           setReservations([])
         }
       } finally {
@@ -91,7 +90,6 @@ function AdminReservationsPage() {
         setReservations(reload.data)
       }
     } catch (error) {
-      console.error('Error al cancelar reserva desde admin:', error)
       toast.error('Error al cancelar la reserva')
     } finally {
       setCancellingId(null)

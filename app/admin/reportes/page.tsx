@@ -293,7 +293,6 @@ const fetchReportData = async (period: string): Promise<ReportData> => {
       previousMonthReservations: previousMonth?.reservations || 0
     }
   } catch (error) {
-    console.error('Error fetching report data:', error)
     throw error
   }
 }
@@ -316,7 +315,6 @@ function AdminReportsPage() {
       setData(reportData)
     } catch (error) {
       toast.error('Error al cargar datos de reportes')
-      console.error(error)
     } finally {
       setLoading(false)
     }
@@ -599,7 +597,6 @@ function AdminReportsPage() {
             description: 'Usa el diálogo de impresión para guardar como PDF'
           })
         } catch (error) {
-          console.error('Error creating PDF report:', error)
           toast.error('Error al generar reporte PDF', {
             description: error instanceof Error ? error.message : 'Error desconocido'
           })
@@ -609,7 +606,6 @@ function AdminReportsPage() {
         throw new Error(`Formato no soportado: ${selectedFormat}`)
       }
     } catch (error) {
-      console.error('Error exporting report:', error)
       toast.error('Error al exportar', {
         description: error instanceof Error ? error.message : 'Error desconocido'
       })

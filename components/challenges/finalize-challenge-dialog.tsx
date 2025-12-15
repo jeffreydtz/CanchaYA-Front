@@ -71,7 +71,6 @@ export function FinalizeChallengeDialog({
       toast.success('Desafío finalizado exitosamente. Rankings actualizados!')
       onSuccess()
     } catch (error) {
-      console.error('Error finalizing challenge:', error)
       toast.error('No se pudo finalizar el desafío')
     } finally {
       setIsSubmitting(false)

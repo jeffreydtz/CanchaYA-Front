@@ -21,13 +21,12 @@ export function getCookie(name: string): string | null {
           return decodeURIComponent(cookieValue)
         } catch (decodeError) {
           // If decode fails, return the raw value
-          console.debug('Could not decode cookie value, using raw:', decodeError)
           return cookieValue
         }
       }
     }
   } catch (e) {
-    console.error('Error reading cookie:', e)
+    // Silently handle cookie reading errors
   }
   return null
 }

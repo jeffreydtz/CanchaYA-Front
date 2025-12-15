@@ -68,7 +68,6 @@ function convertDiaFromBackendFormat(backendDia: number): number {
   // Para lunes-sábado (1-6), mantener igual (compatible en ambos formatos)
   if (backendDia >= 1 && backendDia <= 6) return backendDia
   // Si recibimos un valor inesperado, loguear y devolver tal cual
-  console.warn(`Valor inesperado de diaSemana del backend: ${backendDia}`)
   return backendDia
 }
 
@@ -105,9 +104,6 @@ function AdminDisponibilidadPage() {
             filteredCanchas = canchasRes.data.filter(cancha =>
               clubIds.includes(cancha.club.id)
             )
-            console.log(`Admin-club: Filtrando ${canchasRes.data.length} canchas a ${filteredCanchas.length} canchas de clubes: ${clubIds.join(', ')}`)
-          } else if (nivelAcceso === 'admin') {
-            console.log(`Admin global: Mostrando todas las ${canchasRes.data.length} canchas`)
           }
 
           setCanchas(filteredCanchas)
@@ -132,23 +128,11 @@ function AdminDisponibilidadPage() {
 
       setViewLoading(true)
       try {
-        console.log('Cargando disponibilidades para cancha:', selectedCancha)
         const response = await apiClient.getDisponibilidadPorCancha(selectedCancha)
-        
-        console.log('Respuesta completa del servidor:', {
-          hasData: !!response.data,
-          dataLength: response.data?.length,
-          hasError: !!response.error,
-          error: response.error,
-          status: response.status,
-          rawResponse: response
-        })
-        
+
         if (response.error) {
-          console.error('API Error al cargar disponibilidades:', response.error)
           // Si es un 404, puede que simplemente no haya disponibilidades aún
           if (response.status === 404) {
-            console.log('No se encontraron disponibilidades (404) - esto es normal si no se han creado aún')
             setDisponibilidades([])
             // No mostrar error si es 404, solo loguear
           } else {
@@ -161,11 +145,8 @@ function AdminDisponibilidadPage() {
         }
 
         if (response.data) {
-          console.log('Datos recibidos del backend:', response.data)
-          
           // Verificar que sea un array
           if (!Array.isArray(response.data)) {
-            console.error('La respuesta no es un array:', typeof response.data, response.data)
             toast.error('Error en el formato de datos', {
               description: 'El servidor devolvió un formato inesperado'
             })
@@ -175,35 +156,20 @@ function AdminDisponibilidadPage() {
 
           // Convertir días del formato backend al formato frontend
           // Backend puede devolver 0-6 (0=domingo) o 1-7 (7=domingo), normalizamos a 0-6
-          const disponibilidadesConvertidas = response.data.map((disp, index) => {
-            console.log(`Disponibilidad ${index}:`, {
-              id: disp.id,
-              diaSemanaOriginal: disp.diaSemana,
-              horario: disp.horario,
-              disponible: disp.disponible
-            })
-            
+          const disponibilidadesConvertidas = response.data.map((disp) => {
             const diaConvertido = convertDiaFromBackendFormat(disp.diaSemana)
-            console.log(`  -> diaSemana convertido: ${disp.diaSemana} -> ${diaConvertido}`)
-            
+
             return {
               ...disp,
               diaSemana: diaConvertido
             }
           })
-          
-          console.log('Disponibilidades convertidas:', disponibilidadesConvertidas.length, disponibilidadesConvertidas)
+
           setDisponibilidades(disponibilidadesConvertidas)
-          
-          if (disponibilidadesConvertidas.length === 0) {
-            console.log('No hay disponibilidades configuradas para esta cancha')
-          }
         } else {
-          console.log('No hay data en la respuesta - array vacío')
           setDisponibilidades([])
         }
       } catch (error) {
-        console.error('Error loading disponibilidades (catch):', error)
         toast.error('Error al cargar disponibilidades', {
           description: error instanceof Error ? error.message : 'Error desconocido'
         })
@@ -233,16 +199,7 @@ function AdminDisponibilidadPage() {
     try {
       // Convertir días del formato frontend (0-6) al formato backend (1-7)
       const diasBackend = convertDiasToBackendFormat(selectedDias)
-      
-      // Log para debugging
-      console.log('Creando disponibilidad con:', {
-        canchaIds: selectedCanchas,
-        horarioIds: selectedHorarios,
-        diasSemana: diasBackend,
-        diasOriginales: selectedDias,
-        disponible: true
-      })
-      
+
       const requestData = {
         canchaIds: selectedCanchas,
         horarioIds: selectedHorarios,
@@ -252,10 +209,8 @@ function AdminDisponibilidadPage() {
       
       const response = await apiClient.crearDisponibilidadLote(requestData)
 
-      console.log('Respuesta del servidor:', response)
 
       if (response.error) {
-        console.error('Error en la respuesta:', response.error)
         toast.error('Error al crear disponibilidad', {
           description: response.error || 'Error desconocido del servidor'
         })
@@ -265,7 +220,6 @@ function AdminDisponibilidadPage() {
 
       const result = response.data
       if (result) {
-        console.log('Resultado exitoso:', result)
         toast.success('Patrón de disponibilidad creado', {
           description: `${result.inserted} slot(s) creado(s), ${result.skipped || 0} duplicado(s)`
         })
@@ -280,25 +234,20 @@ function AdminDisponibilidadPage() {
           // Pequeño delay para asegurar que el backend haya procesado la creación
           setTimeout(async () => {
             try {
-              console.log('Recargando disponibilidades para cancha:', selectedCancha)
               const reloadResponse = await apiClient.getDisponibilidadPorCancha(selectedCancha)
-              console.log('Respuesta de recarga:', reloadResponse)
               if (reloadResponse.data) {
                 // Convertir días del formato backend al formato frontend
                 const disponibilidadesConvertidas = reloadResponse.data.map(disp => ({
                   ...disp,
                   diaSemana: convertDiaFromBackendFormat(disp.diaSemana)
                 }))
-                console.log('Disponibilidades convertidas:', disponibilidadesConvertidas.length)
                 setDisponibilidades(disponibilidadesConvertidas)
               } else if (reloadResponse.error) {
-                console.error('Error al recargar disponibilidades:', reloadResponse.error)
                 toast.error('Error al recargar disponibilidades', {
                   description: reloadResponse.error
                 })
               }
             } catch (error) {
-              console.error('Error al recargar disponibilidades:', error)
               toast.error('Error al recargar disponibilidades', {
                 description: error instanceof Error ? error.message : 'Error desconocido'
               })
@@ -306,13 +255,11 @@ function AdminDisponibilidadPage() {
           }, 1000) // Aumentado a 1 segundo para dar más tiempo al backend
         }
       } else {
-        console.error('No se recibió data en la respuesta:', response)
         toast.error('Error al crear disponibilidad', {
           description: 'No se recibió respuesta del servidor. Revisa la consola para más detalles.'
         })
       }
     } catch (error) {
-      console.error('Error al crear disponibilidad (catch):', error)
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
       toast.error('Error al crear disponibilidad', {
         description: errorMessage
@@ -555,7 +502,6 @@ function AdminDisponibilidadPage() {
                         const dia = DIAS_SEMANA.find(d => d.value === disp.diaSemana)
                         
                         if (!disp.horario) {
-                          console.warn('Disponibilidad sin horario (filtrada):', disp)
                           return null
                         }
                         

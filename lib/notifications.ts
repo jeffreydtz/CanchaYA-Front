@@ -67,7 +67,6 @@ export class NotificationManager {
                 })
 
                 this.eventSource.onopen = () => {
-                    console.log('✅ Notification stream connected')
                     this.reconnectAttempts = 0
                     resolve(true)
                 }
@@ -77,12 +76,11 @@ export class NotificationManager {
                         const notification: NotificationData = JSON.parse(event.data)
                         this.notifyListeners(notification)
                     } catch (error) {
-                        console.error('Failed to parse notification:', error)
+                        // Silently handle parsing errors
                     }
                 }
 
                 this.eventSource.onerror = (error) => {
-                    console.error('SSE connection error:', error)
                     this.handleReconnect()
                     resolve(false)
                 }
@@ -116,7 +114,6 @@ export class NotificationManager {
                 })
 
             } catch (error) {
-                console.error('Failed to establish SSE connection:', error)
                 resolve(false)
             }
         })
@@ -126,7 +123,6 @@ export class NotificationManager {
         if (this.eventSource) {
             this.eventSource.close()
             this.eventSource = null
-            console.log('🔌 Notification stream disconnected')
         }
     }
 
@@ -143,7 +139,7 @@ export class NotificationManager {
             try {
                 listener(notification)
             } catch (error) {
-                console.error('Notification listener error:', error)
+                // Silently handle listener errors
             }
         })
     }
@@ -153,13 +149,9 @@ export class NotificationManager {
             this.reconnectAttempts++
             const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1)
 
-            console.log(`🔄 Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`)
-
             setTimeout(() => {
                 this.connect()
             }, delay)
-        } else {
-            console.error('❌ Max reconnection attempts reached')
         }
     }
 
@@ -186,7 +178,6 @@ export async function getNotifications(token: string): Promise<NotificationData[
         }
         return response.data?.notifications || []
     } catch (error) {
-        console.error('Error fetching notifications:', error)
         return []
     }
 }
@@ -203,7 +194,6 @@ export async function markNotificationAsRead(notificationId: string, token: stri
 
         return response.ok
     } catch (error) {
-        console.error('Error marking notification as read:', error)
         return false
     }
 }
@@ -220,7 +210,6 @@ export async function clearNotification(notificationId: string, token: string): 
 
         return response.ok
     } catch (error) {
-        console.error('Error clearing notification:', error)
         return false
     }
 }
@@ -228,7 +217,6 @@ export async function clearNotification(notificationId: string, token: string): 
 // Browser notification permissions
 export function requestNotificationPermission(): Promise<NotificationPermission> {
     if (!('Notification' in window)) {
-        console.warn('This browser does not support notifications')
         return Promise.resolve('denied')
     }
 

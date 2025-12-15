@@ -65,7 +65,6 @@ export default function CourtDetail() {
           setDisponibilidades(disponibilidadesResponse.data)
         }
       } catch (error) {
-        console.error('Error loading court details:', error)
         toast.error('No se pudo cargar la información de la cancha')
       } finally {
         setLoading(false)
@@ -84,7 +83,7 @@ export default function CourtDetail() {
           setCourtFotos(response.data)
         }
       } catch (error) {
-        console.error('Error loading court fotos:', error)
+        // Silently handle photo loading error
       }
     }
     loadFotos()
@@ -170,7 +169,6 @@ export default function CourtDetail() {
         setSelectedTime('')
       }
     } catch (error) {
-      console.error('Error creating reservation:', error)
       toast.error('No se pudo crear la reserva')
     } finally {
       setReserving(false)

@@ -45,7 +45,7 @@ export function ApiError({
     try {
       await onRetry()
     } catch (error) {
-      console.error('Retry failed:', error)
+      // Silently handle retry error
     } finally {
       setIsRetrying(false)
     }

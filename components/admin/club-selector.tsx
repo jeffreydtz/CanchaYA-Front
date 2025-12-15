@@ -92,7 +92,6 @@ export function ClubSelector({
           }
         }
       } catch (error) {
-        console.error('Error fetching clubs:', error)
         toast.error('Error al cargar los clubes')
       } finally {
         setLoading(false)

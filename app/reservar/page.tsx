@@ -39,7 +39,7 @@ export default function ReservarPage() {
         if (response.error || !response.data) return
         setPersonaId(response.data.personaId)
       } catch (error) {
-        console.error('Error fetching personaId:', error)
+        // Error silently handled
       }
     }
     fetchPersonaId()

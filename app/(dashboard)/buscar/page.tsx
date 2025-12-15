@@ -255,7 +255,7 @@ export default function BuscarPage() {
                   fotos: fotosResponse.data || []
                 }
               } catch (error) {
-                console.error(`Error loading photos for cancha ${cancha.id}:`, error)
+                // Silently handle photo loading error
                 return cancha
               }
             })
@@ -269,7 +269,6 @@ export default function BuscarPage() {
           setDeportes(deportesResponse.data)
         }
       } catch (error) {
-        console.error('Error fetching data:', error)
         toast.error('Error al cargar los datos')
       } finally {
         setLoading(false)
@@ -287,7 +286,6 @@ export default function BuscarPage() {
           setGeoError(null)
         },
         (error) => {
-          console.warn('Geolocation error:', error)
           setGeoError('No se pudo obtener tu ubicación')
         }
       )
@@ -324,7 +322,7 @@ export default function BuscarPage() {
                 fotos: fotosResponse.data || []
               }
             } catch (error) {
-              console.error(`Error loading photos for cancha ${cancha.id}:`, error)
+              // Silently handle photo loading error
               return cancha
             }
           })
@@ -413,7 +411,6 @@ export default function BuscarPage() {
         setCanchas(filtered)
       }
     } catch (error) {
-      console.error('Error searching:', error)
       toast.error('Error al buscar canchas')
     } finally {
       setSearching(false)

@@ -50,7 +50,7 @@ export function EditCanchaDialog({ cancha, open, onOpenChange, onSuccess }: Edit
         if (clubsRes.data) setClubs(clubsRes.data)
         if (deportesRes.data) setDeportes(deportesRes.data)
       } catch (error) {
-        console.error('Error loading data:', error)
+        // Silently handle data loading error
       }
     }
     loadData()

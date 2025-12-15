@@ -66,7 +66,6 @@ export function LocationSearchMap({
       setSuggestions(data)
       setShowSuggestions(true)
     } catch (error) {
-      console.error('Error geocoding address:', error)
       toast.error('Error al buscar la ubicación')
       setSuggestions([])
     } finally {

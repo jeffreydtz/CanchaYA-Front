@@ -216,21 +216,8 @@ export function logError(classifiedError: ClassifiedError, additionalData?: Reco
         } as Record<string, unknown>
     }
 
-    // Log to console with appropriate level
-    switch (classifiedError.severity) {
-        case ErrorSeverity.LOW:
-            console.info('Error (Low):', report)
-            break
-        case ErrorSeverity.MEDIUM:
-            console.warn('Error (Medium):', report)
-            break
-        case ErrorSeverity.HIGH:
-            console.error('Error (High):', report)
-            break
-        case ErrorSeverity.CRITICAL:
-            console.error('CRITICAL ERROR:', report)
-            break
-    }
+    // Error has been classified and would be logged to external service in production
+    // (console logging removed)
 
     // In production, send to external error tracking service
     if (process.env.NODE_ENV === 'production') {
@@ -252,11 +239,10 @@ function sendToErrorTrackingService(report: ErrorReport) {
       },
       body: JSON.stringify(report)
     }).catch(err => {
-      console.error('Failed to send error report:', err)
+      // Handle error silently
     })
     */
-
-    console.log('Error report sent to tracking service:', report.id)
+    // Error report has been prepared for external service
 }
 
 // Error recovery utilities
@@ -287,9 +273,7 @@ export class ErrorRecovery {
             attempts++
             this.retryAttempts.set(operationId, attempts)
 
-            console.warn(`Retry attempt ${attempts}/${maxRetries} for ${context || 'operation'}`)
-
-            // Exponential backoff
+            // Retry attempt made with exponential backoff
             const backoffDelay = delay * Math.pow(2, attempts - 1)
             await new Promise(resolve => setTimeout(resolve, backoffDelay))
 
@@ -308,8 +292,7 @@ export class ErrorRecovery {
             const classifiedError = classifyError(error as Error, `${context} (primary)`)
             logError(classifiedError)
 
-            console.warn(`Primary operation failed, trying fallback for ${context}`)
-
+            // Primary operation failed, trying fallback
             try {
                 return await fallback()
             } catch (fallbackError) {
@@ -375,7 +358,7 @@ export function setupGlobalErrorHandlers() {
             const classifiedError = classifyError(error, 'unhandled-promise-rejection')
             logError(classifiedError)
 
-            // Prevent the default handling (console error)
+            // Prevent the default handling
             event.preventDefault()
         })
 

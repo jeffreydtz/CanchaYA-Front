@@ -68,7 +68,6 @@ export function CreateChallengeDialog({
         setDeportes(deportesResponse.data)
       }
     } catch (error) {
-      console.error('Error loading initial data:', error)
       toast.error('Error al cargar datos')
     } finally {
       setIsLoading(false)
@@ -101,7 +100,6 @@ export function CreateChallengeDialog({
           setSearchResults(filtered)
         }
       } catch (error) {
-        console.error('Error searching personas:', error)
         toast.error('Error al buscar jugadores')
       } finally {
         setIsSearching(false)
@@ -182,7 +180,6 @@ export function CreateChallengeDialog({
       onSuccess()
       handleClose()
     } catch (error) {
-      console.error('Error creating challenge:', error)
       toast.error('No se pudo crear el desafío')
     } finally {
       setIsSubmitting(false)

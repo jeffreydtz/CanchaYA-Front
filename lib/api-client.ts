@@ -792,7 +792,7 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
       }
 
       // List of known endpoints that are not yet implemented in backend
-      // Suppress 404 errors for these to avoid console spam
+      // Suppress error handling for these to avoid unnecessary processing
       const knownMissingEndpoints = [
         '/reportes/canchas-top',
         '/reportes/ocupacion-horarios',
@@ -801,15 +801,8 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
         '/admin/roles',
       ]
 
-      const shouldSuppressLog = response.status === 404 && knownMissingEndpoints.some(e => endpoint.includes(e))
-
-      if (!shouldSuppressLog) {
-        console.error(`API Error [${response.status}] at ${endpoint}:`, {
-          status: response.status,
-          data,
-          errorMessage
-        })
-      }
+      // Skip special handling for known missing endpoints
+      knownMissingEndpoints.some(e => endpoint.includes(e))
 
       return {
         error: errorMessage,

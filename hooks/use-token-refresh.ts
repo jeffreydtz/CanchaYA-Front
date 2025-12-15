@@ -43,8 +43,6 @@ export function useTokenRefresh() {
         // Refresh 5 minutes (300 seconds) before expiration
         const refreshIn = Math.max(0, (expiresIn - 300) * 1000) // Convert to milliseconds
 
-        console.log(`Token expires in ${Math.floor(expiresIn / 60)} minutes. Will refresh in ${Math.floor(refreshIn / 1000 / 60)} minutes.`)
-
         // Clear any existing timeout
         if (refreshTimeoutRef.current) {
           clearTimeout(refreshTimeoutRef.current)
@@ -53,18 +51,15 @@ export function useTokenRefresh() {
         // Set up automatic refresh
         refreshTimeoutRef.current = setTimeout(async () => {
           try {
-            console.log('Refreshing access token...')
             const response = await apiClient.refreshToken(refreshToken)
 
             if (response.data?.accessToken) {
               // Update access token (keep existing refresh token)
               setAuthTokens(response.data.accessToken, refreshToken)
-              console.log('Access token refreshed successfully')
 
               // Schedule next refresh
               setupTokenRefresh()
             } else {
-              console.error('Failed to refresh token:', response.error)
               toast.error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.')
 
               // Clear tokens and redirect to login
@@ -76,13 +71,11 @@ export function useTokenRefresh() {
               }
             }
           } catch (error) {
-            console.error('Error refreshing token:', error)
             toast.error('Error al refrescar la sesión')
           }
         }, refreshIn)
 
       } catch (error) {
-        console.error('Error decoding token:', error)
         // If token is invalid, clear it
         deleteCookie('token')
         deleteCookie('refreshToken')
