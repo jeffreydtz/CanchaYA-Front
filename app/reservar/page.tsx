@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Calendar } from '@/components/ui/calendar'
 import { toast } from 'sonner'
-import apiClient, { Club, Cancha, AvailabilitySlotRealTime, CanchaFoto } from '@/lib/api-client'
+import apiClient, { Club, Cancha, AvailabilitySlotRealTime, CanchaFoto, DisponibilidadHorario } from '@/lib/api-client'
 import { Loader2, MapPin, Trophy, Calendar as CalendarIcon, Clock } from 'lucide-react'
 import { CourtPhotosCarousel } from '@/components/court/court-photos-carousel'
 import { RealtimeAvailability } from '@/components/disponibilidad/realtime-availability'
@@ -108,7 +108,7 @@ export default function ReservarPage() {
           canchaId: selectedCancha
         })
 
-        if (response.data) {
+        if (response.data && response.data.length > 0) {
           const slots = response.data
             // mostramos slots del día seleccionado, y los que cayeron en la madrugada del día siguiente
             .filter(slot =>
@@ -118,7 +118,32 @@ export default function ReservarPage() {
             .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio))
           setAvailableSlots(slots)
         } else {
-          setAvailableSlots([])
+          // Fallback: construir slots a partir del patrón semanal si la API de realtime no devuelve nada
+          const patternResponse = await apiClient.getDisponibilidadPorCancha(selectedCancha)
+          if (patternResponse.data && patternResponse.data.length > 0) {
+            const allPattern: DisponibilidadHorario[] = patternResponse.data
+            const weekday = selectedDate.getDay() // 0-6 (0=domingo)
+            const patternForDay = allPattern.filter(
+              (disp) => disp.diaSemana === weekday && disp.disponible !== false && disp.horario
+            )
+
+            const fallbackSlots: AvailabilitySlotRealTime[] = patternForDay.map((disp) => ({
+              fecha: dateStr,
+              canchaId: selectedCancha,
+              canchaNombre: '',
+              horarioId: disp.horario.id,
+              horaInicio: disp.horario.horaInicio,
+              horaFin: disp.horario.horaFin,
+              disponibilidadId: disp.id,
+              ocupado: false,
+              estado: 'libre',
+            }))
+
+            fallbackSlots.sort((a, b) => a.horaInicio.localeCompare(b.horaInicio))
+            setAvailableSlots(fallbackSlots)
+          } else {
+            setAvailableSlots([])
+          }
         }
       } catch {
         toast.error('Error al cargar horarios disponibles')
@@ -215,7 +240,7 @@ export default function ReservarPage() {
         canchaId: selectedCancha
       })
 
-      if (availResponse.data) {
+      if (availResponse.data && availResponse.data.length > 0) {
         const slots = availResponse.data
           .filter(slot =>
             slot.fecha === dateStr2 ||
@@ -223,6 +248,31 @@ export default function ReservarPage() {
           )
           .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio))
         setAvailableSlots(slots)
+      } else {
+        // mismo fallback que en la carga inicial
+        const patternResponse = await apiClient.getDisponibilidadPorCancha(selectedCancha)
+        if (patternResponse.data && patternResponse.data.length > 0) {
+          const allPattern: DisponibilidadHorario[] = patternResponse.data
+          const weekday = selectedDate.getDay()
+          const patternForDay = allPattern.filter(
+            (disp) => disp.diaSemana === weekday && disp.disponible !== false && disp.horario
+          )
+
+          const fallbackSlots: AvailabilitySlotRealTime[] = patternForDay.map((disp) => ({
+            fecha: dateStr2,
+            canchaId: selectedCancha,
+            canchaNombre: '',
+            horarioId: disp.horario.id,
+            horaInicio: disp.horario.horaInicio,
+            horaFin: disp.horario.horaFin,
+            disponibilidadId: disp.id,
+            ocupado: false,
+            estado: 'libre',
+          }))
+
+          fallbackSlots.sort((a, b) => a.horaInicio.localeCompare(b.horaInicio))
+          setAvailableSlots(fallbackSlots)
+        }
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Ocurrió un error inesperado'
