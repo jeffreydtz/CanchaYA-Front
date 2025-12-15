@@ -98,45 +98,18 @@ export default function ReservarPage() {
       setSlotsLoading(true)
       try {
         const dateStr = format(selectedDate, 'yyyy-MM-dd')
-        const nextDay = new Date(selectedDate)
-        nextDay.setDate(nextDay.getDate() + 1)
-        const nextDayStr = format(nextDay, 'yyyy-MM-dd')
-
-        // Validación: verificar que from <= to (ya se cumple automáticamente aquí)
-        // Validación: rango máximo de 30 días (en este caso solo consultamos 1-2 días, OK)
 
         const response = await apiClient.getDisponibilidadRealTime({
           from: dateStr,
-          to: nextDayStr, // incluir la madrugada siguiente para capturar slots cruzando medianoche
+          to: dateStr,
           canchaId: selectedCancha
         })
 
         if (response.data && response.data.length > 0) {
-          // mostramos slots del día seleccionado, y slots que COMIENZAN en el día seleccionado
-          // aunque terminen después de medianoche (ej: 23:00-00:00)
+          // Mostrar solo slots del día seleccionado
+          // El último turno es 23:00-23:59, no cruza medianoche
           const slots = response.data
-            .filter(slot => {
-              // Caso 1: Slot que pertenece exactamente al día seleccionado
-              if (slot.fecha === dateStr) {
-                return true
-              }
-
-              // Caso 2: Slot del día siguiente PERO que comenzó antes de medianoche
-              // Ejemplo: slot 23:00-00:00 del día X aparece con fecha X+1 pero horaInicio 23:00
-              if (slot.fecha === nextDayStr) {
-                // Si el horario de inicio es >= 23:00, significa que comenzó el día anterior
-                // (algunos backends guardan el slot con la fecha de fin, no de inicio)
-                if (slot.horaInicio >= '23:00:00' || slot.horaInicio >= '23:00') {
-                  return true
-                }
-                // También incluir slots que realmente son de madrugada (00:00-06:00)
-                if (slot.horaInicio < '06:00:00' || slot.horaInicio < '06:00') {
-                  return true
-                }
-              }
-
-              return false
-            })
+            .filter(slot => slot.fecha === dateStr)
             .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio))
 
           setAvailableSlots(slots)
@@ -242,17 +215,9 @@ export default function ReservarPage() {
       const fechaHora = `${year}-${month}-${day}T${hours}:${minutes}:00-03:00`
 
       const dateStr = format(selectedDate, 'yyyy-MM-dd')
-      const nextDay = new Date(selectedDate)
-      nextDay.setDate(nextDay.getDate() + 1)
-      const nextDayStr = format(nextDay, 'yyyy-MM-dd')
 
-      // Validación flexible para slots que cruzan medianoche
-      // Un slot de 23:00-00:00 puede tener fecha del día siguiente pero comenzar en el día seleccionado
-      const isValidSlot =
-        slot.fecha === dateStr ||
-        (slot.fecha === nextDayStr && (slot.horaInicio >= '23:00' || slot.horaInicio >= '23:00:00'))
-
-      if (!isValidSlot) {
+      // Validar que el slot pertenece a la fecha seleccionada
+      if (slot.fecha !== dateStr) {
         toast.error('Error de validación', {
           description: 'La fecha del slot no coincide con la fecha seleccionada'
         })
@@ -280,34 +245,17 @@ export default function ReservarPage() {
 
       // Recargar disponibilidad después de crear la reserva
       const dateStr2 = format(selectedDate, 'yyyy-MM-dd')
-      const nextDay2 = new Date(selectedDate)
-      nextDay2.setDate(nextDay2.getDate() + 1)
-      const nextDayStr2 = format(nextDay2, 'yyyy-MM-dd')
 
       try {
         const availResponse = await apiClient.getDisponibilidadRealTime({
           from: dateStr2,
-          to: nextDayStr2,
+          to: dateStr2,
           canchaId: selectedCancha
         })
 
         if (availResponse.data && availResponse.data.length > 0) {
           const slots = availResponse.data
-            .filter(slot => {
-              // Mismo filtro que en la carga inicial
-              if (slot.fecha === dateStr2) {
-                return true
-              }
-              if (slot.fecha === nextDayStr2) {
-                if (slot.horaInicio >= '23:00:00' || slot.horaInicio >= '23:00') {
-                  return true
-                }
-                if (slot.horaInicio < '06:00:00' || slot.horaInicio < '06:00') {
-                  return true
-                }
-              }
-              return false
-            })
+            .filter(slot => slot.fecha === dateStr2)
             .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio))
           setAvailableSlots(slots)
         } else {
