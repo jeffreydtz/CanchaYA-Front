@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Plus, FileText, Download } from 'lucide-react';
 import { ReportBuilder, ReportHistoryItem } from '@/components/analytics/ReportBuilder';
 import { AnalyticsLegend } from '@/components/analytics/AnalyticsLegend';
-import type { ReportConfig, Report } from '@/lib/analytics/types';
+import type { ReportConfig, Report, ReportFormat } from '@/lib/analytics/types';
 import { toast } from 'sonner';
-import { downloadCSV, downloadExcel, generateFilename } from '@/lib/analytics/export';
+import { downloadCSV, downloadExcel, downloadHTML, generateFilename } from '@/lib/analytics/export';
 import { fetchDashboardData } from '@/lib/analytics/data-aggregator';
 import { REPORT_CONFIG } from '@/lib/analytics/config';
 import { withErrorBoundary } from '@/components/error/with-error-boundary';
@@ -72,11 +72,19 @@ function ReportesAnalyticsPage() {
         generatedAt: new Date()
       };
 
+      // Map logical format to file extension
+      const extensionMap: Record<ReportFormat, string> = {
+        CSV: 'csv',
+        EXCEL: 'xlsx',
+        PDF: 'pdf',
+        HTML: 'html',
+      };
+
       // Generate file based on format
       let result;
       const filename = generateFilename(
         `reporte-${config.type.toLowerCase()}`,
-        config.format.toLowerCase()
+        extensionMap[config.format]
       );
 
       switch (config.format) {
@@ -108,23 +116,68 @@ function ReportesAnalyticsPage() {
           result = downloadExcel(excelData, filename, REPORT_CONFIG.excelSheetName);
           break;
 
+        case 'HTML': {
+          // Simple HTML table export for KPIs
+          const rows = reportData.data.kpis.map(kpi => `
+            <tr>
+              <td>${kpi.name}</td>
+              <td>${kpi.value}</td>
+              <td>${kpi.previousValue ?? 'N/A'}</td>
+              <td>${kpi.change ?? ''}</td>
+              <td>${kpi.changePercent ?? ''}</td>
+              <td>${kpi.trend}</td>
+              <td>${kpi.status}</td>
+            </tr>
+          `).join('')
+
+          const html = `<!DOCTYPE html>
+          <html lang="es">
+            <head>
+              <meta charSet="utf-8" />
+              <title>${config.name || 'Reporte Analytics'}</title>
+              <style>
+                body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 16px; }
+                table { border-collapse: collapse; width: 100%; }
+                th, td { border: 1px solid #e5e7eb; padding: 8px; font-size: 14px; }
+                th { background: #f3f4f6; text-align: left; }
+              </style>
+            </head>
+            <body>
+              <h1>${config.name || 'Reporte Analytics'}</h1>
+              <p>Tipo: ${config.type}</p>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Métrica</th>
+                    <th>Valor Actual</th>
+                    <th>Valor Anterior</th>
+                    <th>Cambio</th>
+                    <th>Cambio %</th>
+                    <th>Tendencia</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${rows}
+                </tbody>
+              </table>
+            </body>
+          </html>`
+
+          result = downloadHTML(html, filename)
+          break
+        }
+
         case 'PDF':
-        case 'HTML':
-          // For PDF/HTML, we'd need a more complex implementation
-          // For now, download as CSV as fallback
-          toast.info('Formato no implementado aún', {
-            description: `El formato ${config.format} estará disponible próximamente. Descargando como CSV...`
+          // PDF export not implemented yet
+          toast.info('Formato PDF no implementado aún', {
+            description: 'Por ahora solo están disponibles CSV, Excel y HTML.'
           });
-          const fallbackData = reportData.data.kpis.map(kpi => ({
-            'Métrica': kpi.name,
-            'Valor Actual': kpi.value,
-            'Valor Anterior': kpi.previousValue || 'N/A',
-            'Cambio': kpi.change,
-            'Cambio %': kpi.changePercent,
-            'Tendencia': kpi.trend,
-            'Estado': kpi.status
-          }));
-          result = downloadCSV(fallbackData, filename.replace(`.${config.format.toLowerCase()}`, '.csv'));
+          result = {
+            success: false,
+            filename,
+            error: 'Formato PDF no implementado'
+          };
           break;
 
         default:

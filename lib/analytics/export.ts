@@ -219,6 +219,35 @@ export function downloadExcel(
   }
 }
 
+// ============================================================================
+// HTML EXPORT
+// ============================================================================
+
+/**
+ * Trigger browser download of HTML content
+ */
+export function downloadHTML(
+  html: string,
+  filename: string = 'export.html'
+): ExportResult {
+  try {
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8;' })
+    triggerDownload(blob, filename)
+
+    return {
+      success: true,
+      filename
+    }
+  } catch (error) {
+    console.error('Error exporting HTML:', error)
+    return {
+      success: false,
+      filename,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }
+  }
+}
+
 /**
  * Convert array of objects to HTML table
  */

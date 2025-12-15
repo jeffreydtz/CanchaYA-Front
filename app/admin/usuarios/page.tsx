@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Edit, UserPlus, Loader2, Shield, Building2 } from 'lucide-react'
-import apiClient, { UsuarioAdmin, Rol, CrearUsuarioAdminDto, ActualizarUsuarioDto, CambiarRolDto, CambiarNivelAccesoDto, Club } from '@/lib/api-client'
+import apiClient, { UsuarioAdmin, Rol, CrearUsuarioAdminDto, ActualizarUsuarioDto, CambiarRolDto, Club } from '@/lib/api-client'
 import { Checkbox } from '@/components/ui/checkbox'
 import { withErrorBoundary } from '@/components/error/with-error-boundary'
 import { toast } from 'sonner'
@@ -49,7 +49,6 @@ function AdminUsersPage() {
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState(false)
-  const [changingAccess, setChangingAccess] = useState(false)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [accessDialogOpen, setAccessDialogOpen] = useState(false)
@@ -171,12 +170,27 @@ function AdminUsersPage() {
   }
 
   const handleCambiarRol = async (usuarioId: string, nuevoRol: string) => {
-    // Prevent admin from changing their own role
+    // Prevent admin from changing su propio rol
     if (usuarioId === userId && isSuperAdmin) {
       toast.error('No puedes cambiar tu propio rol')
       return
     }
 
+    const rolInfo = roles.find((r) => r.nombre === nuevoRol)
+    const nuevoNivelAcceso = rolInfo?.nivelAcceso as 'usuario' | 'admin-club' | 'admin' | undefined
+
+    // Si el rol seleccionado es admin-club → abrir modal para seleccionar clubes
+    if (nuevoNivelAcceso === 'admin-club') {
+      const user = users.find((u) => u.id === usuarioId) || null
+      setSelectedUser(user)
+      setSelectedAccessLevel('admin-club')
+      setSelectedClubIds(user?.clubIds || [])
+      setAccessDialogOpen(true)
+      ;(window as any).__pendingRoleChange = { usuarioId, nuevoRol }
+      return
+    }
+
+    // Para roles que no son admin-club → cambiar rol directo (nivelAcceso se deriva del rol en backend)
     try {
       const data: CambiarRolDto = { rol: nuevoRol }
       const response = await apiClient.cambiarRolUsuario(usuarioId, data)
@@ -191,46 +205,39 @@ function AdminUsersPage() {
     }
   }
 
-  const openAccessDialog = (user: UsuarioAdmin) => {
-    setSelectedUser(user)
-    setSelectedAccessLevel(getUserAccessLevel(user))
-    setSelectedClubIds(user.clubIds || [])
-    setAccessDialogOpen(true)
-  }
-
-  const handleCambiarNivelAcceso = async () => {
-    if (!selectedUser) return
-
-    // Prevent admin from changing their own access level
-    if (selectedUser.id === userId) {
-      toast.error('No puedes cambiar tu propio nivel de acceso')
+  const handleGuardarRolAdminClub = async () => {
+    const pending = (window as any).__pendingRoleChange as { usuarioId: string; nuevoRol: string } | undefined
+    if (!pending || !selectedUser) {
+      setAccessDialogOpen(false)
       return
     }
 
-    // Validate clubIds when admin-club is selected
-    if (selectedAccessLevel === 'admin-club' && selectedClubIds.length === 0) {
-      toast.error('Debes seleccionar al menos un club para el nivel Admin Club')
+    const { usuarioId, nuevoRol } = pending
+
+    // Validar selección de clubes
+    if (selectedClubIds.length === 0) {
+      toast.error('Debes seleccionar al menos un club para el rol Admin Club')
       return
     }
 
     try {
-      setChangingAccess(true)
-      const data: CambiarNivelAccesoDto = {
-        nivelAcceso: selectedAccessLevel,
-        ...(selectedAccessLevel === 'admin-club' && { clubIds: selectedClubIds }),
+      const data: CambiarRolDto & { clubIds: string[] } = {
+        rol: nuevoRol,
+        clubIds: selectedClubIds,
       }
-      const response = await apiClient.cambiarNivelAcceso(selectedUser.id, data)
+      const response = await apiClient.cambiarRolUsuario(usuarioId, data)
       if (response.error) {
         toast.error(response.error)
       } else {
-        toast.success(`Nivel de acceso actualizado a "${getAccessLevelName(selectedAccessLevel)}"`)
+        toast.success(`Rol actualizado a "${nuevoRol}" con ${selectedClubIds.length} club(es) asignado(s)`)
         setAccessDialogOpen(false)
+        setSelectedUser(null)
+        setSelectedClubIds([])
+        ;(window as any).__pendingRoleChange = undefined
         loadUsers()
       }
     } catch {
-      toast.error('Error al cambiar nivel de acceso')
-    } finally {
-      setChangingAccess(false)
+      toast.error('Error al cambiar rol / asignar clubes')
     }
   }
 
@@ -693,162 +700,77 @@ function AdminUsersPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Access Level Dialog */}
+      {/* Dialog para asignar clubes cuando el rol seleccionado es Admin-Club */}
       <Dialog open={accessDialogOpen} onOpenChange={setAccessDialogOpen}>
         <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Shield className="h-5 w-5 text-primary" />
-              Cambiar Nivel de Acceso
+              Configurar Rol Admin-Club
             </DialogTitle>
             <DialogDescription>
-              Configura el nivel de acceso y permisos para{' '}
+              Selecciona los clubes que este usuario podrá administrar como{' '}
               <span className="font-semibold">
                 {selectedUser?.persona?.nombre} {selectedUser?.persona?.apellido}
               </span>
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-6 py-4">
-            {/* Access Level Selection */}
+            {/* Selección de clubes (obligatorio para Admin-Club) */}
             <div className="space-y-3">
-              <Label className="text-base font-semibold">Nivel de Acceso</Label>
-              <div className="grid gap-3">
-                <div
-                  className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                    selectedAccessLevel === 'usuario'
-                      ? 'border-primary bg-primary/5'
-                      : 'border-muted hover:border-muted-foreground/30'
-                  }`}
-                  onClick={() => setSelectedAccessLevel('usuario')}
-                >
-                  <div className={`mt-0.5 h-4 w-4 rounded-full border-2 flex items-center justify-center ${
-                    selectedAccessLevel === 'usuario' ? 'border-primary' : 'border-muted-foreground/50'
-                  }`}>
-                    {selectedAccessLevel === 'usuario' && (
-                      <div className="h-2 w-2 rounded-full bg-primary" />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-medium">Usuario</div>
-                    <div className="text-sm text-muted-foreground">
-                      Acceso básico. Puede hacer reservas y ver su historial.
-                    </div>
-                  </div>
-                </div>
-
-                <div
-                  className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                    selectedAccessLevel === 'admin-club'
-                      ? 'border-orange-500 bg-orange-500/5'
-                      : 'border-muted hover:border-muted-foreground/30'
-                  }`}
-                  onClick={() => setSelectedAccessLevel('admin-club')}
-                >
-                  <div className={`mt-0.5 h-4 w-4 rounded-full border-2 flex items-center justify-center ${
-                    selectedAccessLevel === 'admin-club' ? 'border-orange-500' : 'border-muted-foreground/50'
-                  }`}>
-                    {selectedAccessLevel === 'admin-club' && (
-                      <div className="h-2 w-2 rounded-full bg-orange-500" />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-medium flex items-center gap-2">
-                      <Building2 className="h-4 w-4 text-orange-500" />
-                      Admin de Club
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Puede gestionar reservas, canchas y métricas de los clubes asignados.
-                    </div>
-                  </div>
-                </div>
-
-                <div
-                  className={`flex items-start gap-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                    selectedAccessLevel === 'admin'
-                      ? 'border-red-500 bg-red-500/5'
-                      : 'border-muted hover:border-muted-foreground/30'
-                  }`}
-                  onClick={() => setSelectedAccessLevel('admin')}
-                >
-                  <div className={`mt-0.5 h-4 w-4 rounded-full border-2 flex items-center justify-center ${
-                    selectedAccessLevel === 'admin' ? 'border-red-500' : 'border-muted-foreground/50'
-                  }`}>
-                    {selectedAccessLevel === 'admin' && (
-                      <div className="h-2 w-2 rounded-full bg-red-500" />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-medium flex items-center gap-2">
-                      <Shield className="h-4 w-4 text-red-500" />
-                      Administrador Global
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Acceso completo al sistema. Puede gestionar todos los clubes, usuarios y configuraciones.
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Club Selection (only for admin-club) */}
-            {selectedAccessLevel === 'admin-club' && (
-              <div className="space-y-3">
-                <Label className="text-base font-semibold">
-                  Clubes Asignados
-                  <span className="text-destructive ml-1">*</span>
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Selecciona los clubes que este usuario podrá administrar.
-                </p>
-                <div className="max-h-48 overflow-y-auto border rounded-lg p-2 space-y-1">
-                  {clubs.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      No hay clubes disponibles
-                    </p>
-                  ) : (
-                    clubs.map((club) => (
-                      <div
-                        key={club.id}
-                        className={`flex items-center gap-3 p-3 rounded-md cursor-pointer transition-colors ${
-                          selectedClubIds.includes(club.id)
-                            ? 'bg-orange-100 dark:bg-orange-900/20'
-                            : 'hover:bg-muted'
-                        }`}
-                        onClick={() => toggleClubSelection(club.id)}
-                      >
-                        <Checkbox
-                          checked={selectedClubIds.includes(club.id)}
-                          onCheckedChange={() => toggleClubSelection(club.id)}
-                        />
-                        <div className="flex-1">
-                          <div className="font-medium text-sm">{club.nombre}</div>
-                          <div className="text-xs text-muted-foreground">{club.direccion}</div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-                {selectedClubIds.length > 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    {selectedClubIds.length} club{selectedClubIds.length > 1 ? 'es' : ''} seleccionado{selectedClubIds.length > 1 ? 's' : ''}
+              <Label className="text-base font-semibold">
+                Clubes Asignados
+                <span className="text-destructive ml-1">*</span>
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Selecciona los clubes que este usuario podrá administrar como Admin-Club.
+              </p>
+              <div className="max-h-48 overflow-y-auto border rounded-lg p-2 space-y-1">
+                {clubs.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No hay clubes disponibles
                   </p>
+                ) : (
+                  clubs.map((club) => (
+                    <div
+                      key={club.id}
+                      className={`flex items-center gap-3 p-3 rounded-md cursor-pointer transition-colors ${
+                        selectedClubIds.includes(club.id)
+                          ? 'bg-orange-100 dark:bg-orange-900/20'
+                          : 'hover:bg-muted'
+                      }`}
+                      onClick={() => toggleClubSelection(club.id)}
+                    >
+                      <Checkbox
+                        checked={selectedClubIds.includes(club.id)}
+                        onCheckedChange={() => toggleClubSelection(club.id)}
+                      />
+                      <div className="flex-1">
+                        <div className="font-medium text-sm">{club.nombre}</div>
+                        <div className="text-xs text-muted-foreground">{club.direccion}</div>
+                      </div>
+                    </div>
+                  ))
                 )}
               </div>
-            )}
+              {selectedClubIds.length > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  {selectedClubIds.length} club{selectedClubIds.length > 1 ? 'es' : ''} seleccionado{selectedClubIds.length > 1 ? 's' : ''}
+                </p>
+              )}
+            </div>
           </div>
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => setAccessDialogOpen(false)}
-              disabled={changingAccess}
             >
               Cancelar
             </Button>
             <Button
-              onClick={handleCambiarNivelAcceso}
-              disabled={changingAccess || (selectedAccessLevel === 'admin-club' && selectedClubIds.length === 0)}
+              onClick={handleGuardarRolAdminClub}
+              disabled={selectedClubIds.length === 0}
             >
-              {changingAccess && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Guardar Cambios
             </Button>
           </DialogFooter>
