@@ -31,8 +31,10 @@ import { EditCanchaDialog } from '@/components/admin/edit-cancha-dialog'
 import { CreateCanchaDialog } from '@/components/admin/create-cancha-dialog'
 import { CanchaPhotosManager } from '@/components/admin/cancha-photos-manager'
 import { withErrorBoundary } from '@/components/error/with-error-boundary'
+import { useAuth } from '@/components/auth/auth-context'
 
 function AdminCourtsPage() {
+  const { nivelAcceso, clubIds } = useAuth()
   const [courts, setCourts] = useState<Cancha[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
@@ -42,6 +44,9 @@ function AdminCourtsPage() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [photosDialogOpen, setPhotosDialogOpen] = useState(false)
+  
+  const isAdminClub = nivelAcceso === 'admin-club'
+  const hasNoClubScope = isAdminClub && (!clubIds || clubIds.length === 0)
 
   const loadCourts = async () => {
     setLoading(true)
@@ -63,11 +68,26 @@ function AdminCourtsPage() {
     loadCourts()
   }, [])
 
-  const filteredCourts = courts.filter(court =>
-    court.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (court.deporte?.nombre?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-    (court.ubicacion?.toLowerCase() || '').includes(searchTerm.toLowerCase())
-  )
+  // Filter courts by search term and club scope (for admin-club users)
+  const filteredCourts = courts.filter(court => {
+    // Text search filter
+    const matchesSearch = 
+      court.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (court.deporte?.nombre?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+      (court.ubicacion?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+    
+    // Club scope filter (admin-club only sees courts from their clubs)
+    if (isAdminClub && clubIds && clubIds.length > 0) {
+      const courtClubId = court.club?.id
+      if (courtClubId) {
+        return matchesSearch && clubIds.includes(courtClubId)
+      }
+      // If no club info, hide it (shouldn't happen but be safe)
+      return false
+    }
+    
+    return matchesSearch
+  })
 
   const handleEditCourt = (court: Cancha) => {
     setEditingCourt(court)
