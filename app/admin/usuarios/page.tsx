@@ -193,7 +193,7 @@ function AdminUsersPage() {
 
   const openAccessDialog = (user: UsuarioAdmin) => {
     setSelectedUser(user)
-    setSelectedAccessLevel(user.nivelAcceso || 'usuario')
+    setSelectedAccessLevel(getUserAccessLevel(user))
     setSelectedClubIds(user.clubIds || [])
     setAccessDialogOpen(true)
   }
@@ -265,6 +265,13 @@ function AdminUsersPage() {
     setEditDialogOpen(true)
   }
 
+  const getUserAccessLevel = (user: UsuarioAdmin): 'usuario' | 'admin-club' | 'admin' => {
+    const rolInfo = roles.find((rol) => rol.nombre === user.rol)
+    // Si el backend aún no devuelve nivelAcceso en UsuarioAdmin,
+    // lo derivamos desde la definición del rol. Fallback a 'usuario'.
+    return (rolInfo?.nivelAcceso as 'usuario' | 'admin-club' | 'admin') || 'usuario'
+  }
+
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
       user.persona?.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -274,7 +281,8 @@ function AdminUsersPage() {
     const matchesStatus =
       statusFilter === 'all' ||
       (statusFilter === 'activo' ? user.activo : !user.activo)
-    const matchesAccessLevel = accessLevelFilter === 'all' || user.nivelAcceso === accessLevelFilter
+    const userAccessLevel = getUserAccessLevel(user)
+    const matchesAccessLevel = accessLevelFilter === 'all' || userAccessLevel === accessLevelFilter
     return matchesSearch && matchesRole && matchesStatus && matchesAccessLevel
   })
 
@@ -597,10 +605,10 @@ function AdminUsersPage() {
                               onClick={() => openAccessDialog(user)}
                               disabled={user.id === userId}
                             >
-                              {getAccessLevelBadge(user.nivelAcceso || 'usuario', user.clubIds)}
+                              {getAccessLevelBadge(getUserAccessLevel(user), user.clubIds)}
                             </Button>
                           ) : (
-                            getAccessLevelBadge(user.nivelAcceso || 'usuario', user.clubIds)
+                            getAccessLevelBadge(getUserAccessLevel(user), user.clubIds)
                           )}
                         </TableCell>
                         <TableCell>{getStatusBadge(user.activo)}</TableCell>
