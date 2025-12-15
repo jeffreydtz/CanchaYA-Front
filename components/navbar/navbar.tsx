@@ -29,6 +29,18 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // Block body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isMobileMenuOpen])
+
   const navigationItems = [
     { href: '/', label: t('nav.home'), icon: Home },
     { href: '/buscar', label: 'Buscar', icon: Search },
@@ -308,17 +320,30 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Navigation Overlay */}
         {isMobileMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 right-0 bg-white/98 dark:bg-gray-950/98 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800 shadow-xl">
-            <div className="py-4 space-y-2">
+          <div 
+            className="md:hidden fixed inset-0 top-20 bg-black/60 backdrop-blur-sm z-40"
+            onClick={() => setIsMobileMenuOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+
+        {/* Mobile Navigation Menu */}
+        <div 
+          className={`md:hidden fixed top-20 left-0 right-0 bottom-0 z-50 transform transition-transform duration-300 ease-out ${
+            isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
+          <div className="h-full w-[85%] max-w-sm bg-white dark:bg-gray-950 shadow-2xl overflow-y-auto">
+            <div className="py-6 px-4 space-y-2">
               {navigationItems.map((item) => {
                 const Icon = item.icon
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-100 font-semibold antialiased hover:bg-primary/10 hover:text-primary rounded-lg mx-2 transition-colors"
+                    className="flex items-center space-x-3 px-4 py-3.5 text-gray-700 dark:text-gray-100 font-semibold antialiased hover:bg-gold/10 hover:text-gold rounded-xl transition-all duration-200"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <Icon className="h-5 w-5" />
@@ -329,67 +354,65 @@ export default function Navbar() {
 
               {/* Desafíos section for mobile */}
               {isAuthenticated && (
-                <>
-                  <div className="px-2 pt-2 border-t border-gray-200/50 dark:border-gray-700/50">
-                    <div className="px-2 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Desafíos
-                    </div>
-                    <Link
-                      href="/desafios"
-                      className="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-100 font-semibold antialiased hover:bg-primary/10 hover:text-primary rounded-lg transition-colors"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <Trophy className="h-5 w-5" />
-                      <span className="font-medium">Todos los Desafíos</span>
-                      {pendingChallengesCount > 0 && (
-                        <Badge variant="destructive" className="ml-auto">
-                          {pendingChallengesCount}
-                        </Badge>
-                      )}
-                    </Link>
-                    <Link
-                      href="/desafios?tab=invitaciones"
-                      className="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-100 font-semibold antialiased hover:bg-primary/10 hover:text-primary rounded-lg transition-colors"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <Bell className="h-5 w-5" />
-                      <span className="font-medium">Invitaciones</span>
-                      {pendingChallengesCount > 0 && (
-                        <Badge variant="secondary" className="ml-auto">
-                          {pendingChallengesCount}
-                        </Badge>
-                      )}
-                    </Link>
-                    <Link
-                      href="/perfil-competitivo"
-                      className="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-100 font-semibold antialiased hover:bg-primary/10 hover:text-primary rounded-lg transition-colors"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <Trophy className="h-5 w-5 text-green-600" />
-                      <span className="font-medium">Perfil Competitivo</span>
-                    </Link>
-                    <Link
-                      href="/ranking"
-                      className="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-100 font-semibold antialiased hover:bg-primary/10 hover:text-primary rounded-lg transition-colors"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <Trophy className="h-5 w-5 text-yellow-500" />
-                      <span className="font-medium">Ranking Global</span>
-                    </Link>
+                <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-800">
+                  <div className="px-4 py-2 text-xs font-bold text-gold uppercase tracking-wider">
+                    Desafíos
                   </div>
-                </>
+                  <Link
+                    href="/desafios"
+                    className="flex items-center space-x-3 px-4 py-3.5 text-gray-700 dark:text-gray-100 font-semibold antialiased hover:bg-gold/10 hover:text-gold rounded-xl transition-all duration-200"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Trophy className="h-5 w-5" />
+                    <span className="font-medium">Todos los Desafíos</span>
+                    {pendingChallengesCount > 0 && (
+                      <Badge variant="destructive" className="ml-auto">
+                        {pendingChallengesCount}
+                      </Badge>
+                    )}
+                  </Link>
+                  <Link
+                    href="/desafios?tab=invitaciones"
+                    className="flex items-center space-x-3 px-4 py-3.5 text-gray-700 dark:text-gray-100 font-semibold antialiased hover:bg-gold/10 hover:text-gold rounded-xl transition-all duration-200"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Bell className="h-5 w-5" />
+                    <span className="font-medium">Invitaciones</span>
+                    {pendingChallengesCount > 0 && (
+                      <Badge variant="secondary" className="ml-auto">
+                        {pendingChallengesCount}
+                      </Badge>
+                    )}
+                  </Link>
+                  <Link
+                    href="/perfil-competitivo"
+                    className="flex items-center space-x-3 px-4 py-3.5 text-gray-700 dark:text-gray-100 font-semibold antialiased hover:bg-gold/10 hover:text-gold rounded-xl transition-all duration-200"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Trophy className="h-5 w-5 text-green-600" />
+                    <span className="font-medium">Perfil Competitivo</span>
+                  </Link>
+                  <Link
+                    href="/ranking"
+                    className="flex items-center space-x-3 px-4 py-3.5 text-gray-700 dark:text-gray-100 font-semibold antialiased hover:bg-gold/10 hover:text-gold rounded-xl transition-all duration-200"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <Trophy className="h-5 w-5 text-yellow-500" />
+                    <span className="font-medium">Ranking Global</span>
+                  </Link>
+                </div>
               )}
 
               {!isAuthenticated && (
-                <div className="px-2 pt-4 border-t border-gray-200/50 dark:border-gray-700/50">
-                  <div className="flex flex-col space-y-2">
+                <div className="pt-6 mt-4 border-t border-gray-200 dark:border-gray-800">
+                  <div className="flex flex-col space-y-3">
                     <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                      <Button variant="ghost" className="w-full justify-start" size="lg">
+                      <Button variant="outline" className="w-full justify-center font-bold" size="lg">
                         {t('nav.login')}
                       </Button>
                     </Link>
                     <Link href="/register" onClick={() => setIsMobileMenuOpen(false)}>
-                      <Button className="w-full" size="lg">
+                      <Button className="w-full btn-luxury" size="lg">
                         {t('nav.register')}
                       </Button>
                     </Link>
@@ -398,7 +421,7 @@ export default function Navbar() {
               )}
             </div>
           </div>
-        )}
+        </div>
       </div>
     </nav>
   )

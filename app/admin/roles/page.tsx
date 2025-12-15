@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Lock, Briefcase, Loader2 } from 'lucide-react'
+import { Plus, Lock, Briefcase, Loader2, Shield, Building2, User } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   Dialog,
@@ -207,6 +207,151 @@ export default function RolesPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Access Levels Information Section */}
+      <div className="mt-8">
+        <h2 className="text-2xl font-bold tracking-tight mb-4">Niveles de Acceso</h2>
+        <p className="text-muted-foreground mb-6">
+          Los niveles de acceso determinan los permisos reales de cada usuario en el sistema.
+          A diferencia de los roles (que son informativos), los niveles de acceso controlan qué puede hacer cada usuario.
+        </p>
+        
+        <div className="grid gap-4 md:grid-cols-3">
+          {/* Usuario Level */}
+          <Card className="border-2 border-gray-200 dark:border-gray-700">
+            <CardHeader>
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="h-5 w-5 text-gray-500" />
+                    Usuario
+                  </CardTitle>
+                  <CardDescription>Nivel básico</CardDescription>
+                </div>
+                <Badge variant="secondary" className="bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300">
+                  Básico
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ul className="text-sm text-muted-foreground space-y-2">
+                <li className="flex items-center gap-2">
+                  <span className="text-green-500">✓</span> Hacer reservas
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-green-500">✓</span> Ver su historial
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-green-500">✓</span> Gestionar su perfil
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-green-500">✓</span> Participar en desafíos
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-red-500">✗</span> Acceso al panel de admin
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          {/* Admin Club Level */}
+          <Card className="border-2 border-orange-200 dark:border-orange-800">
+            <CardHeader>
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="h-5 w-5 text-orange-500" />
+                    Admin de Club
+                  </CardTitle>
+                  <CardDescription>Gestión de clubes asignados</CardDescription>
+                </div>
+                <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400">
+                  Club
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ul className="text-sm text-muted-foreground space-y-2">
+                <li className="flex items-center gap-2">
+                  <span className="text-green-500">✓</span> Todo lo de Usuario
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-green-500">✓</span> Gestionar reservas del club
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-green-500">✓</span> Administrar canchas
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-green-500">✓</span> Ver métricas del club
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-red-500">✗</span> Gestionar otros clubes
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          {/* Admin Global Level */}
+          <Card className="border-2 border-red-200 dark:border-red-800">
+            <CardHeader>
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5 text-red-500" />
+                    Admin Global
+                  </CardTitle>
+                  <CardDescription>Acceso completo al sistema</CardDescription>
+                </div>
+                <Badge className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                  Global
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <ul className="text-sm text-muted-foreground space-y-2">
+                <li className="flex items-center gap-2">
+                  <span className="text-green-500">✓</span> Todo lo de Admin Club
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-green-500">✓</span> Gestionar todos los clubes
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-green-500">✓</span> Administrar usuarios
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-green-500">✓</span> Crear/eliminar roles
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-green-500">✓</span> Configuración del sistema
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="mt-6 bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                <Shield className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-1">
+                  ¿Cómo asignar niveles de acceso?
+                </h4>
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  Para cambiar el nivel de acceso de un usuario, ve a{' '}
+                  <a href="/admin/usuarios" className="underline font-medium hover:text-blue-900 dark:hover:text-blue-100">
+                    Gestión de Usuarios
+                  </a>{' '}
+                  y haz clic en el badge de nivel de acceso del usuario que deseas modificar.
+                  Podrás seleccionar el nuevo nivel y, en caso de Admin de Club, asignar los clubes correspondientes.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

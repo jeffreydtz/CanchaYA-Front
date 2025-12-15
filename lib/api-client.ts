@@ -651,6 +651,15 @@ export interface CambiarRolDto {
   rol: string // Role name (must exist in Rol table)
 }
 
+/**
+ * DTO for changing a user's access level
+ * PATCH /api/usuarios/:id/nivel-acceso
+ */
+export interface CambiarNivelAccesoDto {
+  nivelAcceso: 'usuario' | 'admin-club' | 'admin'
+  clubIds?: string[] // Required when nivelAcceso is 'admin-club'
+}
+
 // ===== USUARIOS EXTENDED INTERFACES =====
 
 /**
@@ -669,6 +678,8 @@ export interface UsuarioAdmin {
     email: string
   }
   rol: string // Role name (can be any system or business role)
+  nivelAcceso: 'usuario' | 'admin-club' | 'admin' // Real permission level
+  clubIds?: string[] // Array of club IDs for admin-club users
   createdAt: string // ISO date
   updatedAt: string // ISO date
 }
@@ -899,6 +910,17 @@ const apiClient = {
    */
   cambiarRolUsuario: (id: string, data: CambiarRolDto) =>
     apiRequest<UsuarioAdmin>(`/usuarios/${id}/rol`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  /**
+   * Cambiar nivel de acceso de usuario - PATCH /usuarios/{id}/nivel-acceso (admin only)
+   * Changes the user's access level (usuario, admin-club, admin)
+   * When setting admin-club, clubIds array is required
+   */
+  cambiarNivelAcceso: (id: string, data: CambiarNivelAccesoDto) =>
+    apiRequest<UsuarioAdmin>(`/usuarios/${id}/nivel-acceso`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
