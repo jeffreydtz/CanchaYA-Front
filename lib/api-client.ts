@@ -1023,6 +1023,36 @@ const apiClient = {
   getCanchasByClub: (clubId: string) => apiRequest<Cancha[]>(`/canchas/club/${clubId}`),
 
   /**
+   * Obtener canchas por múltiples clubIds (para admin-club)
+   * Hace múltiples llamadas y combina los resultados
+   */
+  getCanchasByClubIds: async (clubIds: string[]): Promise<ApiResponse<Cancha[]>> => {
+    try {
+      const responses = await Promise.all(
+        clubIds.map(clubId => apiRequest<Cancha[]>(`/canchas/club/${clubId}`))
+      )
+      
+      // Combinar todas las canchas de todos los clubes
+      const allCanchas = responses.reduce((acc, response) => {
+        if (response.data) {
+          return [...acc, ...response.data]
+        }
+        return acc
+      }, [] as Cancha[])
+      
+      return {
+        data: allCanchas,
+        status: 200
+      }
+    } catch (error) {
+      return {
+        error: 'Error al cargar canchas de los clubes',
+        status: 500
+      }
+    }
+  },
+
+  /**
    * Obtener cancha por ID - GET /canchas/{id}
    */
   getCanchaById: (id: string) => apiRequest<Cancha>(`/canchas/${id}`),
