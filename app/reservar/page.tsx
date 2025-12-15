@@ -98,16 +98,23 @@ export default function ReservarPage() {
       setSlotsLoading(true)
       try {
         const dateStr = format(selectedDate, 'yyyy-MM-dd')
+        const nextDay = new Date(selectedDate)
+        nextDay.setDate(nextDay.getDate() + 1)
+        const nextDayStr = format(nextDay, 'yyyy-MM-dd')
+
         const response = await apiClient.getDisponibilidadRealTime({
           from: dateStr,
-          to: dateStr,
+          to: nextDayStr, // incluir la madrugada siguiente para capturar slots cruzando medianoche
           canchaId: selectedCancha
         })
 
         if (response.data) {
-          // Show all slots returned by backend for that rango.
-          // No filtramos por fecha aquí para evitar perder horarios que cruzan medianoche.
           const slots = response.data
+            // mostramos slots del día seleccionado, y los que cayeron en la madrugada del día siguiente
+            .filter(slot =>
+              slot.fecha === dateStr ||
+              (slot.fecha === nextDayStr && slot.horaInicio < '06:00') // rango tolerante para slots 23:00-00:00, 00-02, etc.
+            )
             .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio))
           setAvailableSlots(slots)
         } else {
@@ -198,15 +205,22 @@ export default function ReservarPage() {
 
       // Recargar disponibilidad
       const dateStr2 = format(selectedDate, 'yyyy-MM-dd')
+      const nextDay2 = new Date(selectedDate)
+      nextDay2.setDate(nextDay2.getDate() + 1)
+      const nextDayStr2 = format(nextDay2, 'yyyy-MM-dd')
+
       const availResponse = await apiClient.getDisponibilidadRealTime({
         from: dateStr2,
-        to: dateStr2,
+        to: nextDayStr2,
         canchaId: selectedCancha
       })
 
       if (availResponse.data) {
-        // Show all slots (libre y ocupado); el backend ya respeta el rango de fechas.
         const slots = availResponse.data
+          .filter(slot =>
+            slot.fecha === dateStr2 ||
+            (slot.fecha === nextDayStr2 && slot.horaInicio < '06:00')
+          )
           .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio))
         setAvailableSlots(slots)
       }
