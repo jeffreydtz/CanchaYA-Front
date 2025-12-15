@@ -46,14 +46,14 @@ export function ClubSelector({
   onClubSelect,
   showLabel = true,
 }: ClubSelectorProps) {
-  const { userRole, clubIds, isSuperAdmin, isAdminClub } = useAuth()
+  const { nivelAcceso, clubIds, isSuperAdmin, isAdminClub } = useAuth()
   const [clubs, setClubs] = useState<Club[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedClub, setSelectedClub] = useState<Club | null>(null)
 
   useEffect(() => {
-    // Skip if user is not an admin
-    if (userRole !== 'admin' && userRole !== 'admin-club') {
+    // Skip if user is not an admin (check nivelAcceso, not userRole)
+    if (nivelAcceso !== 'admin' && nivelAcceso !== 'admin-club') {
       return
     }
 
@@ -100,7 +100,7 @@ export function ClubSelector({
     }
 
     fetchClubs()
-  }, [userRole, clubIds, isAdminClub, selectedClubId, onClubSelect])
+  }, [nivelAcceso, clubIds, isAdminClub, selectedClubId, onClubSelect])
 
   const handleSelectClub = (club: Club) => {
     setSelectedClub(club)
@@ -112,8 +112,8 @@ export function ClubSelector({
     onClubSelect?.(null)
   }
 
-  // Only show for admin users
-  if (userRole !== 'admin' && userRole !== 'admin-club') {
+  // Only show for admin users (check nivelAcceso)
+  if (nivelAcceso !== 'admin' && nivelAcceso !== 'admin-club') {
     return null
   }
 

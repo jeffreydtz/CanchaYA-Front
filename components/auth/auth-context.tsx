@@ -23,27 +23,34 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>
   logout: () => Promise<void>
   isAuthenticated: boolean
-  isAdmin: boolean
-  isAdminClub: boolean // New flag for admin-club role
-  isSuperAdmin: boolean // True if admin (global), false if admin-club
+  isAdmin: boolean // True if nivelAcceso === 'admin'
+  isAdminClub: boolean // True if nivelAcceso === 'admin-club'
+  isSuperAdmin: boolean // True if nivelAcceso === 'admin' (global admin)
   loading: boolean
   refreshUser: () => Promise<void>
   personaId: string | null // Added for backend API compatibility
   userId: string | null     // User ID from JWT
   clubIds: string[] // Array of club IDs for scoped access (admin-club users)
-  userRole: string | null // Complete role information (admin, admin-club, usuario, or custom business roles)
+  nivelAcceso: 'usuario' | 'admin-club' | 'admin' | null // REAL permission level - USE THIS
+  displayRole: string | null // Display role (informative only - e.g., "recepcionista")
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 /**
- * Helper function to decode JWT and extract role and clubIds
+ * Helper function to decode JWT and extract nivelAcceso, rol, and clubIds
+ * CRITICAL: nivelAcceso is the real permission level, rol is just for display
  */
-function decodeJWTToken(token: string): { role: string; clubIds: string[] } | null {
+function decodeJWTToken(token: string): {
+  nivelAcceso: 'usuario' | 'admin-club' | 'admin'
+  displayRole: string
+  clubIds: string[]
+} | null {
   try {
     const decoded = jwtDecode<JWTPayload>(token)
     return {
-      role: decoded.rol,
+      nivelAcceso: decoded.nivelAcceso,
+      displayRole: decoded.rol,
       clubIds: decoded.clubIds || [],
     }
   } catch (e) {
@@ -59,7 +66,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [personaId, setPersonaId] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
   const [clubIds, setClubIds] = useState<string[]>([])
-  const [userRole, setUserRole] = useState<string | null>(null)
+  const [nivelAcceso, setNivelAcceso] = useState<'usuario' | 'admin-club' | 'admin' | null>(null)
+  const [displayRole, setDisplayRole] = useState<string | null>(null)
 
   // Enable automatic token refresh
   useTokenRefresh()
@@ -78,25 +86,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (token) {
           try {
             const decoded = jwtDecode<JWTPayload>(token)
-            const roleInfo = decodeJWTToken(token)
+            const tokenInfo = decodeJWTToken(token)
 
             if (!isMounted) return
 
             // Garantiza que los campos requeridos existan
             const userData: User = {
-              id: decoded.sub,
+              id: decoded.id,
               nombre: decoded.email.split('@')[0] || 'Usuario',
               email: decoded.email,
-              rol: decoded.rol, // Use decoded role directly from JWT
+              rol: decoded.rol, // Display role (informative only)
+              nivelAcceso: decoded.nivelAcceso, // REAL permission level
               activo: true,
               fechaCreacion: new Date().toISOString(),
-              clubIds: roleInfo?.clubIds || [], // Add clubIds from JWT
+              clubIds: tokenInfo?.clubIds || [], // Add clubIds from JWT
             }
             setUser(userData)
             setPersonaId(decoded.personaId || null)
-            setUserId(decoded.sub || null)
-            setUserRole(decoded.rol)
-            setClubIds(roleInfo?.clubIds || [])
+            setUserId(decoded.id || null)
+            setNivelAcceso(decoded.nivelAcceso)
+            setDisplayRole(decoded.rol)
+            setClubIds(tokenInfo?.clubIds || [])
 
             // Fetch persona data to get avatar URL on initial load
             if (decoded.personaId) {
@@ -120,7 +130,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(null)
             setPersonaId(null)
             setUserId(null)
-            setUserRole(null)
+            setNivelAcceso(null)
+            setDisplayRole(null)
             setClubIds([])
             deleteCookie('token')
           }
@@ -128,7 +139,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(null)
           setPersonaId(null)
           setUserId(null)
-          setUserRole(null)
+          setNivelAcceso(null)
+          setDisplayRole(null)
           setClubIds([])
         }
       } finally {
@@ -166,28 +178,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         try {
           const decoded = jwtDecode<JWTPayload>(accessToken)
-          const roleInfo = decodeJWTToken(accessToken)
+          const tokenInfo = decodeJWTToken(accessToken)
 
           // Validate that required fields exist
-          if (!decoded.sub || !decoded.email) {
+          if (!decoded.id || !decoded.email || !decoded.nivelAcceso) {
             throw new Error('Token missing required fields')
           }
 
           const userData: User = {
-            id: decoded.sub,
+            id: decoded.id,
             nombre: decoded.email.split('@')[0] || 'Usuario',
             email: decoded.email,
-            rol: decoded.rol,
+            rol: decoded.rol, // Display role (informative only)
+            nivelAcceso: decoded.nivelAcceso, // REAL permission level
             activo: true,
             fechaCreacion: decoded.iat ? new Date(decoded.iat * 1000).toISOString() : new Date().toISOString(),
-            clubIds: roleInfo?.clubIds || [],
+            clubIds: tokenInfo?.clubIds || [],
           }
 
           setUser(userData)
           setPersonaId(decoded.personaId || null)
-          setUserId(decoded.sub || null)
-          setUserRole(decoded.rol)
-          setClubIds(roleInfo?.clubIds || [])
+          setUserId(decoded.id || null)
+          setNivelAcceso(decoded.nivelAcceso)
+          setDisplayRole(decoded.rol)
+          setClubIds(tokenInfo?.clubIds || [])
 
           // Fetch persona data to get avatar URL
           if (decoded.personaId) {
@@ -242,7 +256,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
     setPersonaId(null)
     setUserId(null)
-    setUserRole(null)
+    setNivelAcceso(null)
+    setDisplayRole(null)
     setClubIds([])
     toast.success('Sesión cerrada correctamente')
 
@@ -261,30 +276,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!token) {
       console.log('No token found, setting user to null')
       setUser(null)
-      setUserRole(null)
+      setNivelAcceso(null)
+      setDisplayRole(null)
       setClubIds([])
       return
     }
 
     try {
       const decoded = jwtDecode<JWTPayload>(token)
-      const roleInfo = decodeJWTToken(token)
+      const tokenInfo = decodeJWTToken(token)
       console.log('Token decoded successfully:', decoded)
 
       const userData: User = {
-        id: decoded.sub,
+        id: decoded.id,
         nombre: decoded.email.split('@')[0] || 'Usuario',
         email: decoded.email,
-        rol: decoded.rol,
+        rol: decoded.rol, // Display role (informative only)
+        nivelAcceso: decoded.nivelAcceso, // REAL permission level
         activo: true,
         fechaCreacion: new Date().toISOString(),
-        clubIds: roleInfo?.clubIds || [],
+        clubIds: tokenInfo?.clubIds || [],
       }
 
       setUser(userData)
-      setUserId(decoded.sub || null)
-      setUserRole(decoded.rol)
-      setClubIds(roleInfo?.clubIds || [])
+      setUserId(decoded.id || null)
+      setNivelAcceso(decoded.nivelAcceso)
+      setDisplayRole(decoded.rol)
+      setClubIds(tokenInfo?.clubIds || [])
       console.log('User refreshed:', userData)
 
       // Fetch persona data to get avatar URL
@@ -306,18 +324,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       console.error('Error decoding token on refresh:', e)
       setUser(null)
-      setUserRole(null)
+      setNivelAcceso(null)
+      setDisplayRole(null)
       setClubIds([])
       deleteCookie('token')
     }
   }
 
   const isAuthenticated = !!user
-  // Note: These flags check for specific roles needed for authorization logic
-  // The system supports additional system roles beyond these, but these are used for admin panel access
-  const isAdmin = user?.rol === 'admin'
-  const isAdminClub = user?.rol === 'admin-club'
-  const isSuperAdmin = user?.rol === 'admin' // True for global admin (distinct from admin-club)
+  // CRITICAL: Use nivelAcceso for permission checks, NOT rol
+  const isAdmin = nivelAcceso === 'admin'
+  const isAdminClub = nivelAcceso === 'admin-club'
+  const isSuperAdmin = nivelAcceso === 'admin' // True for global admin
 
   const value: AuthContextType = {
     user,
@@ -332,7 +350,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     personaId,
     userId,
     clubIds,
-    userRole,
+    nivelAcceso,
+    displayRole,
   }
 
   // Only show loading spinner on initial page load, not during navigation

@@ -73,15 +73,18 @@ export interface AuthMeResponse {
 
 /**
  * JWT Payload structure from backend
- * Contains role information and optional club IDs for scoped access
- * Note: Backend uses 'sub' (subject) for user ID following JWT standard
+ * CRITICAL: Use nivelAcceso for permission control, NOT rol
+ * - rol: Display only (informative label like "recepcionista")
+ * - nivelAcceso: Real permission level (usuario | admin-club | admin)
+ * - clubIds: Scope of data access for admin-club users
  */
 export interface JWTPayload {
-  sub: string // User ID (UUID) - subject claim (JWT standard)
-  rol: string // User role: can be any system role or custom business role
+  id: string // User ID (UUID) - backend uses 'id' not 'sub'
   personaId: string // Person ID associated with user
   email: string // User email
-  clubIds?: string[] // Array of club IDs if user is admin-club (optional)
+  rol: string // Display role (e.g., "recepcionista", "jugador") - INFORMATIVE ONLY
+  nivelAcceso: 'usuario' | 'admin-club' | 'admin' // REAL permission level - USE THIS FOR ACCESS CONTROL
+  clubIds?: string[] // Array of club IDs if nivelAcceso is admin-club (optional)
   iat: number // Issued at timestamp
   exp: number // Expiration timestamp
 }
@@ -104,19 +107,21 @@ export interface User {
 }
 
 // Legacy User interface for backward compatibility
+// CRITICAL: Use nivelAcceso for permission checks, NOT rol
 export interface UserLegacy {
   id: string // UUID
   nombre: string
   email: string
   telefono?: string
-  rol: string // User role: can be any system role or custom business role
+  rol: string // Display role (informative only - e.g., "recepcionista", "jugador")
+  nivelAcceso: 'usuario' | 'admin-club' | 'admin' // REAL permission level - USE THIS
   activo: boolean
   deudaPendiente?: number
   estadoCuenta?: 'activo' | 'bloqueado'
   fechaCreacion: string
   avatarUrl?: string
   apellido?: string
-  clubIds?: string[] // Array of club IDs for admin-club users
+  clubIds?: string[] // Array of club IDs for admin-club users (scoped access)
 }
 
 export interface Club {

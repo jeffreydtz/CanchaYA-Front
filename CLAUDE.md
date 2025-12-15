@@ -49,6 +49,9 @@ Dual authentication system with JWT tokens:
 - **Client-side**: `lib/auth.ts` - Cookie management, auth state
 - **Server-side**: `lib/auth-server.ts` - JWT verification, protected routes
 - **Context**: `components/auth/auth-context.tsx` - React context for auth state
+- **Permissions**: `lib/permissions.ts` - Permission helper functions
+
+**⚠️ CRITICAL:** Always use `nivelAcceso` for permission checks, NEVER use `rol`. See [BACKEND_INTEGRATION.md](./BACKEND_INTEGRATION.md) for complete rules and examples.
 
 ### API Integration
 Comprehensive API client (`lib/api-client.ts`) aligned with NestJS backend:
@@ -153,12 +156,23 @@ if (response.error) {
 
 ### Authentication Checks
 ```typescript
-// Client-side
-import { isClientAuthenticated } from '@/lib/auth'
+// Client-side - Context hooks
+import { useAuth } from '@/components/auth/auth-context'
+const { isAuthenticated, isAdmin, isAdminClub, nivelAcceso, clubIds } = useAuth()
+
+// Client-side - Permission helpers
+import { hasAdminPrivileges, hasClubAccess } from '@/lib/permissions'
+if (hasAdminPrivileges(nivelAcceso)) { /* show admin features */ }
 
 // Server-side
-import { requireAuth, requireAdmin } from '@/lib/auth-server'
+import { requireAuth, requireAdmin, requireAdminOrAdminClub } from '@/lib/auth-server'
 const user = await requireAuth() // Redirects if not authenticated
+const admin = await requireAdmin() // Only global admins
+const clubAdmin = await requireAdminOrAdminClub() // Global or club admins
+
+// ⚠️ CRITICAL: Always check nivelAcceso, never check rol
+// ❌ WRONG: if (user.rol === 'admin')
+// ✅ CORRECT: if (user.nivelAcceso === 'admin')
 ```
 
 ### Form Handling
