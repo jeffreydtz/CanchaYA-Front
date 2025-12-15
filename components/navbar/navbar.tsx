@@ -33,7 +33,7 @@ export default function Navbar() {
     ...(isAuthenticated ? [
       { href: '/profile', label: t('nav.profile'), icon: User }
     ] : []),
-    ...(isAdmin ? [{ href: '/admin', label: t('nav.admin'), icon: Shield }] : []),
+    ...(isAdmin ? [{ href: '/admin/dashboard', label: t('nav.admin'), icon: Shield }] : []),
   ]
 
   return (
@@ -247,7 +247,7 @@ export default function Navbar() {
                     </DropdownMenuItem>
                     {isAdmin && (
                       <DropdownMenuItem asChild>
-                        <Link href="/admin" className="flex items-center p-3 rounded-lg hover:bg-muted cursor-pointer">
+                        <Link href="/admin/dashboard" className="flex items-center p-3 rounded-lg hover:bg-muted cursor-pointer">
                           <Shield className="mr-3 h-5 w-5" />
                           <span className="font-medium">{t('nav.admin')}</span>
                         </Link>
@@ -323,6 +323,60 @@ export default function Navbar() {
                   </Link>
                 )
               })}
+
+              {/* Desafíos section for mobile */}
+              {isAuthenticated && (
+                <>
+                  <div className="px-2 pt-2 border-t border-gray-200/50 dark:border-gray-700/50">
+                    <div className="px-2 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Desafíos
+                    </div>
+                    <Link
+                      href="/desafios"
+                      className="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-100 font-semibold antialiased hover:bg-primary/10 hover:text-primary rounded-lg transition-colors"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Trophy className="h-5 w-5" />
+                      <span className="font-medium">Todos los Desafíos</span>
+                      {pendingChallengesCount > 0 && (
+                        <Badge variant="destructive" className="ml-auto">
+                          {pendingChallengesCount}
+                        </Badge>
+                      )}
+                    </Link>
+                    <Link
+                      href="/desafios?tab=invitaciones"
+                      className="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-100 font-semibold antialiased hover:bg-primary/10 hover:text-primary rounded-lg transition-colors"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Bell className="h-5 w-5" />
+                      <span className="font-medium">Invitaciones</span>
+                      {pendingChallengesCount > 0 && (
+                        <Badge variant="secondary" className="ml-auto">
+                          {pendingChallengesCount}
+                        </Badge>
+                      )}
+                    </Link>
+                    <Link
+                      href="/perfil-competitivo"
+                      className="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-100 font-semibold antialiased hover:bg-primary/10 hover:text-primary rounded-lg transition-colors"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Trophy className="h-5 w-5 text-green-600" />
+                      <span className="font-medium">Perfil Competitivo</span>
+                    </Link>
+                    <Link
+                      href="/ranking"
+                      className="flex items-center space-x-3 px-4 py-3 text-gray-700 dark:text-gray-100 font-semibold antialiased hover:bg-primary/10 hover:text-primary rounded-lg transition-colors"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Trophy className="h-5 w-5 text-yellow-500" />
+                      <span className="font-medium">Ranking Global</span>
+                    </Link>
+                  </div>
+                </>
+              )}
+
               {!isAuthenticated && (
                 <div className="px-2 pt-4 border-t border-gray-200/50 dark:border-gray-700/50">
                   <div className="flex flex-col space-y-2">

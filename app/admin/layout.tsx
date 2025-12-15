@@ -2,7 +2,7 @@
 
 import { Suspense } from 'react'
 import AdminSidebar from '@/components/admin/admin-sidebar'
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import Navbar from '@/components/navbar/navbar'
 import { useAuth } from '@/components/auth/auth-context'
 import { useRouter } from 'next/navigation'
@@ -40,7 +40,14 @@ export default function AdminLayout({
           <div className="flex pt-16">
             <AdminSidebar />
             <SidebarInset className="flex-1">
-              <main className="p-6 md:p-8 lg:p-10">
+              {/* Mobile Sidebar Trigger */}
+              <header className="flex h-14 items-center gap-2 border-b border-gray-200 dark:border-gray-800 px-4 md:hidden sticky top-16 bg-white dark:bg-gray-950 z-40">
+                <SidebarTrigger className="h-8 w-8" />
+                <div className="flex items-center gap-2">
+                  <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">Panel Admin</h1>
+                </div>
+              </header>
+              <main className="p-4 md:p-6 lg:p-8">
                 <Suspense fallback={
                   <div className="flex items-center justify-center min-h-[400px]">
                     <div className="text-center">
