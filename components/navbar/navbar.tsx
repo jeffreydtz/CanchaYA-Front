@@ -12,11 +12,14 @@ import { useLanguage } from '@/lib/language-context'
 import { Badge } from '@/components/ui/badge'
 
 export default function Navbar() {
-  const { user, isAuthenticated, isAdmin, logout } = useAuth()
+  const { user, isAuthenticated, isAdmin, isAdminClub, logout } = useAuth()
   const { pendingChallengesCount } = useChallengesNotifications()
   const { t } = useLanguage()
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  // Check if user has any admin privileges (admin or admin-club)
+  const hasAdminAccess = isAdmin || isAdminClub
 
   useEffect(() => {
     const handleScroll = () => {
@@ -33,7 +36,7 @@ export default function Navbar() {
     ...(isAuthenticated ? [
       { href: '/profile', label: t('nav.profile'), icon: User }
     ] : []),
-    ...(isAdmin ? [{ href: '/admin/dashboard', label: t('nav.admin'), icon: Shield }] : []),
+    ...(hasAdminAccess ? [{ href: '/admin/dashboard', label: t('nav.admin'), icon: Shield }] : []),
   ]
 
   return (
@@ -198,10 +201,10 @@ export default function Navbar() {
                           <div>
                             <p className="text-base font-semibold leading-none">{user?.nombre}</p>
                             <p className="text-sm text-muted-foreground mt-1">{user?.email}</p>
-                            {isAdmin && (
+                            {hasAdminAccess && (
                               <div className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gradient-to-r from-secondary to-accent text-white mt-2">
                                 <Shield className="h-3 w-3 mr-1" />
-                                Admin
+                                {isAdmin ? 'Admin' : 'Admin Club'}
                               </div>
                             )}
                           </div>
@@ -245,7 +248,7 @@ export default function Navbar() {
                         <span className="font-medium">Notificaciones</span>
                       </Link>
                     </DropdownMenuItem>
-                    {isAdmin && (
+                    {hasAdminAccess && (
                       <DropdownMenuItem asChild>
                         <Link href="/admin/dashboard" className="flex items-center p-3 rounded-lg hover:bg-muted cursor-pointer">
                           <Shield className="mr-3 h-5 w-5" />
