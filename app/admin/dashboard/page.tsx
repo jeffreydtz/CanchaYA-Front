@@ -103,7 +103,10 @@ const fetchDashboardData = async (filters?: Record<string, unknown> | null): Pro
     const toStr = format(toDate, 'yyyy-MM-dd')
     const tz = 'America/Argentina/Cordoba'
 
-    // Use admin endpoints that automatically filter by clubIds for admin-club users
+    // Extract clubId from filters if present
+    const clubId = filters?.clubId as string | undefined
+
+    // Use admin endpoints with clubId filter
     const [
       adminResumenRes,
       canchasTopRes,
@@ -112,10 +115,10 @@ const fetchDashboardData = async (filters?: Record<string, unknown> | null): Pro
       reservasAggregateRes
     ] = await Promise.all([
       apiClient.getAdminResumen(),
-      apiClient.getAdminCanchasMasUsadas(fromStr, toStr, tz).catch(() => ({ data: [], error: null })),
-      apiClient.getAdminOcupacion('cancha', fromStr, toStr, tz).catch(() => ({ data: [], error: null })),
-      apiClient.getAdminReservasHeatmap(undefined, fromStr, toStr, tz).catch(() => ({ data: [], error: null })),
-      apiClient.getAdminReservasAggregate('day', fromStr, toStr, tz).catch(() => ({ data: [], error: null }))
+      apiClient.getAdminCanchasMasUsadas(fromStr, toStr, tz, clubId).catch(() => ({ data: [], error: null })),
+      apiClient.getAdminOcupacion('cancha', fromStr, toStr, tz, clubId).catch(() => ({ data: [], error: null })),
+      apiClient.getAdminReservasHeatmap(clubId, fromStr, toStr, tz).catch(() => ({ data: [], error: null })),
+      apiClient.getAdminReservasAggregate('day', fromStr, toStr, tz, clubId).catch(() => ({ data: [], error: null }))
     ])
 
     // Handle potential errors

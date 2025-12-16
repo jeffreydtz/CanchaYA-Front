@@ -7,7 +7,7 @@ import { ReportBuilder, ReportHistoryItem } from '@/components/analytics/ReportB
 import { AnalyticsLegend } from '@/components/analytics/AnalyticsLegend';
 import type { ReportConfig, Report, ReportFormat } from '@/lib/analytics/types';
 import { toast } from 'sonner';
-import { downloadCSV, downloadExcel, downloadHTML, generateFilename } from '@/lib/analytics/export';
+import { downloadCSV, downloadExcel, downloadHTML, generateFilename, createPrintableReport } from '@/lib/analytics/export';
 import { fetchDashboardData } from '@/lib/analytics/data-aggregator';
 import { REPORT_CONFIG } from '@/lib/analytics/config';
 import { withErrorBoundary } from '@/components/error/with-error-boundary';
@@ -168,17 +168,72 @@ function ReportesAnalyticsPage() {
           break
         }
 
-        case 'PDF':
-          // PDF export not implemented yet
-          toast.info('Formato PDF no implementado aún', {
-            description: 'Por ahora solo están disponibles CSV, Excel y HTML.'
-          });
-          result = {
-            success: false,
-            filename,
-            error: 'Formato PDF no implementado'
+        case 'PDF': {
+          // PDF export using print dialog
+          const escapeHTML = (str: string | number): string => {
+            const s = String(str);
+            return s
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/'/g, '&#39;');
           };
+
+          const sections = [
+            {
+              title: 'Métricas del Reporte',
+              content: `
+                <table border="1" style="width: 100%; border-collapse: collapse;">
+                  <thead>
+                    <tr style="background-color: #f5f5f5;">
+                      <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Métrica</th>
+                      <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Valor Actual</th>
+                      <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Valor Anterior</th>
+                      <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Cambio</th>
+                      <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Tendencia</th>
+                      <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${reportData.data.kpis.map(kpi => `
+                      <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${escapeHTML(kpi.name)}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${escapeHTML(kpi.value)}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${kpi.previousValue ?? 'N/A'}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${kpi.change ?? ''}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${escapeHTML(kpi.trend)}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${escapeHTML(kpi.status)}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              `
+            }
+          ];
+
+          try {
+            createPrintableReport(config.name || 'Reporte Analytics', sections);
+            toast.success('Reporte listo para imprimir', {
+              description: 'Usa el diálogo de impresión para guardar como PDF'
+            });
+            result = {
+              success: true,
+              filename,
+              url: undefined
+            };
+          } catch (error) {
+            toast.error('Error al generar reporte PDF', {
+              description: error instanceof Error ? error.message : 'Error desconocido'
+            });
+            result = {
+              success: false,
+              filename,
+              error: error instanceof Error ? error.message : 'Error desconocido'
+            };
+          }
           break;
+        }
 
         default:
           throw new Error(`Formato no soportado: ${config.format}`);

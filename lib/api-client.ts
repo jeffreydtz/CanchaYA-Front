@@ -1869,11 +1869,12 @@ const apiClient = {
    * @param tz Zona horaria (e.g., America/Argentina/Cordoba)
    * @returns Canchas con mayor cantidad de reservas confirmadas
    */
-  getAdminCanchasMasUsadas: (from?: string, to?: string, tz?: string) => {
+  getAdminCanchasMasUsadas: (from?: string, to?: string, tz?: string, clubId?: string) => {
     const params = new URLSearchParams()
     if (from) params.append('from', from)
     if (to) params.append('to', to)
     if (tz) params.append('tz', tz)
+    if (clubId) params.append('clubId', clubId)
     const query = params.toString() ? `?${params.toString()}` : ''
     return apiRequest<CanchaMasUsada[]>(`/admin/canchas-mas-usadas${query}`)
   },
@@ -1897,13 +1898,15 @@ const apiClient = {
     granularity: 'day' | 'week' | 'month',
     from: string,
     to: string,
-    tz?: string
+    tz?: string,
+    clubId?: string
   ) => {
     const params = new URLSearchParams()
     params.append('granularity', granularity)
     params.append('from', from)
     params.append('to', to)
     if (tz) params.append('tz', tz)
+    if (clubId) params.append('clubId', clubId)
     return apiRequest<ReservasAggregate[]>(`/admin/reservas/aggregate?${params.toString()}`)
   },
 
@@ -1961,12 +1964,13 @@ const apiClient = {
    * @param tz Zona horaria (e.g., America/Argentina/Cordoba)
    * @returns Porcentaje de ocupación con semáforo visual
    */
-  getAdminOcupacion: (by: 'club' | 'cancha', from?: string, to?: string, tz?: string) => {
+  getAdminOcupacion: (by: 'club' | 'cancha', from?: string, to?: string, tz?: string, clubId?: string) => {
     const params = new URLSearchParams()
     params.append('by', by)
     if (from) params.append('from', from)
     if (to) params.append('to', to)
     if (tz) params.append('tz', tz)
+    if (clubId) params.append('clubId', clubId)
     return apiRequest<OcupacionSemaforo[]>(`/admin/ocupacion?${params.toString()}`)
   },
 
