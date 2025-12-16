@@ -43,40 +43,53 @@ export default function DynamicLeafletMap({
   const map = useRef<L.Map | null>(null)
 
   useEffect(() => {
-    if (!mapContainer.current || map.current) return
+    if (!mapContainer.current) return
+    if (map.current) return // Prevent re-initialization
 
-    // Initialize map
-    map.current = L.map(mapContainer.current).setView([latitude, longitude], zoom)
-
-    // Add tile layer from OpenStreetMap
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 19,
-    }).addTo(map.current)
-
-    // Add marker with club information
+    // Validate coordinates
     const lat = Number(latitude)
     const lng = Number(longitude)
-    
-    const popupContent = `
-      <div class="p-2">
-        <h3 class="font-bold text-sm">${clubName}</h3>
-        ${address ? `<p class="text-xs text-gray-600">${address}</p>` : ''}
-        <p class="text-xs text-gray-500 mt-1">${!isNaN(lat) ? lat.toFixed(6) : '0.000000'}, ${!isNaN(lng) ? lng.toFixed(6) : '0.000000'}</p>
-      </div>
-    `
 
-    if (!isNaN(lat) && !isNaN(lng)) {
+    if (isNaN(lat) || isNaN(lng)) {
+      console.error('Invalid coordinates for map:', { latitude, longitude })
+      return
+    }
+
+    try {
+      // Initialize map
+      map.current = L.map(mapContainer.current).setView([lat, lng], zoom)
+
+      // Add tile layer from OpenStreetMap
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+      }).addTo(map.current)
+
+      // Add marker with club information
+      const popupContent = `
+        <div class="p-2">
+          <h3 class="font-bold text-sm">${clubName}</h3>
+          ${address ? `<p class="text-xs text-gray-600">${address}</p>` : ''}
+          <p class="text-xs text-gray-500 mt-1">${lat.toFixed(6)}, ${lng.toFixed(6)}</p>
+        </div>
+      `
+
       L.marker([lat, lng], { icon: markerIcon })
-      .addTo(map.current)
-      .bindPopup(popupContent, { maxWidth: 250 })
-      .openPopup()
+        .addTo(map.current)
+        .bindPopup(popupContent, { maxWidth: 250 })
+        .openPopup()
+    } catch (error) {
+      console.error('Error initializing map:', error)
     }
 
     // Cleanup
     return () => {
       if (map.current) {
-        map.current.remove()
+        try {
+          map.current.remove()
+        } catch (e) {
+          // Ignore cleanup errors
+        }
         map.current = null
       }
     }

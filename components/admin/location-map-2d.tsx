@@ -18,11 +18,15 @@ export function LocationMap2D({ initialLat = -32.9442, initialLng = -60.6560, on
     // Dynamically load Leaflet only on client side
     if (typeof window === 'undefined') return
     if (!mapRef.current) return
+    if (mapInstanceRef.current) return // Don't reinitialize if map exists
+
+    let map: any = null
+    let mounted = true
 
     // Import Leaflet
     import('leaflet').then((L) => {
-      // Guard against null ref
-      if (!mapRef.current) return
+      // Guard against unmounted component
+      if (!mounted || !mapRef.current) return
 
       // Fix for Leaflet default markers
       const defaultIcon = L.icon({
@@ -36,11 +40,8 @@ export function LocationMap2D({ initialLat = -32.9442, initialLng = -60.6560, on
 
       L.Marker.prototype.setIcon(defaultIcon)
 
-      // Create map only if not already created
-      if (mapInstanceRef.current) return
-
       // Initialize map
-      const map = L.map(mapRef.current as HTMLElement, {
+      map = L.map(mapRef.current as HTMLElement, {
         center: [initialLat, initialLng],
         zoom: 13,
         zoomControl: true
@@ -67,15 +68,17 @@ export function LocationMap2D({ initialLat = -32.9442, initialLng = -60.6560, on
         const { lat, lng } = e.latlng
 
         // Remove old marker
-        if (markerRef.current) {
+        if (markerRef.current && map) {
           map.removeLayer(markerRef.current)
         }
 
         // Add new marker
-        markerRef.current = L.marker([lat, lng], { icon: defaultIcon })
-          .addTo(map)
-          .bindPopup(`<strong>Ubicación seleccionada</strong><br>Lat: ${lat.toFixed(6)}<br>Lng: ${lng.toFixed(6)}`)
-          .openPopup()
+        if (map) {
+          markerRef.current = L.marker([lat, lng], { icon: defaultIcon })
+            .addTo(map)
+            .bindPopup(`<strong>Ubicación seleccionada</strong><br>Lat: ${lat.toFixed(6)}<br>Lng: ${lng.toFixed(6)}`)
+            .openPopup()
+        }
 
         // Call callback
         if (onLocationSelect) {
@@ -91,18 +94,28 @@ export function LocationMap2D({ initialLat = -32.9442, initialLng = -60.6560, on
         }
       }
 
-      map.on('click', handleMapClick)
-
-      // Cleanup
-      return () => {
-        map.off('click', handleMapClick)
-        map.remove()
-        mapInstanceRef.current = null
+      if (map) {
+        map.on('click', handleMapClick)
       }
-    }).catch((err) => {
+    }).catch(() => {
       // Silently handle Leaflet loading error
+      console.error('Failed to load Leaflet map')
     })
-  }, [])
+
+    // Cleanup
+    return () => {
+      mounted = false
+      if (mapInstanceRef.current) {
+        try {
+          mapInstanceRef.current.remove()
+        } catch (e) {
+          // Ignore cleanup errors
+        }
+        mapInstanceRef.current = null
+        markerRef.current = null
+      }
+    }
+  }, [initialLat, initialLng, onLocationSelect])
 
   // Update marker when initial coordinates change
   useEffect(() => {
