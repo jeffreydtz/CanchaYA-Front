@@ -138,6 +138,25 @@ export type AlertCondition = '>' | '<' | '=' | '>=' | '<=' | 'between';
 
 export type AlertChannel = 'EMAIL' | 'PUSH' | 'SMS' | 'IN_APP';
 
+export type EmailTemplate =
+  | 'METRIC_THRESHOLD'
+  | 'ANOMALY_DETECTED'
+  | 'CRITICAL_ALERT'
+  | 'DAILY_SUMMARY'
+  | 'WEEKLY_REPORT';
+
+export interface EmailConfig {
+  enabled: boolean;
+  recipients: string[];
+  cc?: string[];
+  bcc?: string[];
+  template: EmailTemplate;
+  includeChart?: boolean;
+  includeHistoricalData?: boolean;
+  customSubject?: string;
+  customMessage?: string;
+}
+
 export interface Alert {
   id: string;
   name: string;
@@ -148,6 +167,7 @@ export interface Alert {
   threshold: number | [number, number];
   severity: AlertSeverity;
   channels: AlertChannel[];
+  emailConfig?: EmailConfig;
   active: boolean;
   cooldownMinutes: number;
   lastTriggered?: Date;
@@ -163,6 +183,22 @@ export interface AlertTrigger {
   value: number;
   previousValue?: number;
   message: string;
+  emailSent?: boolean;
+  emailError?: string;
+}
+
+export interface EmailNotification {
+  id: string;
+  to: string[];
+  cc?: string[];
+  bcc?: string[];
+  subject: string;
+  template: EmailTemplate;
+  templateData: Record<string, any>;
+  sentAt?: Date;
+  status: 'pending' | 'sent' | 'failed' | 'queued';
+  error?: string;
+  retryCount?: number;
 }
 
 // ============================================================================

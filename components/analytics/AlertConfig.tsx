@@ -14,9 +14,10 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Bell, Mail, Smartphone, MessageSquare, X } from 'lucide-react';
-import type { Alert, AlertCondition, AlertSeverity, AlertChannel } from '@/lib/analytics/types';
+import type { Alert, AlertCondition, AlertSeverity, AlertChannel, EmailConfig } from '@/lib/analytics/types';
 import { cn } from '@/lib/utils';
 import { ALERT_CONFIG, COLOR_PALETTES } from '@/lib/analytics/config';
+import { EmailConfigForm } from './EmailConfigForm';
 
 interface AlertConfigProps {
   alert?: Alert;
@@ -68,6 +69,13 @@ export function AlertConfig({ alert, onSave, onCancel }: AlertConfigProps) {
   const [channels, setChannels] = useState<AlertChannel[]>(alert?.channels || ['EMAIL']);
   const [cooldownMinutes, setCooldownMinutes] = useState(alert?.cooldownMinutes || ALERT_CONFIG.defaultCooldownMinutes);
   const [active, setActive] = useState(alert?.active ?? true);
+  const [emailConfig, setEmailConfig] = useState<EmailConfig>(
+    alert?.emailConfig || {
+      enabled: true,
+      recipients: [],
+      template: 'METRIC_THRESHOLD',
+    }
+  );
 
   const handleChannelToggle = (channel: AlertChannel) => {
     setChannels((prev) =>
@@ -90,6 +98,7 @@ export function AlertConfig({ alert, onSave, onCancel }: AlertConfigProps) {
       threshold: parsedThreshold,
       severity,
       channels,
+      emailConfig: channels.includes('EMAIL') ? emailConfig : undefined,
       cooldownMinutes,
       active,
       updatedAt: new Date(),
@@ -232,6 +241,14 @@ export function AlertConfig({ alert, onSave, onCancel }: AlertConfigProps) {
             ))}
           </div>
         </div>
+
+        {/* Email Configuration - shown when EMAIL channel is selected */}
+        {channels.includes('EMAIL') && (
+          <EmailConfigForm
+            config={emailConfig}
+            onChange={setEmailConfig}
+          />
+        )}
 
         {/* Cooldown */}
         <div className="space-y-2">
