@@ -108,7 +108,13 @@ function AdminDisponibilidadPage() {
 
           setCanchas(filteredCanchas)
         }
-        if (horariosRes.data) setHorarios(horariosRes.data)
+        if (horariosRes.data) {
+          // Filtrar horarios para excluir el de las 23:00-23:59
+          const filteredHorarios = horariosRes.data.filter(horario =>
+            horario.horaInicio !== '23:00:00' && horario.horaInicio !== '23:00'
+          )
+          setHorarios(filteredHorarios)
+        }
       } catch {
         toast.error('Error al cargar datos iniciales')
       } finally {
