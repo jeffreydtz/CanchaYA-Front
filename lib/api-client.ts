@@ -1237,6 +1237,12 @@ const apiClient = {
   getReservas: () => apiRequest<Reserva[]>('/reservas'),
 
   /**
+   * Mis Reservas - GET /reservas/mis
+   * @returns Reservas del usuario autenticado (solo dueño)
+   */
+  getMisReservas: () => apiRequest<Reserva[]>('/reservas/mis'),
+
+  /**
    * Crear reserva - POST /reservas
    * Requiere: disponibilidadId y fechaHora (ISO 8601)
    * Reglas:

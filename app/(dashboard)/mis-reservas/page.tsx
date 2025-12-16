@@ -343,15 +343,15 @@ function LoadingSkeleton() {
 }
 
 export default function MisReservasPage() {
-  const { isAuthenticated, personaId } = useAuth()
+  const { isAuthenticated, nivelAcceso } = useAuth()
   const [reservas, setReservas] = useState<Reserva[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState('all')
 
   useEffect(() => {
-    // Only fetch when fully authenticated and after personaId is available
-    if (!isAuthenticated || !personaId) {
+    // Only fetch when fully authenticated
+    if (!isAuthenticated) {
       setLoading(false)
       return
     }
@@ -362,16 +362,23 @@ export default function MisReservasPage() {
       setLoading(true)
       setError(null)
       try {
-        const response = await apiClient.getReservas()
+        // CRITICAL: Use correct endpoint based on nivelAcceso
+        // - usuario → GET /reservas/mis (only their reservations)
+        // - admin-club → GET /reservas (reservations from their clubs)
+        // - admin → GET /reservas (all reservations)
+        let response
+        if (nivelAcceso === 'usuario') {
+          response = await apiClient.getMisReservas()
+        } else {
+          // admin-club and admin use GET /reservas with automatic scope filtering
+          response = await apiClient.getReservas()
+        }
+
         if (!isMounted) return
 
         if (response.data) {
-          // Filter reservations by current user's persona id
-          // Backend returns all reservations, frontend filters by user
-          const userReservas = response.data.filter(
-            (reserva: Reserva) => reserva.persona.id === personaId
-          )
-          setReservas(userReservas)
+          // Backend handles filtering by scope - NO manual filtering needed
+          setReservas(response.data)
         } else {
           setError(response.error || 'Error al cargar las reservas')
         }
@@ -390,7 +397,7 @@ export default function MisReservasPage() {
     return () => {
       isMounted = false
     }
-  }, [isAuthenticated, personaId])
+  }, [isAuthenticated, nivelAcceso])
 
   const handleCancelReservation = (reservaId: string) => {
     setReservas(prev => prev.filter(r => r.id !== reservaId))
@@ -466,10 +473,18 @@ export default function MisReservasPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-2">
-                Mis Reservas
+                {nivelAcceso === 'admin'
+                  ? 'Todas las Reservas'
+                  : nivelAcceso === 'admin-club'
+                  ? 'Reservas del Club'
+                  : 'Mis Reservas'}
               </h1>
               <p className="text-gray-600 dark:text-gray-300">
-                Gestiona todas tus reservas de canchas deportivas
+                {nivelAcceso === 'admin'
+                  ? 'Gestiona todas las reservas del sistema'
+                  : nivelAcceso === 'admin-club'
+                  ? 'Gestiona las reservas de tu club'
+                  : 'Gestiona todas tus reservas de canchas deportivas'}
               </p>
             </div>
             <Link href="/">
@@ -545,23 +560,35 @@ export default function MisReservasPage() {
                 <CardContent className="p-8 text-center">
                   <Calendar className="h-16 w-16 mx-auto mb-4 text-gray-400" />
                   <h3 className="text-xl font-semibold mb-2">
-                    {activeTab === 'all' ? 'No tienes reservas' : 
-                     activeTab === 'upcoming' ? 'No tienes reservas próximas' :
-                     activeTab === 'past' ? 'No tienes reservas pasadas' :
-                     'No tienes reservas canceladas'}
+                    {activeTab === 'all'
+                      ? (nivelAcceso === 'admin' ? 'No hay reservas en el sistema' :
+                         nivelAcceso === 'admin-club' ? 'No hay reservas en tu club' :
+                         'No tienes reservas')
+                      : activeTab === 'upcoming'
+                      ? (nivelAcceso === 'usuario' ? 'No tienes reservas próximas' : 'No hay reservas próximas')
+                      : activeTab === 'past'
+                      ? (nivelAcceso === 'usuario' ? 'No tienes reservas pasadas' : 'No hay reservas pasadas')
+                      : (nivelAcceso === 'usuario' ? 'No tienes reservas canceladas' : 'No hay reservas canceladas')}
                   </h3>
                   <p className="text-gray-600 mb-4">
-                    {activeTab === 'all' ? 'Comienza reservando tu primera cancha deportiva.' :
-                     activeTab === 'upcoming' ? 'Reserva una cancha para tus próximos partidos.' :
-                     activeTab === 'past' ? 'Aquí aparecerán tus reservas pasadas.' :
-                     'Aquí aparecerán las reservas que hayas cancelado.'}
+                    {activeTab === 'all'
+                      ? (nivelAcceso === 'usuario' ? 'Comienza reservando tu primera cancha deportiva.' :
+                         'Aún no hay reservas registradas.')
+                      : activeTab === 'upcoming'
+                      ? (nivelAcceso === 'usuario' ? 'Reserva una cancha para tus próximos partidos.' :
+                         'No hay reservas programadas para el futuro.')
+                      : activeTab === 'past'
+                      ? 'Aquí aparecerán las reservas pasadas.'
+                      : 'Aquí aparecerán las reservas canceladas.'}
                   </p>
-                  <Link href="/">
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Hacer Reserva
-                    </Button>
-                  </Link>
+                  {nivelAcceso === 'usuario' && (
+                    <Link href="/">
+                      <Button>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Hacer Reserva
+                      </Button>
+                    </Link>
+                  )}
                 </CardContent>
               </Card>
             ) : (
