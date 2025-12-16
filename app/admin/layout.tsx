@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useEffect } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import AdminSidebar from '@/components/admin/admin-sidebar'
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import Navbar from '@/components/navbar/navbar'
@@ -10,6 +10,8 @@ import { ErrorBoundary } from '@/components/error/error-boundary'
 import { AlertCircle } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import apiClient, { Club } from '@/lib/api-client'
+
 export default function AdminLayout({
   children,
 }: {
@@ -17,6 +19,7 @@ export default function AdminLayout({
 }) {
   const { isAuthenticated, isAdmin, isAdminClub, clubIds, nivelAcceso } = useAuth()
   const router = useRouter()
+  const [clubs, setClubs] = useState<Club[]>([])
 
   // Allow access to both admin and admin-club users
   const hasAdminAccess = isAdmin || isAdminClub
@@ -30,6 +33,25 @@ export default function AdminLayout({
     }
   }, [isAuthenticated, hasAdminAccess, router])
 
+  // Load clubs for admin-club users to display names
+  useEffect(() => {
+    const loadClubs = async () => {
+      if (!isAdminClub || !clubIds || clubIds.length === 0) return
+
+      try {
+        const response = await apiClient.getClubes()
+        if (response.data) {
+          // Filter to only show clubs the user has access to
+          const userClubs = response.data.filter(club => clubIds.includes(club.id))
+          setClubs(userClubs)
+        }
+      } catch {
+        // Silently handle error - not critical for layout
+      }
+    }
+
+    loadClubs()
+  }, [isAdminClub, clubIds])
 
   if (!isAuthenticated || !hasAdminAccess) {
     return null // O un loader/spinner
@@ -58,7 +80,7 @@ export default function AdminLayout({
                       {nivelAcceso === 'admin'
                         ? 'Admin Global'
                         : nivelAcceso === 'admin-club'
-                        ? `Admin Club${clubIds && clubIds.length ? ` · Clubs: ${clubIds.length}` : ''}`
+                        ? `Admin Club${clubs.length > 0 ? ` · ${clubs.map(c => c.nombre).join(', ')}` : clubIds && clubIds.length ? ` · ${clubIds.length} club${clubIds.length > 1 ? 's' : ''}` : ''}`
                         : 'Usuario'}
                     </Badge>
                   </div>
