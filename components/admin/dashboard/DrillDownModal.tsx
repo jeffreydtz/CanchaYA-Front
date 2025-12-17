@@ -417,7 +417,7 @@ export function DrillDownModal({ isOpen, onClose, data }: DrillDownModalProps) {
                       <XAxis dataKey="dia" />
                       <YAxis />
                       <Tooltip
-                        formatter={(value: any, name: string) => {
+                        formatter={(value: any, name: string | undefined) => {
                           if (name === 'Ingresos ($)') {
                             return `$${formatCompactNumber(Number(value))}`
                           }

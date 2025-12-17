@@ -10,9 +10,9 @@
 
 'use client'
 
-import { useRef, useMemo, Suspense } from 'react'
+import React, { useRef, useMemo, useState } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { OrbitControls, Text, Environment, PerspectiveCamera } from '@react-three/drei'
+import { OrbitControls, Text, Environment, PerspectiveCamera, Stars } from '@react-three/drei'
 import * as THREE from 'three'
 
 // ============================================================================
@@ -450,7 +450,3 @@ export function Court3DSphere({ courts }: Court3DSphereProps) {
     </div>
   )
 }
-
-// Missing import
-import { useState } from 'react'
-import { Stars } from '@react-three/drei'

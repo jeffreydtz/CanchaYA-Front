@@ -206,7 +206,7 @@ export function AnalyticsChart({
                   cx={CHART_CONFIG.pieChart.cx}
                   cy={CHART_CONFIG.pieChart.cy}
                   outerRadius={CHART_CONFIG.pieChart.outerRadius}
-                  label={(entry) => `${entry[xAxisKey]}: ${entry[dataKeys[0].key]}`}
+                  label={(entry: any) => `${entry[xAxisKey]}: ${entry[dataKeys[0].key]}`}
                 >
                   {data.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
