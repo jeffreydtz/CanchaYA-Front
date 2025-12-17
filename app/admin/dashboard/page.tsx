@@ -27,21 +27,12 @@ import { downloadExcel, generateFilename } from '@/lib/analytics/export'
 import { formatCompactNumber } from '@/lib/analytics/formatters'
 import { SPORTS_COLORS } from '@/lib/analytics/constants'
 import { withErrorBoundary } from '@/components/error/with-error-boundary'
-import dynamic from 'next/dynamic'
-
-// Lazy load 3D components to avoid SSR issues with Three.js
-const Revenue3DBarChart = dynamic(
-  () => import('@/components/analytics/Charts3D').then(mod => ({ default: mod.Revenue3DBarChart })),
-  { ssr: false, loading: () => <div className="h-[500px] animate-pulse bg-slate-100 rounded-xl" /> }
-)
-const Heatmap3D = dynamic(
-  () => import('@/components/analytics/Charts3D').then(mod => ({ default: mod.Heatmap3D })),
-  { ssr: false, loading: () => <div className="h-[600px] animate-pulse bg-slate-100 rounded-xl" /> }
-)
-const Court3DSphere = dynamic(
-  () => import('@/components/analytics/Charts3D').then(mod => ({ default: mod.Court3DSphere })),
-  { ssr: false, loading: () => <div className="h-[600px] animate-pulse bg-slate-100 rounded-xl" /> }
-)
+// Use client-safe wrapper components for 3D charts
+import { 
+  Revenue3DBarChart, 
+  Heatmap3D, 
+  Court3DSphere 
+} from '@/components/analytics/Charts3DWrapper'
 
 interface DashboardData {
   metrics: {

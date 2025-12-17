@@ -1,28 +1,47 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-// @ts-nocheck
 /**
  * 3D Analytics Visualizations using Three.js
  * Interactive 3D charts for revenue, occupancy, and court distribution
- *
- * Note: TypeScript checking disabled due to React 19 + @react-three/fiber v8 compatibility issues
- * with JSX.IntrinsicElements not recognizing Three.js elements
+ * 
+ * IMPORTANT: These components MUST be loaded with next/dynamic and ssr: false
+ * to avoid SSR issues with Three.js
  */
 
 'use client'
 
-import React, { useRef, useMemo, useState } from 'react'
+import { useRef, useMemo, useState, useEffect } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls, Text, Environment, PerspectiveCamera, Stars } from '@react-three/drei'
 import * as THREE from 'three'
 
 // ============================================================================
-// 3D BAR CHART FOR REVENUE
+// TYPES
 // ============================================================================
 
 interface Revenue3DBarChartProps {
   data: Array<{ label: string; value: number; color?: string }>
   maxValue?: number
 }
+
+interface Heatmap3DProps {
+  data: number[][] // 7 days × 16 hours matrix
+  dayLabels: string[]
+  hourLabels: string[]
+}
+
+interface Court3DSphereProps {
+  courts: Array<{
+    id: string
+    name: string
+    sport: string
+    occupancy: number
+    revenue: number
+    color: string
+  }>
+}
+
+// ============================================================================
+// 3D BAR CHART FOR REVENUE
+// ============================================================================
 
 function Bar3D({
   position,
@@ -97,7 +116,22 @@ function Bar3D({
 }
 
 export function Revenue3DBarChart({ data, maxValue }: Revenue3DBarChartProps) {
-  const max = maxValue || Math.max(...data.map(d => d.value))
+  const [mounted, setMounted] = useState(false)
+
+  // Ensure client-side only rendering
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted || !data || data.length === 0) {
+    return (
+      <div className="w-full h-[500px] bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 rounded-xl overflow-hidden flex items-center justify-center">
+        <p className="text-gray-500">Cargando visualización 3D...</p>
+      </div>
+    )
+  }
+
+  const max = maxValue || Math.max(...data.map(d => d.value), 1)
   const normalizedData = data.map(d => ({
     ...d,
     normalizedHeight: (d.value / max) * 5 // Scale to max height of 5 units
@@ -133,7 +167,7 @@ export function Revenue3DBarChart({ data, maxValue }: Revenue3DBarChartProps) {
           const xPos = (index - normalizedData.length / 2) * 1.5
           return (
             <Bar3D
-              key={index}
+              key={`bar-${index}`}
               position={[xPos, 0, 0]}
               height={item.normalizedHeight}
               color={item.color || '#3b82f6'}
@@ -153,12 +187,6 @@ export function Revenue3DBarChart({ data, maxValue }: Revenue3DBarChartProps) {
 // ============================================================================
 // 3D HEATMAP FOR OCCUPANCY
 // ============================================================================
-
-interface Heatmap3DProps {
-  data: number[][] // 7 days × 16 hours matrix
-  dayLabels: string[]
-  hourLabels: string[]
-}
 
 function HeatmapCell({
   position,
@@ -227,6 +255,20 @@ function HeatmapCell({
 }
 
 export function Heatmap3D({ data, dayLabels, hourLabels }: Heatmap3DProps) {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted || !data || data.length === 0) {
+    return (
+      <div className="w-full h-[600px] bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 rounded-xl overflow-hidden flex items-center justify-center">
+        <p className="text-gray-500">Cargando visualización 3D...</p>
+      </div>
+    )
+  }
+
   return (
     <div className="w-full h-[600px] bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 rounded-xl overflow-hidden">
       <Canvas shadows>
@@ -253,7 +295,7 @@ export function Heatmap3D({ data, dayLabels, hourLabels }: Heatmap3DProps) {
             const zPos = (dayIndex - dayLabels.length / 2) * 1.2
             return (
               <HeatmapCell
-                key={`${dayIndex}-${hourIndex}`}
+                key={`heatmap-${dayIndex}-${hourIndex}`}
                 position={[xPos, 0, zPos]}
                 intensity={value}
                 day={dayLabels[dayIndex]}
@@ -268,7 +310,7 @@ export function Heatmap3D({ data, dayLabels, hourLabels }: Heatmap3DProps) {
           const zPos = (index - dayLabels.length / 2) * 1.2
           return (
             <Text
-              key={`day-${index}`}
+              key={`day-label-${index}`}
               position={[-hourLabels.length * 0.6 - 1, 0.1, zPos]}
               fontSize={0.3}
               color="#1f2937"
@@ -287,7 +329,7 @@ export function Heatmap3D({ data, dayLabels, hourLabels }: Heatmap3DProps) {
           const xPos = (actualIndex - hourLabels.length / 2) * 1.2
           return (
             <Text
-              key={`hour-${actualIndex}`}
+              key={`hour-label-${actualIndex}`}
               position={[xPos, 0.1, dayLabels.length * 0.6 + 1]}
               fontSize={0.25}
               color="#1f2937"
@@ -309,17 +351,6 @@ export function Heatmap3D({ data, dayLabels, hourLabels }: Heatmap3DProps) {
 // ============================================================================
 // 3D SPHERE VISUALIZATION - Courts Distribution
 // ============================================================================
-
-interface Court3DSphereProps {
-  courts: Array<{
-    id: string
-    name: string
-    sport: string
-    occupancy: number
-    revenue: number
-    color: string
-  }>
-}
 
 function CourtSphere({
   position,
@@ -396,6 +427,20 @@ function CourtSphere({
 }
 
 export function Court3DSphere({ courts }: Court3DSphereProps) {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted || !courts || courts.length === 0) {
+    return (
+      <div className="w-full h-[600px] bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-slate-900 dark:to-purple-900 rounded-xl overflow-hidden flex items-center justify-center">
+        <p className="text-gray-500">Cargando visualización 3D...</p>
+      </div>
+    )
+  }
+
   return (
     <div className="w-full h-[600px] bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-slate-900 dark:to-purple-900 rounded-xl overflow-hidden">
       <Canvas>
@@ -434,7 +479,7 @@ export function Court3DSphere({ courts }: Court3DSphereProps) {
         {/* Court spheres */}
         {courts.map((court, index) => (
           <CourtSphere
-            key={court.id}
+            key={`sphere-${court.id}`}
             position={[0, 0, 0]}
             court={court}
             index={index}
