@@ -2,6 +2,12 @@
  * 3D Analytics Visualizations using Three.js
  * Interactive 3D charts for revenue, occupancy, and court distribution
  * 
+ * Compatible with:
+ * - React 19.2.3
+ * - @react-three/fiber 9.4.2
+ * - @react-three/drei 10.7.7
+ * - Three.js 0.182.0
+ * 
  * IMPORTANT: These components MUST be loaded with next/dynamic and ssr: false
  * to avoid SSR issues with Three.js
  */
@@ -91,7 +97,7 @@ function Bar3D({
       <Text
         position={[0, -0.5, 0]}
         fontSize={0.3}
-        color="#374151"
+        fill="#374151"
         anchorX="center"
         anchorY="middle"
         rotation={[-Math.PI / 2, 0, 0]}
@@ -104,7 +110,7 @@ function Bar3D({
         <Text
           position={[0, height + 0.5, 0]}
           fontSize={0.25}
-          color="#1f2937"
+          fill="#1f2937"
           anchorX="center"
           anchorY="middle"
         >
@@ -154,8 +160,7 @@ export function Revenue3DBarChart({ data, maxValue }: Revenue3DBarChartProps) {
           position={[10, 10, 5]}
           intensity={1}
           castShadow
-          shadow-mapSize-width={2048}
-          shadow-mapSize-height={2048}
+          shadow-mapSize={2048}
         />
         <pointLight position={[-10, 10, -10]} intensity={0.5} />
 
@@ -241,7 +246,7 @@ function HeatmapCell({
         <Text
           position={[0, height + 0.5, 0]}
           fontSize={0.2}
-          color="#ffffff"
+          fill="#ffffff"
           anchorX="center"
           anchorY="middle"
         >
@@ -313,7 +318,7 @@ export function Heatmap3D({ data, dayLabels, hourLabels }: Heatmap3DProps) {
               key={`day-label-${index}`}
               position={[-hourLabels.length * 0.6 - 1, 0.1, zPos]}
               fontSize={0.3}
-              color="#1f2937"
+              fill="#1f2937"
               anchorX="right"
               anchorY="middle"
               rotation={[-Math.PI / 2, 0, 0]}
@@ -332,7 +337,7 @@ export function Heatmap3D({ data, dayLabels, hourLabels }: Heatmap3DProps) {
               key={`hour-label-${actualIndex}`}
               position={[xPos, 0.1, dayLabels.length * 0.6 + 1]}
               fontSize={0.25}
-              color="#1f2937"
+              fill="#1f2937"
               anchorX="center"
               anchorY="top"
               rotation={[-Math.PI / 2, 0, 0]}
@@ -407,7 +412,7 @@ function CourtSphere({
         <Text
           position={[position[0], position[1] + size + 1, position[2]]}
           fontSize={0.3}
-          color="#ffffff"
+          fill="#ffffff"
           anchorX="center"
           anchorY="middle"
           outlineWidth={0.05}

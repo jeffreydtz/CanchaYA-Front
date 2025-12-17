@@ -63,6 +63,27 @@ export function CanchaDistributionChart({
     )
   }
 
+  if (!data || data.length === 0) {
+    return (
+      <Card className="col-span-1 border-gray-200 dark:border-gray-800">
+        <CardHeader>
+          <CardTitle className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <MapPin className="h-5 w-5 text-primary" />
+            Distribución por Cancha
+          </CardTitle>
+          <CardDescription className="text-gray-600 dark:text-gray-400 mt-1">
+            No hay datos disponibles para mostrar
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-64 text-gray-500">
+            No hay datos de canchas disponibles
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload
@@ -106,7 +127,7 @@ export function CanchaDistributionChart({
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart 
-            data={data} 
+            data={data.filter(d => d && typeof d.reservations === 'number' && !isNaN(d.reservations))} 
             layout="horizontal"
             margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
           >
@@ -130,7 +151,9 @@ export function CanchaDistributionChart({
               cursor="pointer"
               onClick={(data: any) => onBarClick?.(data.payload as CanchaData)}
             >
-              {data.map((entry, index) => (
+              {data
+                .filter(d => d && typeof d.reservations === 'number' && !isNaN(d.reservations))
+                .map((entry, index) => (
                 <Cell 
                   key={`cell-${index}`} 
                   fill={SPORT_COLORS[entry.sport] || SPORT_COLORS.default} 
@@ -142,7 +165,7 @@ export function CanchaDistributionChart({
 
         {/* Legend - Interactive */}
         <div className="mt-4 flex flex-wrap gap-3 justify-center">
-          {Array.from(new Set(data.map(d => d.sport))).map((sport) => (
+          {Array.from(new Set(data.filter(d => d && d.sport).map(d => d.sport))).map((sport) => (
             <button
               key={sport}
               onClick={() => onSportClick?.(sport)}

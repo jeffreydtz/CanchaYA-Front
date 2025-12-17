@@ -74,6 +74,10 @@ export function AnalyticsChart({
     }
   };
 
+  // Validate data and dataKeys
+  const validData = Array.isArray(data) ? data.filter(d => d !== null && d !== undefined) : []
+  const validDataKeys = Array.isArray(dataKeys) ? dataKeys.filter(dk => dk && dk.key) : []
+
   return (
     <Card className={className}>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -91,9 +95,15 @@ export function AnalyticsChart({
 
       <CardContent className="pt-6">
         <div id={chartId} className="w-full">
+          {(!validData || validData.length === 0 || validDataKeys.length === 0) ? (
+            <div className="flex items-center justify-center h-[300px] text-gray-500">
+              No hay datos disponibles
+            </div>
+          ) : (
+            <>
           {type === 'line' && (
             <ResponsiveContainer width="100%" height={height}>
-              <LineChart data={data}>
+              <LineChart data={validData}>
                 {showGrid && <CartesianGrid strokeDasharray={CHART_CONFIG.grid.strokeDasharray} stroke={CHART_CONFIG.grid.color} />}
                 <XAxis
                   dataKey={xAxisKey}
@@ -111,7 +121,7 @@ export function AnalyticsChart({
                 />
                 <Tooltip content={<CustomTooltip />} />
                 {showLegend && <Legend />}
-                {dataKeys.map((dk, index) => (
+                {validDataKeys.map((dk, index) => (
                   <Line
                     key={dk.key}
                     type="monotone"
@@ -129,7 +139,7 @@ export function AnalyticsChart({
 
           {type === 'bar' && (
             <ResponsiveContainer width="100%" height={height}>
-              <BarChart data={data}>
+              <BarChart data={validData}>
                 {showGrid && <CartesianGrid strokeDasharray={CHART_CONFIG.grid.strokeDasharray} stroke={CHART_CONFIG.grid.color} />}
                 <XAxis
                   dataKey={xAxisKey}
@@ -147,7 +157,7 @@ export function AnalyticsChart({
                 />
                 <Tooltip content={<CustomTooltip />} />
                 {showLegend && <Legend />}
-                {dataKeys.map((dk, index) => (
+                {validDataKeys.map((dk, index) => (
                   <Bar
                     key={dk.key}
                     dataKey={dk.key}
@@ -162,7 +172,7 @@ export function AnalyticsChart({
 
           {type === 'area' && (
             <ResponsiveContainer width="100%" height={height}>
-              <AreaChart data={data}>
+              <AreaChart data={validData}>
                 {showGrid && <CartesianGrid strokeDasharray={CHART_CONFIG.grid.strokeDasharray} stroke={CHART_CONFIG.grid.color} />}
                 <XAxis
                   dataKey={xAxisKey}
@@ -180,7 +190,7 @@ export function AnalyticsChart({
                 />
                 <Tooltip content={<CustomTooltip />} />
                 {showLegend && <Legend />}
-                {dataKeys.map((dk, index) => (
+                {validDataKeys.map((dk, index) => (
                   <Area
                     key={dk.key}
                     type="monotone"
@@ -196,19 +206,19 @@ export function AnalyticsChart({
             </ResponsiveContainer>
           )}
 
-          {type === 'pie' && (
+          {type === 'pie' && validDataKeys.length > 0 && (
             <ResponsiveContainer width="100%" height={height}>
               <PieChart>
                 <Pie
-                  data={data}
-                  dataKey={dataKeys[0].key}
+                  data={validData}
+                  dataKey={validDataKeys[0].key}
                   nameKey={xAxisKey}
                   cx={CHART_CONFIG.pieChart.cx}
                   cy={CHART_CONFIG.pieChart.cy}
                   outerRadius={CHART_CONFIG.pieChart.outerRadius}
-                  label={(entry: any) => `${entry[xAxisKey]}: ${entry[dataKeys[0].key]}`}
+                  label={(entry: any) => `${entry[xAxisKey]}: ${entry[validDataKeys[0].key]}`}
                 >
-                  {data.map((entry, index) => (
+                  {validData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
@@ -216,6 +226,8 @@ export function AnalyticsChart({
                 {showLegend && <Legend />}
               </PieChart>
             </ResponsiveContainer>
+          )}
+          </>
           )}
         </div>
       </CardContent>

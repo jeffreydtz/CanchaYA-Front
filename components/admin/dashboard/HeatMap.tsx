@@ -47,7 +47,15 @@ export function HeatMap({ data, loading = false, onCellClick, onDayClick }: Heat
   }
 
   const getCellData = (day: string, hour: number) => {
-    return data.find(cell => cell.day === day && cell.hour === hour) || { day, hour, occupancy: 0 }
+    const cell = data.find(cell => cell.day === day && cell.hour === hour)
+    if (cell) {
+      // Ensure occupancy is a valid number
+      const occupancy = typeof cell.occupancy === 'number' && !isNaN(cell.occupancy) 
+        ? Math.max(0, Math.min(100, cell.occupancy)) 
+        : 0
+      return { ...cell, occupancy }
+    }
+    return { day, hour, occupancy: 0 }
   }
 
   if (loading) {
@@ -59,6 +67,28 @@ export function HeatMap({ data, loading = false, onCellClick, onDayClick }: Heat
         </CardHeader>
         <CardContent>
           <div className="h-96 bg-gray-200 dark:bg-gray-700 rounded"></div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // Validate data
+  if (!data || data.length === 0) {
+    return (
+      <Card className="col-span-2 border-gray-200 dark:border-gray-800">
+        <CardHeader>
+          <CardTitle className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <Calendar className="h-5 w-5 text-primary" />
+            Mapa de Calor - Ocupación por Horario
+          </CardTitle>
+          <CardDescription className="text-gray-600 dark:text-gray-400 mt-1">
+            No hay datos disponibles para mostrar
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-96 text-gray-500">
+            No hay datos de ocupación disponibles
+          </div>
         </CardContent>
       </Card>
     )

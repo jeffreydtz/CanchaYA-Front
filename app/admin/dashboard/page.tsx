@@ -30,8 +30,7 @@ import { withErrorBoundary } from '@/components/error/with-error-boundary'
 // Use client-safe wrapper components for 3D charts
 import { 
   Revenue3DBarChart, 
-  Heatmap3D, 
-  Court3DSphere 
+  Heatmap3D
 } from '@/components/analytics/Charts3DWrapper'
 
 interface DashboardData {
@@ -265,19 +264,44 @@ const fetchDashboardData = async (filters?: Record<string, unknown> | null): Pro
     })
 
     // HeatMap data - only show hours with activity (8am to 11pm)
-    const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+    // IMPORTANT: Order must match HeatMap component: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+    // But API returns dow: 0=Dom, 1=Lun, 2=Mar, 3=Mié, 4=Jue, 5=Vie, 6=Sáb
+    const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+    const dowToDayIndex: Record<number, number> = {
+      0: 6, // Dom -> index 6
+      1: 0, // Lun -> index 0
+      2: 1, // Mar -> index 1
+      3: 2, // Mié -> index 2
+      4: 3, // Jue -> index 3
+      5: 4, // Vie -> index 4
+      6: 5  // Sáb -> index 5
+    }
     const processedHeatMapData = []
 
     if (heatmapData.length > 0) {
       // Only process hours from 8 to 23 (8am to 11pm)
       for (let dow = 0; dow < 7; dow++) {
+        const dayIndex = dowToDayIndex[dow] ?? dow
+        const day = days[dayIndex]
         for (let hour = 8; hour <= 23; hour++) {
           const hourStr = `${hour.toString().padStart(2, '0')}:00`
           const dataPoint = heatmapData.find(h => h.dow === dow && h.hora === hourStr)
+          // Calculate occupancy percentage
+          // If API returns reservas count, convert to percentage (assuming max 5-10 reservations per hour slot is high occupancy)
+          // Adjust the divisor based on your actual max capacity per hour
+          const maxReservationsPerSlot = 8 // Adjust based on your actual capacity
+          let occupancy = 0
+          
+          if (dataPoint?.reservas !== undefined && dataPoint.reservas !== null) {
+            const reservas = typeof dataPoint.reservas === 'number' ? dataPoint.reservas : 0
+            // Convert to percentage: (reservas / max) * 100, capped at 100%
+            occupancy = Math.min(100, Math.max(0, (reservas / maxReservationsPerSlot) * 100))
+          }
+          
           processedHeatMapData.push({
-            day: days[dow],
+            day,
             hour,
-            occupancy: dataPoint?.reservas || 0
+            occupancy: Math.round(occupancy * 10) / 10
           })
         }
       }
@@ -728,7 +752,8 @@ function DashboardPage() {
             <Heatmap3D
               data={(() => {
                 // Convert heatMapData to matrix format
-                const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+                // IMPORTANT: Order must match HeatMap component: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+                const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
                 const hours = Array.from({ length: 16 }, (_, i) => `${i + 8}:00`)
                 const matrix: number[][] = Array(7).fill(0).map(() => Array(16).fill(0))
 
@@ -736,34 +761,18 @@ function DashboardPage() {
                   const dayIndex = days.indexOf(item.day)
                   const hourIndex = item.hour - 8
                   if (dayIndex >= 0 && hourIndex >= 0 && hourIndex < 16) {
-                    matrix[dayIndex][hourIndex] = item.occupancy
+                    // Ensure occupancy is a valid number
+                    const occupancy = typeof item.occupancy === 'number' && !isNaN(item.occupancy) 
+                      ? Math.max(0, Math.min(100, item.occupancy)) 
+                      : 0
+                    matrix[dayIndex][hourIndex] = occupancy
                   }
                 })
 
                 return matrix
               })()}
-              dayLabels={['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']}
+              dayLabels={['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']}
               hourLabels={Array.from({ length: 16 }, (_, i) => `${i + 8}:00`)}
-            />
-          </div>
-
-          {/* 3D Court Sphere Visualization */}
-          <div className="space-y-3">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Universo de Canchas (3D)
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Cada esfera representa una cancha. El tamaño indica la ocupación y giran automáticamente.
-            </p>
-            <Court3DSphere
-              courts={data.topCanchas.map(cancha => ({
-                id: cancha.id,
-                name: cancha.name,
-                sport: cancha.sport,
-                occupancy: cancha.occupancy,
-                revenue: cancha.revenue,
-                color: SPORTS_COLORS[cancha.sport] || '#3b82f6'
-              }))}
             />
           </div>
         </div>

@@ -84,8 +84,13 @@ export function OccupancyChart({ data, loading = false }: OccupancyChartProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <AreaChart data={data}>
+        {!data || data.length === 0 ? (
+          <div className="flex items-center justify-center h-[300px] text-gray-500">
+            No hay datos disponibles
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={data}>
             <defs>
               <linearGradient id="colorOccupancy" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
@@ -123,10 +128,10 @@ export function OccupancyChart({ data, loading = false }: OccupancyChartProps) {
               strokeWidth={2}
               dot={false}
               name="Ingresos ($)"
-              yAxisId={1}
             />
           </AreaChart>
         </ResponsiveContainer>
+        )}
       </CardContent>
     </Card>
   )
