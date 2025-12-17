@@ -97,7 +97,7 @@ function Bar3D({
       <Text
         position={[0, -0.5, 0]}
         fontSize={0.3}
-        fill="#374151"
+        color="#374151"
         anchorX="center"
         anchorY="middle"
         rotation={[-Math.PI / 2, 0, 0]}
@@ -110,7 +110,7 @@ function Bar3D({
         <Text
           position={[0, height + 0.5, 0]}
           fontSize={0.25}
-          fill="#1f2937"
+          color="#1f2937"
           anchorX="center"
           anchorY="middle"
         >
@@ -246,7 +246,7 @@ function HeatmapCell({
         <Text
           position={[0, height + 0.5, 0]}
           fontSize={0.2}
-          fill="#ffffff"
+          color="#ffffff"
           anchorX="center"
           anchorY="middle"
         >
@@ -318,7 +318,7 @@ export function Heatmap3D({ data, dayLabels, hourLabels }: Heatmap3DProps) {
               key={`day-label-${index}`}
               position={[-hourLabels.length * 0.6 - 1, 0.1, zPos]}
               fontSize={0.3}
-              fill="#1f2937"
+              color="#1f2937"
               anchorX="right"
               anchorY="middle"
               rotation={[-Math.PI / 2, 0, 0]}
@@ -337,7 +337,7 @@ export function Heatmap3D({ data, dayLabels, hourLabels }: Heatmap3DProps) {
               key={`hour-label-${actualIndex}`}
               position={[xPos, 0.1, dayLabels.length * 0.6 + 1]}
               fontSize={0.25}
-              fill="#1f2937"
+              color="#1f2937"
               anchorX="center"
               anchorY="top"
               rotation={[-Math.PI / 2, 0, 0]}
@@ -412,7 +412,7 @@ function CourtSphere({
         <Text
           position={[position[0], position[1] + size + 1, position[2]]}
           fontSize={0.3}
-          fill="#ffffff"
+          color="#ffffff"
           anchorX="center"
           anchorY="middle"
           outlineWidth={0.05}
