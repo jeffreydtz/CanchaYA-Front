@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 /**
  * 3D Analytics Visualizations using Three.js
  * Interactive 3D charts for revenue, occupancy, and court distribution
  *
  * Note: TypeScript checking disabled due to React 19 + @react-three/fiber v8 compatibility issues
+ * with JSX.IntrinsicElements not recognizing Three.js elements
  */
 
 'use client'
