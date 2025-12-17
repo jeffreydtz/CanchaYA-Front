@@ -49,21 +49,39 @@ interface Court3DSphereProps {
 // 3D BAR CHART FOR REVENUE
 // ============================================================================
 
+// Helper function to get color based on value (height)
+const getColorByValue = (value: number, maxValue: number): string => {
+  const percentage = (value / maxValue) * 100
+  
+  // Color gradient: Low (blue) -> Medium (green/yellow) -> High (orange/red)
+  if (percentage >= 80) return '#ef4444' // Red - Very High
+  if (percentage >= 60) return '#f59e0b' // Amber - High
+  if (percentage >= 40) return '#10b981' // Green - Medium-High
+  if (percentage >= 20) return '#3b82f6' // Blue - Medium
+  return '#94a3b8' // Gray - Low
+}
+
 function Bar3D({
   position,
   height,
-  color = '#3b82f6',
+  color,
   label,
-  value
+  value,
+  maxValue
 }: {
   position: [number, number, number]
   height: number
   color?: string
   label: string
   value: number
+  maxValue: number
 }) {
   const meshRef = useRef<THREE.Mesh>(null)
   const [hovered, setHovered] = useState(false)
+
+  // Calculate color based on value height
+  const barColor = color || getColorByValue(value, maxValue)
+  const hoverColor = hovered ? '#60a5fa' : barColor
 
   useFrame(() => {
     if (meshRef.current) {
@@ -87,9 +105,11 @@ function Bar3D({
       >
         <boxGeometry args={[0.8, height, 0.8]} />
         <meshStandardMaterial
-          color={hovered ? '#60a5fa' : color}
+          color={hoverColor}
           metalness={0.3}
           roughness={0.4}
+          emissive={barColor}
+          emissiveIntensity={hovered ? 0.3 : 0.1}
         />
       </mesh>
 
@@ -144,47 +164,78 @@ export function Revenue3DBarChart({ data, maxValue }: Revenue3DBarChartProps) {
   }))
 
   return (
-    <div className="w-full h-[500px] bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 rounded-xl overflow-hidden">
-      <Canvas shadows>
-        <PerspectiveCamera makeDefault position={[8, 8, 8]} />
-        <OrbitControls
-          enableDamping
-          dampingFactor={0.05}
-          minDistance={5}
-          maxDistance={20}
-        />
+    <div className="w-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 rounded-xl overflow-hidden">
+      {/* Color Legend */}
+      <div className="p-4 bg-white/50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-center gap-4 flex-wrap">
+          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Intensidad por valor:</span>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 rounded" style={{ backgroundColor: '#94a3b8' }}></div>
+            <span className="text-xs text-gray-600 dark:text-gray-400">0-20%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 rounded" style={{ backgroundColor: '#3b82f6' }}></div>
+            <span className="text-xs text-gray-600 dark:text-gray-400">20-40%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 rounded" style={{ backgroundColor: '#10b981' }}></div>
+            <span className="text-xs text-gray-600 dark:text-gray-400">40-60%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 rounded" style={{ backgroundColor: '#f59e0b' }}></div>
+            <span className="text-xs text-gray-600 dark:text-gray-400">60-80%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 rounded" style={{ backgroundColor: '#ef4444' }}></div>
+            <span className="text-xs text-gray-600 dark:text-gray-400">80-100%</span>
+          </div>
+        </div>
+      </div>
 
-        {/* Lighting */}
-        <ambientLight intensity={0.5} />
-        <directionalLight
-          position={[10, 10, 5]}
-          intensity={1}
-          castShadow
-          shadow-mapSize={2048}
-        />
-        <pointLight position={[-10, 10, -10]} intensity={0.5} />
+      {/* 3D Canvas */}
+      <div className="w-full h-[500px]">
+        <Canvas shadows>
+          <PerspectiveCamera makeDefault position={[8, 8, 8]} />
+          <OrbitControls
+            enableDamping
+            dampingFactor={0.05}
+            minDistance={5}
+            maxDistance={20}
+          />
 
-        {/* Grid floor */}
-        <gridHelper args={[20, 20, '#94a3b8', '#cbd5e1']} position={[0, 0, 0]} />
+          {/* Lighting */}
+          <ambientLight intensity={0.5} />
+          <directionalLight
+            position={[10, 10, 5]}
+            intensity={1}
+            castShadow
+            shadow-mapSize={2048}
+          />
+          <pointLight position={[-10, 10, -10]} intensity={0.5} />
 
-        {/* Bars */}
-        {normalizedData.map((item, index) => {
-          const xPos = (index - normalizedData.length / 2) * 1.5
-          return (
-            <Bar3D
-              key={`bar-${index}`}
-              position={[xPos, 0, 0]}
-              height={item.normalizedHeight}
-              color={item.color || '#3b82f6'}
-              label={item.label}
-              value={item.value}
-            />
-          )
-        })}
+          {/* Grid floor */}
+          <gridHelper args={[20, 20, '#94a3b8', '#cbd5e1']} position={[0, 0, 0]} />
 
-        {/* Environment */}
-        <Environment preset="city" />
-      </Canvas>
+          {/* Bars */}
+          {normalizedData.map((item, index) => {
+            const xPos = (index - normalizedData.length / 2) * 1.5
+            return (
+              <Bar3D
+                key={`bar-${index}`}
+                position={[xPos, 0, 0]}
+                height={item.normalizedHeight}
+                color={item.color} // Optional: can override with sport color
+                label={item.label}
+                value={item.value}
+                maxValue={max}
+              />
+            )
+          })}
+
+          {/* Environment */}
+          <Environment preset="city" />
+        </Canvas>
+      </div>
     </div>
   )
 }

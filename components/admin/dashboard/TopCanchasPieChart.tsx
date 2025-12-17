@@ -29,18 +29,23 @@ interface TopCanchasPieChartProps {
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
 
 export function TopCanchasPieChart({ data, loading, onSliceClick }: TopCanchasPieChartProps) {
+  // Validate and filter data
+  const validData = (data || [])
+    .filter(d => d && d.id && d.name && typeof d.reservations === 'number' && !isNaN(d.reservations) && d.reservations > 0)
+    .sort((a, b) => b.reservations - a.reservations) // Sort by reservations descending
+
   // Take only top 5
-  const top5 = data.slice(0, 5)
+  const top5 = validData.slice(0, 5)
 
   // Prepare data for pie chart
   const pieData = top5.map((cancha, index) => ({
-    name: cancha.name,
-    value: cancha.reservations,
-    revenue: cancha.revenue,
-    sport: cancha.sport,
+    name: String(cancha.name || 'Sin nombre').substring(0, 25), // Limit name length
+    value: Math.max(0, Number(cancha.reservations || 0)),
+    revenue: Math.max(0, Number(cancha.revenue || 0)),
+    sport: String(cancha.sport || 'Otro'),
     color: COLORS[index % COLORS.length],
-    id: cancha.id
-  }))
+    id: String(cancha.id)
+  })).filter(d => d.value > 0) // Only include items with value > 0
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
@@ -100,7 +105,8 @@ export function TopCanchasPieChart({ data, loading, onSliceClick }: TopCanchasPi
     )
   }
 
-  if (pieData.length === 0) {
+  // Early validation
+  if (!data || !Array.isArray(data) || data.length === 0 || pieData.length === 0) {
     return (
       <Card className="border-gray-200 dark:border-gray-800">
         <CardHeader>
@@ -112,7 +118,9 @@ export function TopCanchasPieChart({ data, loading, onSliceClick }: TopCanchasPi
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center h-[300px] text-gray-500">
-            No hay datos disponibles
+            {!data || !Array.isArray(data) || data.length === 0 
+              ? 'No hay datos disponibles' 
+              : 'No hay datos válidos para mostrar'}
           </div>
         </CardContent>
       </Card>
@@ -134,45 +142,60 @@ export function TopCanchasPieChart({ data, loading, onSliceClick }: TopCanchasPi
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <PieChart>
-            <Pie
-              data={pieData}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
-              label={CustomLabel}
-              outerRadius={100}
-              fill="#8884d8"
-              dataKey="value"
-              onClick={(data) => {
-                if (onSliceClick) {
-                  const cancha = top5.find(c => c.id === data.id)
-                  if (cancha) onSliceClick(cancha)
-                }
-              }}
-              style={{ cursor: onSliceClick ? 'pointer' : 'default' }}
-            >
-              {pieData.map((entry, index) => (
-                <Cell
-                  key={`cell-${index}`}
-                  fill={entry.color}
-                  className="hover:opacity-80 transition-opacity"
+        {pieData.length === 0 ? (
+          <div className="flex items-center justify-center h-[300px] text-gray-500">
+            No hay datos válidos para mostrar
+          </div>
+        ) : (
+          <div className="w-full" style={{ height: '300px', minHeight: '300px' }}>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={pieData.length > 0 ? CustomLabel : false}
+                  outerRadius={Math.min(100, 280 / pieData.length - 10)}
+                  innerRadius={pieData.length > 3 ? 40 : 0}
+                  fill="#8884d8"
+                  dataKey="value"
+                  nameKey="name"
+                  onClick={(data: any) => {
+                    if (onSliceClick && data && data.id) {
+                      const cancha = top5.find(c => String(c.id) === String(data.id))
+                      if (cancha) onSliceClick(cancha)
+                    }
+                  }}
+                  style={{ cursor: onSliceClick ? 'pointer' : 'default' }}
+                >
+                  {pieData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${entry.id || index}`}
+                      fill={entry.color}
+                      className="hover:opacity-80 transition-opacity"
+                    />
+                  ))}
+                </Pie>
+                <Tooltip content={<CustomTooltip />} />
+                <Legend
+                  verticalAlign="bottom"
+                  height={Math.min(80, pieData.length * 20 + 20)}
+                  wrapperStyle={{ fontSize: '12px' }}
+                  formatter={(value: string, entry: any) => {
+                    const payload = entry.payload
+                    if (!payload) return value
+                    return (
+                      <span className="text-xs text-gray-700 dark:text-gray-300">
+                        {payload.name || value} ({payload.value || 0} reservas)
+                      </span>
+                    )
+                  }}
                 />
-              ))}
-            </Pie>
-            <Tooltip content={<CustomTooltip />} />
-            <Legend
-              verticalAlign="bottom"
-              height={36}
-              formatter={(value, entry: any) => (
-                <span className="text-sm text-gray-700 dark:text-gray-300">
-                  {value} ({entry.payload.value} reservas)
-                </span>
-              )}
-            />
-          </PieChart>
-        </ResponsiveContainer>
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        )}
 
         {/* Summary Stats */}
         <div className="mt-4 grid grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">

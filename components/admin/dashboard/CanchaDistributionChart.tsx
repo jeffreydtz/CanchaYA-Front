@@ -63,7 +63,8 @@ export function CanchaDistributionChart({
     )
   }
 
-  if (!data || data.length === 0) {
+  // Early validation
+  if (!data || !Array.isArray(data) || data.length === 0) {
     return (
       <Card className="col-span-1 border-gray-200 dark:border-gray-800">
         <CardHeader>
@@ -125,43 +126,73 @@ export function CanchaDistributionChart({
         </div>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart 
-            data={data.filter(d => d && typeof d.reservations === 'number' && !isNaN(d.reservations))} 
-            layout="horizontal"
-            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" className="dark:stroke-gray-700" />
-            <XAxis 
-              type="number"
-              stroke="#9ca3af"
-              style={{ fontSize: '12px' }}
-            />
-            <YAxis 
-              type="category"
-              dataKey="name" 
-              stroke="#9ca3af"
-              style={{ fontSize: '12px' }}
-              width={100}
-            />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }} />
-            <Bar 
-              dataKey="reservations" 
-              radius={[0, 8, 8, 0]}
-              cursor="pointer"
-              onClick={(data: any) => onBarClick?.(data.payload as CanchaData)}
-            >
-              {data
-                .filter(d => d && typeof d.reservations === 'number' && !isNaN(d.reservations))
-                .map((entry, index) => (
-                <Cell 
-                  key={`cell-${index}`} 
-                  fill={SPORT_COLORS[entry.sport] || SPORT_COLORS.default} 
-                />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+        {(() => {
+          // Filter and validate data
+          const validData = data
+            .filter(d => d && d.name && typeof d.reservations === 'number' && !isNaN(d.reservations) && d.reservations >= 0)
+            .map(d => ({
+              ...d,
+              reservations: Math.max(0, Number(d.reservations)),
+              name: String(d.name || 'Sin nombre').substring(0, 30) // Limit name length
+            }))
+            .sort((a, b) => b.reservations - a.reservations) // Sort by reservations descending
+
+          if (validData.length === 0) {
+            return (
+              <div className="flex items-center justify-center h-[300px] text-gray-500">
+                No hay datos válidos para mostrar
+              </div>
+            )
+          }
+
+          return (
+            <div className="w-full" style={{ height: '300px', minHeight: '300px' }}>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart 
+                  data={validData} 
+                  layout="horizontal"
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" className="dark:stroke-gray-700" />
+                  <XAxis 
+                    type="number"
+                    stroke="#9ca3af"
+                    style={{ fontSize: '12px' }}
+                    domain={[0, 'dataMax']}
+                    allowDecimals={false}
+                  />
+                  <YAxis 
+                    type="category"
+                    dataKey="name" 
+                    stroke="#9ca3af"
+                    style={{ fontSize: '12px' }}
+                    width={120}
+                    tick={{ fontSize: 11 }}
+                    interval={0}
+                  />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }} />
+                  <Bar 
+                    dataKey="reservations" 
+                    radius={[0, 8, 8, 0]}
+                    cursor="pointer"
+                    onClick={(data: any) => {
+                      if (data && data.payload) {
+                        onBarClick?.(data.payload as CanchaData)
+                      }
+                    }}
+                  >
+                    {validData.map((entry, index) => (
+                      <Cell 
+                        key={`cell-${entry.id || index}`} 
+                        fill={entry.color || SPORT_COLORS[entry.sport] || SPORT_COLORS.default} 
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )
+        })()}
 
         {/* Legend - Interactive */}
         <div className="mt-4 flex flex-wrap gap-3 justify-center">
