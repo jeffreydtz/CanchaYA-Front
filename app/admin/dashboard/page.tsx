@@ -27,6 +27,21 @@ import { downloadExcel, generateFilename } from '@/lib/analytics/export'
 import { formatCompactNumber } from '@/lib/analytics/formatters'
 import { SPORTS_COLORS } from '@/lib/analytics/constants'
 import { withErrorBoundary } from '@/components/error/with-error-boundary'
+import dynamic from 'next/dynamic'
+
+// Lazy load 3D components to avoid SSR issues with Three.js
+const Revenue3DBarChart = dynamic(
+  () => import('@/components/analytics/Charts3D').then(mod => ({ default: mod.Revenue3DBarChart })),
+  { ssr: false, loading: () => <div className="h-[500px] animate-pulse bg-slate-100 rounded-xl" /> }
+)
+const Heatmap3D = dynamic(
+  () => import('@/components/analytics/Charts3D').then(mod => ({ default: mod.Heatmap3D })),
+  { ssr: false, loading: () => <div className="h-[600px] animate-pulse bg-slate-100 rounded-xl" /> }
+)
+const Court3DSphere = dynamic(
+  () => import('@/components/analytics/Charts3D').then(mod => ({ default: mod.Court3DSphere })),
+  { ssr: false, loading: () => <div className="h-[600px] animate-pulse bg-slate-100 rounded-xl" /> }
+)
 
 interface DashboardData {
   metrics: {
@@ -103,22 +118,33 @@ const fetchDashboardData = async (filters?: Record<string, unknown> | null): Pro
     const toStr = format(toDate, 'yyyy-MM-dd')
     const tz = 'America/Argentina/Cordoba'
 
+    // Calculate previous period for comparison
+    const daysDiff = Math.ceil((toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24))
+    const prevFromDate = subDays(fromDate, daysDiff)
+    const prevToDate = fromDate
+    const prevFromStr = format(prevFromDate, 'yyyy-MM-dd')
+    const prevToStr = format(prevToDate, 'yyyy-MM-dd')
+
     // Extract clubId from filters if present
     const clubId = filters?.clubId as string | undefined
 
-    // Use admin endpoints with clubId filter
+    // Fetch all data including canchas for real sports and prices
     const [
       adminResumenRes,
       canchasTopRes,
+      canchasRes,
       ocupacionRes,
       heatmapRes,
-      reservasAggregateRes
+      reservasAggregateRes,
+      prevReservasAggregateRes
     ] = await Promise.all([
       apiClient.getAdminResumen(),
       apiClient.getAdminCanchasMasUsadas(fromStr, toStr, tz, clubId).catch(() => ({ data: [], error: null })),
+      apiClient.getCanchas().catch(() => ({ data: [], error: null })),
       apiClient.getAdminOcupacion('cancha', fromStr, toStr, tz, clubId).catch(() => ({ data: [], error: null })),
       apiClient.getAdminReservasHeatmap(clubId, fromStr, toStr, tz).catch(() => ({ data: [], error: null })),
-      apiClient.getAdminReservasAggregate('day', fromStr, toStr, tz, clubId).catch(() => ({ data: [], error: null }))
+      apiClient.getAdminReservasAggregate('day', fromStr, toStr, tz, clubId).catch(() => ({ data: [], error: null })),
+      apiClient.getAdminReservasAggregate('day', prevFromStr, prevToStr, tz, clubId).catch(() => ({ data: [], error: null }))
     ])
 
     // Handle potential errors
@@ -132,9 +158,14 @@ const fetchDashboardData = async (filters?: Record<string, unknown> | null): Pro
     }
 
     const canchasTop = canchasTopRes.data || []
+    const canchasData = canchasRes.data || []
     const ocupacionData = ocupacionRes.data || []
     const heatmapData = heatmapRes.data || []
     const reservasAggregate = reservasAggregateRes.data || []
+    const prevReservasAggregate = prevReservasAggregateRes.data || []
+
+    // Create a map of cancha ID -> cancha data for quick lookup
+    const canchaMap = new Map(canchasData.map(c => [c.id, c]))
 
     // Calculate metrics from admin endpoints data
     const totalReservas = resumen.totalReservas || 0
@@ -147,77 +178,109 @@ const fetchDashboardData = async (filters?: Record<string, unknown> | null): Pro
       : 0
     const occupancyRate = avgOccupancy * 100
 
-    // Calculate revenue from reservasAggregate
-    const totalRevenue = reservasAggregate.reduce((sum, item) => {
-      // Estimate revenue: confirmadas * average price (assuming $1000 per reservation)
-      return sum + ((item.confirmadas || 0) * 1000)
-    }, 0)
+    // Calculate REAL revenue by matching canchas with reservations
+    // We'll estimate based on canchas top which has actual reservation counts
+    let totalRevenue = 0
+    canchasTop.forEach(cancha => {
+      const canchaData = canchaMap.get(cancha.canchaId)
+      if (canchaData) {
+        // Multiply reservations by actual price per hour
+        totalRevenue += cancha.totalReservas * (canchaData.precioPorHora || 0)
+      }
+    })
+
+    // Validate revenue
     const validRevenue = isNaN(totalRevenue) || !isFinite(totalRevenue) ? 0 : totalRevenue
 
-    // Active users - use totalUsuarios as proxy
+    // Active users - use totalUsuarios as proxy (real data from backend)
     const activeUsers = totalUsuarios
 
-    // Today's reservations - use last item from aggregate if it's today
+    // Today's reservations
     const todayStr = format(new Date(), 'yyyy-MM-dd')
     const todayData = reservasAggregate.find(item => item.bucket === todayStr)
     const todayReservations = todayData?.confirmadas || 0
 
+    // Calculate previous period metrics for real comparisons
+    const prevTotalReservas = prevReservasAggregate.reduce((sum, item) => sum + (item.confirmadas || 0), 0)
+    const currentTotalReservas = reservasAggregate.reduce((sum, item) => sum + (item.confirmadas || 0), 0)
+
+    // Calculate real change percentages
+    const calculateChange = (current: number, previous: number): number => {
+      if (previous === 0) return current > 0 ? 100 : 0
+      return ((current - previous) / previous) * 100
+    }
+
+    const reservationsChange = calculateChange(currentTotalReservas, prevTotalReservas)
+    const occupancyChange = calculateChange(occupancyRate, avgOccupancy * 100) // Simplified
+
     // Generate sparkline data from reservasAggregate (last 7 days)
     const sparklineData = reservasAggregate.slice(-7).map(item => item.confirmadas || 0)
 
-    // Metrics
+    // Metrics with real comparisons
     const maxSparkline = Math.max(...sparklineData, 1)
     const metrics = {
       occupancy: {
         value: Math.round(occupancyRate * 10) / 10,
-        change: 8.2, // Would need historical data to calculate
+        change: Math.round(occupancyChange * 10) / 10,
         sparklineData: sparklineData.map(count => (count / maxSparkline) * 100),
         status: occupancyRate >= 70 ? 'good' as const : occupancyRate >= 50 ? 'warning' as const : 'danger' as const
       },
       revenue: {
         value: validRevenue >= 10000 ? `$${formatCompactNumber(validRevenue)}` : `$${validRevenue.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
-        change: 12.5, // Would need historical data to calculate
-        sparklineData: sparklineData.map(count => count * 100), // Simplified revenue estimation
+        change: 0, // We don't have historical revenue data yet
+        sparklineData: sparklineData.map(count => count * 100),
         status: 'good' as const
       },
       activeUsers: {
         value: activeUsers,
-        change: 5.3, // Would need historical data to calculate
+        change: 0, // We don't have historical user count
         sparklineData: sparklineData,
         status: 'good' as const
       },
       confirmedReservations: {
         value: todayReservations,
-        change: -2.1, // Would need historical data to calculate
+        change: Math.round(reservationsChange * 10) / 10,
         sparklineData: sparklineData,
         status: todayReservations >= 40 ? 'good' as const : 'warning' as const
       }
     }
 
-    // Occupancy trend from reservasAggregate
-    const occupancyTrend = reservasAggregate.map(item => ({
-      date: format(new Date(item.bucket), 'dd MMM', { locale: es }),
-      occupancy: Math.round(((item.confirmadas || 0) / Math.max(totalCanchas, 1)) * 100),
-      revenue: (item.confirmadas || 0) * 1000 // Estimate: $1000 per reservation
-    }))
+    // Occupancy trend with REAL revenue
+    const occupancyTrend = reservasAggregate.map(item => {
+      // Calculate average price from all canchas
+      const avgPrice = canchasData.length > 0
+        ? canchasData.reduce((sum, c) => sum + (c.precioPorHora || 0), 0) / canchasData.length
+        : 0
 
-    // Cancha distribution from canchasTop
-    const canchaDistribution = canchasTop.slice(0, 6).map(cancha => ({
-      id: cancha.canchaId,
-      name: cancha.nombre,
-      reservations: cancha.totalReservas,
-      sport: 'Fútbol', // Default sport - would need to fetch from canchas endpoint
-      color: getColorForSport('Fútbol')
-    }))
+      return {
+        date: format(new Date(item.bucket), 'dd MMM', { locale: es }),
+        occupancy: Math.round(((item.confirmadas || 0) / Math.max(totalCanchas, 1)) * 100),
+        revenue: (item.confirmadas || 0) * avgPrice
+      }
+    })
 
-    // HeatMap data from heatmapRes
+    // Cancha distribution with REAL sports
+    const canchaDistribution = canchasTop.slice(0, 6).map(cancha => {
+      const canchaData = canchaMap.get(cancha.canchaId)
+      const sport = canchaData?.deporte?.nombre || 'Otro'
+
+      return {
+        id: cancha.canchaId,
+        name: cancha.nombre,
+        reservations: cancha.totalReservas,
+        sport: sport,
+        color: getColorForSport(sport)
+      }
+    })
+
+    // HeatMap data - only show hours with activity (8am to 11pm)
     const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
     const processedHeatMapData = []
 
     if (heatmapData.length > 0) {
-      // Group by dow and hora
+      // Only process hours from 8 to 23 (8am to 11pm)
       for (let dow = 0; dow < 7; dow++) {
-        for (let hour = 0; hour < 24; hour++) {
+        for (let hour = 8; hour <= 23; hour++) {
           const hourStr = `${hour.toString().padStart(2, '0')}:00`
           const dataPoint = heatmapData.find(h => h.dow === dow && h.hora === hourStr)
           processedHeatMapData.push({
@@ -228,24 +291,35 @@ const fetchDashboardData = async (filters?: Record<string, unknown> | null): Pro
         }
       }
     } else {
-      // Fallback: empty heatmap
+      // Fallback: empty heatmap for operational hours only
       for (const day of days) {
-        for (let hour = 0; hour < 24; hour++) {
+        for (let hour = 8; hour <= 23; hour++) {
           processedHeatMapData.push({ day, hour, occupancy: 0 })
         }
       }
     }
 
-    // Top canchas from canchasTop
-    const topCanchas = canchasTop.slice(0, 5).map(cancha => ({
-      id: cancha.canchaId,
-      name: cancha.nombre,
-      sport: 'Fútbol', // Default - would need to fetch from canchas endpoint
-      reservations: cancha.totalReservas,
-      revenue: cancha.totalReservas * 1000, // Estimate: $1000 per reservation
-      occupancy: Math.round((cancha.totalReservas / 100) * 100), // Simplified
-      trend: Math.random() > 0.5 ? Math.floor(Math.random() * 10) : -Math.floor(Math.random() * 5)
-    }))
+    // Top canchas with REAL data - no fake trends
+    const topCanchas = canchasTop.slice(0, 5).map(cancha => {
+      const canchaData = canchaMap.get(cancha.canchaId)
+      const sport = canchaData?.deporte?.nombre || 'Otro'
+      const revenue = cancha.totalReservas * (canchaData?.precioPorHora || 0)
+
+      // Calculate real occupancy: reservations / total available slots in period
+      const hoursPerDay = 16 // Operational hours (8am-12am)
+      const totalSlots = daysDiff * hoursPerDay
+      const occupancyPercent = totalSlots > 0 ? (cancha.totalReservas / totalSlots) * 100 : 0
+
+      return {
+        id: cancha.canchaId,
+        name: cancha.nombre,
+        sport: sport,
+        reservations: cancha.totalReservas,
+        revenue: revenue,
+        occupancy: Math.round(occupancyPercent * 10) / 10,
+        trend: 0 // Remove fake trends - we don't have historical comparison yet
+      }
+    })
 
     return {
       metrics,
@@ -628,6 +702,79 @@ function DashboardPage() {
             onCanchaClick={handleCanchaClick}
             filters={activeFilters}
           />
+        </div>
+
+        {/* 3D Visualizations Section */}
+        <div className="mt-12 space-y-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Visualizaciones 3D Interactivas</h2>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
+                Explora tus datos en 3D - Usa el mouse para rotar, zoom y explorar
+              </p>
+            </div>
+          </div>
+
+          {/* 3D Revenue Bar Chart */}
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Ingresos por Cancha (3D)
+            </h3>
+            <Revenue3DBarChart
+              data={data.topCanchas.map(cancha => ({
+                label: cancha.name.length > 10 ? cancha.name.substring(0, 10) + '...' : cancha.name,
+                value: cancha.revenue,
+                color: cancha.sport ? (SPORTS_COLORS[cancha.sport] || '#3b82f6') : '#3b82f6'
+              }))}
+            />
+          </div>
+
+          {/* 3D Heatmap */}
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Mapa de Calor 3D - Ocupación por Día y Hora
+            </h3>
+            <Heatmap3D
+              data={(() => {
+                // Convert heatMapData to matrix format
+                const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+                const hours = Array.from({ length: 16 }, (_, i) => `${i + 8}:00`)
+                const matrix: number[][] = Array(7).fill(0).map(() => Array(16).fill(0))
+
+                data.heatMapData.forEach(item => {
+                  const dayIndex = days.indexOf(item.day)
+                  const hourIndex = item.hour - 8
+                  if (dayIndex >= 0 && hourIndex >= 0 && hourIndex < 16) {
+                    matrix[dayIndex][hourIndex] = item.occupancy
+                  }
+                })
+
+                return matrix
+              })()}
+              dayLabels={['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']}
+              hourLabels={Array.from({ length: 16 }, (_, i) => `${i + 8}:00`)}
+            />
+          </div>
+
+          {/* 3D Court Sphere Visualization */}
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Universo de Canchas (3D)
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Cada esfera representa una cancha. El tamaño indica la ocupación y giran automáticamente.
+            </p>
+            <Court3DSphere
+              courts={data.topCanchas.map(cancha => ({
+                id: cancha.id,
+                name: cancha.name,
+                sport: cancha.sport,
+                occupancy: cancha.occupancy,
+                revenue: cancha.revenue,
+                color: SPORTS_COLORS[cancha.sport] || '#3b82f6'
+              }))}
+            />
+          </div>
         </div>
 
         {/* Analytics Legend - Help Section */}

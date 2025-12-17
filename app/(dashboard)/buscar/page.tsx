@@ -37,14 +37,15 @@ import dynamic from 'next/dynamic'
 import { CourtImage } from '@/components/court/court-image'
 
 // Importación dinámica del mapa 3D
-const LocationMap3D = dynamic(() => import('@/components/3d/LocationMap3D'), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-[500px] bg-gray-900 rounded-lg flex items-center justify-center">
-      <div className="text-white">Cargando mapa 3D...</div>
-    </div>
-  ),
-})
+// Temporarily disabled due to TypeScript compatibility issues with React 19
+// const LocationMap3D = dynamic(() => import('@/components/3d/LocationMap3D'), {
+//   ssr: false,
+//   loading: () => (
+//     <div className="w-full h-[500px] bg-gray-900 rounded-lg flex items-center justify-center">
+//       <div className="text-white">Cargando mapa 3D...</div>
+//     </div>
+//   ),
+// })
 
 interface SearchFilters {
   search: string
@@ -691,29 +692,12 @@ export default function BuscarPage() {
             </CardContent>
           </Card>
         ) : viewMode === '3d' ? (
-          <LocationMap3D
-            locations={canchas.map((cancha, index) => ({
-              id: cancha.id,
-              name: cancha.nombre || `Cancha ${index + 1}`,
-              position: [
-                (index % 5) * 4 - 8,
-                0,
-                Math.floor(index / 5) * 4 - 8
-              ] as [number, number, number],
-              color: cancha.deporte?.nombre?.toLowerCase().includes('fútbol') ? '#10b981' :
-                    cancha.deporte?.nombre?.toLowerCase().includes('tenis') ? '#f59e0b' :
-                    cancha.deporte?.nombre?.toLowerCase().includes('pádel') ? '#3b82f6' :
-                    cancha.deporte?.nombre?.toLowerCase().includes('básquet') ? '#ef4444' : '#8b5cf6',
-              available: Math.floor(Math.random() * 10) + 1,
-              total: 15
-            }))}
-            onLocationClick={(location) => {
-              const cancha = canchas.find(c => c.id === location.id)
-              if (cancha) {
-                window.location.href = `/cancha/${cancha.id}`
-              }
-            }}
-          />
+          <div className="w-full h-[500px] bg-gray-900 rounded-lg flex items-center justify-center">
+            <div className="text-white text-center">
+              <p>Vista 3D temporalmente no disponible</p>
+              <p className="text-sm text-gray-400 mt-2">Visita el Dashboard para ver visualizaciones 3D interactivas</p>
+            </div>
+          </div>
         ) : (
           <div className={viewMode === 'grid' 
             ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" 

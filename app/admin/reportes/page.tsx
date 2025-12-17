@@ -27,6 +27,7 @@ import { format, subMonths, startOfMonth, endOfMonth, subDays, startOfDay } from
 import { es } from 'date-fns/locale'
 import { downloadCSV, downloadExcel, generateFilename, createPrintableReport } from '@/lib/analytics/export'
 import { formatCurrency } from '@/lib/analytics/formatters'
+import { SPORTS_COLORS } from '@/lib/analytics/constants'
 import { withErrorBoundary } from '@/components/error/with-error-boundary'
 
 // Helper function to format currency with proper abbreviations
@@ -35,7 +36,7 @@ const formatCurrencyCompact = (value: number): string => {
   if (typeof value !== 'number' || isNaN(value) || !isFinite(value)) {
     return '$0'
   }
-  
+
   if (value >= 1000000) {
     return `$${(value / 1000000).toFixed(value % 1000000 === 0 ? 0 : 2)}M`
   }
@@ -53,7 +54,6 @@ interface ReportData {
   locationData: Array<{ location: string; reservations: number; revenue: number; growth: number }>
   totalReservations: number
   totalRevenue: number
-  profitMargin: number
   occupancyRate: number
   revenueChangeVsPreviousMonth: number
   reservationsChangeVsPreviousMonth: number
@@ -61,22 +61,9 @@ interface ReportData {
   previousMonthReservations: number
 }
 
-// Colores para deportes
-const SPORT_COLORS: Record<string, string> = {
-  'Fútbol': '#2563eb',
-  'Fútbol 5': '#2563eb',
-  'Fútbol 7': '#1d4ed8',
-  'Baloncesto': '#dc2626',
-  'Básquet': '#dc2626',
-  'Tenis': '#16a34a',
-  'Pádel': '#8b5cf6',
-  'Paddle': '#8b5cf6',
-  'Vóley': '#ea580c',
-  'Voleibol': '#ea580c',
-}
-
+// Use centralized sports colors
 const getColorForSport = (sport: string): string => {
-  return SPORT_COLORS[sport] || '#6b7280'
+  return SPORTS_COLORS[sport] || '#6b7280'
 }
 
 const fetchReportData = async (period: string): Promise<ReportData> => {
@@ -285,7 +272,6 @@ const fetchReportData = async (period: string): Promise<ReportData> => {
       locationData,
       totalReservations: confirmedReservations.length,
       totalRevenue,
-      profitMargin: 28.5, // Would need historical data to calculate
       occupancyRate: Math.round(occupancyRate * 10) / 10,
       revenueChangeVsPreviousMonth: Math.round(revenueChangeVsPreviousMonth * 10) / 10,
       reservationsChangeVsPreviousMonth: Math.round(reservationsChangeVsPreviousMonth * 10) / 10,
@@ -336,7 +322,7 @@ function AdminReportsPage() {
     )
   }
 
-  const { totalReservations, totalRevenue, profitMargin, occupancyRate, monthlyRevenueData, weeklyData, hourlyRevenueData, sportData, locationData, revenueChangeVsPreviousMonth, reservationsChangeVsPreviousMonth, previousMonthRevenue, previousMonthReservations } = data
+  const { totalReservations, totalRevenue, occupancyRate, monthlyRevenueData, weeklyData, hourlyRevenueData, sportData, locationData, revenueChangeVsPreviousMonth, reservationsChangeVsPreviousMonth, previousMonthRevenue, previousMonthReservations } = data
 
   // Calculate revenue change amount
   const revenueDifference = totalRevenue - previousMonthRevenue
@@ -368,48 +354,49 @@ function AdminReportsPage() {
     {
       id: 'occupancy',
       title: 'Ocupación promedio',
-      value: `${occupancyRate}%`,
-      description: 'Promedio semanal',
-      delta: '+5.2%',
-      trend: 'up',
+      value: `${occupancyRate.toFixed(1)}%`,
+      description: 'Promedio del período',
+      delta: occupancyRate >= 70 ? 'Óptimo' : occupancyRate >= 50 ? 'Normal' : 'Bajo',
+      trend: occupancyRate >= 70 ? 'up' : occupancyRate >= 50 ? 'neutral' : 'down',
       icon: Activity,
       iconClasses: 'bg-teal-100 text-teal-600',
     },
     {
-      id: 'profit',
-      title: 'Margen de ganancia',
-      value: `${profitMargin}%`,
-      description: 'vs mes anterior',
-      delta: '-2.1%',
-      trend: 'down',
+      id: 'avgTicket',
+      title: 'Ticket promedio',
+      value: formatCurrencyCompact(totalReservations > 0 ? totalRevenue / totalReservations : 0),
+      description: 'Ingreso por reserva',
+      delta: totalReservations > 0 ? 'Calculado' : 'N/A',
+      trend: 'neutral',
       icon: TrendingUp,
-      iconClasses: 'bg-rose-100 text-rose-500',
+      iconClasses: 'bg-purple-100 text-purple-600',
     },
   ]
 
+  // Calculate real performance highlights from data
   const performanceHighlights = [
     {
       id: 'efficiency',
       title: 'Eficiencia operativa',
-      value: '94.2%',
-      description: '+3.2% vs mes anterior',
+      value: `${occupancyRate.toFixed(1)}%`,
+      description: 'Tasa de ocupación promedio',
       icon: TrendingUp,
       accent: 'bg-emerald-100 text-emerald-600',
     },
     {
-      id: 'satisfaction',
-      title: 'Satisfacción cliente',
-      value: '4.7/5',
-      description: '+0.2 vs mes anterior',
-      icon: Star,
+      id: 'reservations',
+      title: 'Total de reservas',
+      value: totalReservations.toLocaleString(),
+      description: `En el período seleccionado`,
+      icon: Calendar,
       accent: 'bg-indigo-100 text-indigo-600',
     },
     {
-      id: 'response',
-      title: 'Tiempo de respuesta',
-      value: '1.2s',
-      description: '-0.3s vs mes anterior',
-      icon: Clock,
+      id: 'avgTicket',
+      title: 'Ticket promedio',
+      value: formatCurrencyCompact(totalReservations > 0 ? totalRevenue / totalReservations : 0),
+      description: 'Ingreso promedio por reserva',
+      icon: DollarSign,
       accent: 'bg-purple-100 text-purple-600',
     },
   ]
@@ -426,8 +413,8 @@ function AdminReportsPage() {
         // Overview metrics
         { 'Sección': 'Resumen', 'Métrica': 'Ingresos Totales', 'Valor': `$${totalRevenue.toLocaleString()}` },
         { 'Sección': 'Resumen', 'Métrica': 'Reservas Totales', 'Valor': totalReservations.toString() },
-        { 'Sección': 'Resumen', 'Métrica': 'Ocupación Promedio', 'Valor': `${occupancyRate}%` },
-        { 'Sección': 'Resumen', 'Métrica': 'Margen de Ganancia', 'Valor': `${profitMargin}%` },
+        { 'Sección': 'Resumen', 'Métrica': 'Ocupación Promedio', 'Valor': `${occupancyRate.toFixed(1)}%` },
+        { 'Sección': 'Resumen', 'Métrica': 'Ticket Promedio', 'Valor': formatCurrencyCompact(totalReservations > 0 ? totalRevenue / totalReservations : 0) },
         { 'Sección': '', 'Métrica': '', 'Valor': '' }, // Empty row
 
         // Monthly revenue
@@ -517,10 +504,6 @@ function AdminReportsPage() {
                   <tr>
                     <td style="padding: 8px; border: 1px solid #ddd;">Ocupación Promedio</td>
                     <td style="padding: 8px; border: 1px solid #ddd;">${occupancyRate.toFixed(2)}%</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd;">Margen de Ganancia</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${profitMargin.toFixed(2)}%</td>
                   </tr>
                 </tbody>
               </table>

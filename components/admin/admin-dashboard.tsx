@@ -42,36 +42,26 @@ const formatCurrencyCompact = (value: number): string => {
   return formatCurrency(value)
 }
 
-// Default mock data for demonstration
-const defaultMockData = {
-  resumen: {
-    totalUsuarios: 1255,
-    totalReservas: 3890,
-    totalCanchas: 45,
-    deudaTotalPendiente: 125000
-  },
-  topJugadores: [
-    { personaId: '1', nombre: 'Juan Pérez', email: 'juan@example.com', ranking: 1 },
-    { personaId: '2', nombre: 'María García', email: 'maria@example.com', ranking: 2 },
-    { personaId: '3', nombre: 'Carlos López', email: 'carlos@example.com', ranking: 3 },
-  ],
-  canchasMasUsadas: [
-    { canchaId: '1', nombre: 'Cancha Central', totalReservas: 89 },
-    { canchaId: '2', nombre: 'Polideportivo Norte', totalReservas: 76 },
-    { canchaId: '3', nombre: 'Complejo Sur', totalReservas: 65 },
-  ]
-}
+// Hourly data structure for visualization
+const generateHourlyData = (reservasData: ReservasAggregate[]) => {
+  // Group reservations by hour
+  const hourMap = new Map<string, number>()
 
-const hourlyData = [
-  { hour: '08:00', reservations: 12 },
-  { hour: '10:00', reservations: 25 },
-  { hour: '12:00', reservations: 35 },
-  { hour: '14:00', reservations: 42 },
-  { hour: '16:00', reservations: 38 },
-  { hour: '18:00', reservations: 45 },
-  { hour: '20:00', reservations: 32 },
-  { hour: '22:00', reservations: 18 },
-]
+  reservasData.forEach(item => {
+    // Extract hour from bucket if it contains time information
+    // For now, distribute evenly across operational hours
+    const hours = ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00']
+    hours.forEach(hour => {
+      const current = hourMap.get(hour) || 0
+      hourMap.set(hour, current + Math.floor((item.confirmadas || 0) / hours.length))
+    })
+  })
+
+  return Array.from(hourMap.entries()).map(([hour, reservations]) => ({
+    hour,
+    reservations
+  }))
+}
 
 export function AdminDashboard() {
   const [loading, setLoading] = useState(true)
@@ -157,10 +147,12 @@ export function AdminDashboard() {
 
     } catch (err) {
       setError('Error al cargar los datos del dashboard')
-      // Use mock data on error
-      setResumen(defaultMockData.resumen)
-      setTopJugadores(defaultMockData.topJugadores)
-      setCanchasMasUsadas(defaultMockData.canchasMasUsadas)
+      // Don't use mock data - keep everything null/empty to show error state
+      setResumen(null)
+      setTopJugadores([])
+      setCanchasMasUsadas([])
+      setPersonasConDeuda([])
+      setReservasData([])
     } finally {
       setLoading(false)
     }
@@ -509,15 +501,21 @@ export function AdminDashboard() {
                 <CardDescription>Patrones de uso durante el día</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={hourlyData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="hour" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="reservations" fill="#8b5cf6" />
-                  </BarChart>
-                </ResponsiveContainer>
+                {reservasData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={generateHourlyData(reservasData)}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="hour" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="reservations" fill="#8b5cf6" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-[300px] flex items-center justify-center text-gray-500">
+                    Sin datos de horarios disponibles
+                  </div>
+                )}
               </CardContent>
             </Card>
 

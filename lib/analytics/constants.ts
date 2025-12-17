@@ -37,11 +37,19 @@ export const PERIOD_LABELS: Record<string, string> = {
 // ============================================================================
 
 export const SPORTS_COLORS: Record<string, string> = {
-  'Futbol': '#ef4444',      // red
+  // Primary sports - normalize names
+  'Fútbol': '#ef4444',      // red
+  'Futbol': '#ef4444',      // red (fallback)
+  'Fútbol 5': '#dc2626',    // darker red
+  'Fútbol 7': '#b91c1c',    // darkest red
   'Tenis': '#f59e0b',       // amber
-  'Paddle': '#10b981',      // green
-  'Basquetbol': '#3b82f6',  // blue
-  'Voleibol': '#8b5cf6',    // violet
+  'Pádel': '#10b981',       // green
+  'Paddle': '#10b981',      // green (fallback)
+  'Básquet': '#3b82f6',     // blue
+  'Basquetbol': '#3b82f6',  // blue (fallback)
+  'Baloncesto': '#3b82f6',  // blue (fallback)
+  'Vóley': '#8b5cf6',       // violet
+  'Voleibol': '#8b5cf6',    // violet (fallback)
   'Badminton': '#ec4899',   // pink
   'Hockey': '#14b8a6',      // teal
   'Squash': '#f97316',      // orange

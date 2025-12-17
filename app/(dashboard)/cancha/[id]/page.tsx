@@ -50,14 +50,15 @@ import { useNotification } from '@/lib/patterns/notification-observer'
 import { useFormatter } from '@/lib/patterns/formatter-strategy'
 
 // Importación dinámica del componente 3D (solo cliente)
-const Court3DViewer = dynamic(() => import('@/components/3d/Court3DViewer'), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-[400px] bg-gray-900 rounded-lg flex items-center justify-center">
-      <div className="text-white">Cargando vista 3D...</div>
-    </div>
-  ),
-})
+// Temporarily disabled due to TypeScript compatibility issues with React 19
+// const Court3DViewer = dynamic(() => import('@/components/3d/Court3DViewer'), {
+//   ssr: false,
+//   loading: () => (
+//     <div className="w-full h-[400px] bg-gray-900 rounded-lg flex items-center justify-center">
+//       <div className="text-white">Cargando vista 3D...</div>
+//     </div>
+//   ),
+// })
 
 // Dynamic import for map component
 const ClubLocationMap = dynamic(() => import('@/components/map/club-location-map'), {
@@ -503,9 +504,10 @@ export default function CanchaDetailPage() {
             )}
 
             {/* Vista 3D de la Cancha */}
-            <div className="mt-6">
+            {/* Temporarily disabled due to TypeScript compatibility issues with React 19 */}
+            {/* <div className="mt-6">
               <Court3DViewer sport={cancha.deporte?.nombre || 'Fútbol'} />
-            </div>
+            </div> */}
 
             {/* Ratings Display */}
             <div className="mt-6">

@@ -63,13 +63,14 @@ const menuItems = [
         url: "/admin/reportes-analytics",
         icon: Download,
         description: "Generar reportes personalizados"
-      },
-      {
-        title: "Segmentación",
-        url: "/admin/segmentacion",
-        icon: UserCog,
-        description: "Análisis RFM de usuarios"
       }
+      // Segmentación page hidden - no real API endpoint for user behavior segmentation
+      // {
+      //   title: "Segmentación",
+      //   url: "/admin/segmentacion",
+      //   icon: UserCog,
+      //   description: "Análisis RFM de usuarios"
+      // }
     ]
   },
   {
