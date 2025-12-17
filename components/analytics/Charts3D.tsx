@@ -258,12 +258,14 @@ function HeatmapCell({
   const meshRef = useRef<THREE.Mesh>(null)
   const [hovered, setHovered] = useState(false)
 
-  // Color based on intensity (0-100%)
+  // Color based on intensity (0-100%) - Heat map gradient
   const color = useMemo(() => {
-    if (intensity > 75) return '#ef4444' // Red - High
-    if (intensity > 50) return '#f59e0b' // Amber - Medium
-    if (intensity > 25) return '#3b82f6' // Blue - Low
-    return '#94a3b8' // Gray - Very low
+    if (intensity >= 80) return '#dc2626' // Dark Red - Very High
+    if (intensity >= 60) return '#f59e0b' // Orange - High
+    if (intensity >= 40) return '#fbbf24' // Yellow - Medium-High
+    if (intensity >= 20) return '#10b981' // Green - Medium
+    if (intensity >= 5) return '#3b82f6' // Blue - Low
+    return '#6b7280' // Gray - Very low/no activity
   }, [intensity])
 
   const height = Math.max(intensity / 20, 0.2) // Min height 0.2
@@ -288,10 +290,10 @@ function HeatmapCell({
       <boxGeometry args={[0.9, height, 0.9]} />
       <meshStandardMaterial
         color={color}
-        metalness={0.2}
-        roughness={0.6}
+        metalness={0.3}
+        roughness={0.4}
         emissive={color}
-        emissiveIntensity={hovered ? 0.3 : 0.1}
+        emissiveIntensity={hovered ? 0.6 : 0.4} // Increased emissive for better visibility
       />
       {hovered && (
         <Text
@@ -326,8 +328,46 @@ export function Heatmap3D({ data, dayLabels, hourLabels }: Heatmap3DProps) {
   }
 
   return (
-    <div className="w-full h-[600px] bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 rounded-xl overflow-hidden">
-      <Canvas shadows>
+    <div className="w-full bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 rounded-xl overflow-hidden">
+      {/* Color Legend */}
+      <div className="p-4 bg-white/50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-center gap-4 flex-wrap">
+          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Escala de ocupación:</span>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 rounded" style={{ backgroundColor: '#6b7280' }}></div>
+            <span className="text-xs text-gray-600 dark:text-gray-400">0-5%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 rounded" style={{ backgroundColor: '#3b82f6' }}></div>
+            <span className="text-xs text-gray-600 dark:text-gray-400">5-20%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 rounded" style={{ backgroundColor: '#10b981' }}></div>
+            <span className="text-xs text-gray-600 dark:text-gray-400">20-40%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 rounded" style={{ backgroundColor: '#fbbf24' }}></div>
+            <span className="text-xs text-gray-600 dark:text-gray-400">40-60%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 rounded" style={{ backgroundColor: '#f59e0b' }}></div>
+            <span className="text-xs text-gray-600 dark:text-gray-400">60-80%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-4 h-4 rounded" style={{ backgroundColor: '#dc2626' }}></div>
+            <span className="text-xs text-gray-600 dark:text-gray-400">80-100%</span>
+          </div>
+        </div>
+        <div className="mt-2 text-center">
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            💡 Tip: Usa el mouse para rotar, zoom y explorar
+          </span>
+        </div>
+      </div>
+
+      {/* 3D Canvas */}
+      <div className="w-full h-[600px]">
+        <Canvas shadows>
         <PerspectiveCamera makeDefault position={[10, 12, 10]} />
         <OrbitControls
           enableDamping
@@ -336,10 +376,11 @@ export function Heatmap3D({ data, dayLabels, hourLabels }: Heatmap3DProps) {
           maxDistance={25}
         />
 
-        {/* Lighting */}
-        <ambientLight intensity={0.4} />
-        <directionalLight position={[10, 15, 5]} intensity={0.8} castShadow />
-        <pointLight position={[-10, 10, -10]} intensity={0.3} color="#60a5fa" />
+        {/* Lighting - Enhanced for better color visibility */}
+        <ambientLight intensity={0.6} />
+        <directionalLight position={[10, 15, 5]} intensity={1.2} castShadow />
+        <pointLight position={[-10, 10, -10]} intensity={0.5} color="#ffffff" />
+        <pointLight position={[10, 10, 10]} intensity={0.4} color="#fbbf24" />
 
         {/* Grid */}
         <gridHelper args={[20, 20, '#94a3b8', '#cbd5e1']} position={[0, 0, 0]} />
@@ -400,6 +441,7 @@ export function Heatmap3D({ data, dayLabels, hourLabels }: Heatmap3DProps) {
 
         <Environment preset="sunset" />
       </Canvas>
+      </div>
     </div>
   )
 }
